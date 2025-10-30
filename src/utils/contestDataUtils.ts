@@ -5,7 +5,7 @@ import type React from "react";
 import type { Updater } from "use-immer";
 
 export function toImmerContestData(
-  data: ContestData<{ withMarkdown: true }>,
+  data: ContestData<{ withMarkdown: true }>
 ): ImmerContestData {
   return {
     ...data,
@@ -17,11 +17,12 @@ export function toImmerContestData(
       ...problem,
       key: crypto.randomUUID(),
     })),
+    images: [],
   };
 }
 
 export function newProblem(
-  contestData: ImmerContestData,
+  contestData: ImmerContestData
 ): ImmerContestData["problems"][number] {
   return {
     key: crypto.randomUUID(),
@@ -37,7 +38,7 @@ export function newProblem(
     testcase: "10",
     point_equal: "是",
     submit_filename: contestData.support_languages.map(
-      (lang) => "problem." + lang.name,
+      (lang) => "problem." + lang.name
     ),
     pretestcase: "10",
     statementMarkdown: "",
@@ -47,7 +48,7 @@ export function newProblem(
 export function removeProblemCallback(
   modal: ModalHookAPI,
   setPanel: React.Dispatch<React.SetStateAction<string>>,
-  updateContestData: Updater<ImmerContestData>,
+  updateContestData: Updater<ImmerContestData>
 ) {
   return async (e: string) => {
     if (

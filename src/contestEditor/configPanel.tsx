@@ -17,7 +17,7 @@ import {
   type Dispatch,
   type SetStateAction,
 } from "react";
-import { useImmer, type Updater } from "use-immer";
+import { type Updater } from "use-immer";
 import type { DateArr, ImmerContestData } from "@/types/contestData";
 import dayjs from "dayjs";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -52,23 +52,9 @@ const ConfigPanel: FC<{
   const { modal, message } = App.useApp();
   const formRef = useRef<HTMLFormElement>(null);
   const [width, setWidth] = useState(220);
-  const [images, updateImages] = useImmer<
-    {
-      name: string;
-      url: string;
-      editMode: boolean;
-    }[]
-  >([]);
-  const imagesRef = useRef(images);
-
-  useEffect(() => {
-    imagesRef.current = images;
-  }, [images]);
-  useEffect(
-    () => () => imagesRef.current.forEach((x) => URL.revokeObjectURL(x.url)),
-    [],
+  const [imageEditModeId, setImageEditModeId] = useState<number | undefined>(
+    undefined
   );
-
   useEffect(() => {
     if (!formRef.current) return;
     const form = formRef.current;
@@ -98,7 +84,7 @@ const ConfigPanel: FC<{
   }
   function updateLang(
     index: number,
-    cb: (x: ImmerContestData["support_languages"][number]) => void,
+    cb: (x: ImmerContestData["support_languages"][number]) => void
   ) {
     updateContestData((x) => {
       cb(x.support_languages[index]);
@@ -106,16 +92,24 @@ const ConfigPanel: FC<{
   }
   function updateProblemData(
     index: number,
-    cb: (x: ImmerContestData["problems"][number]) => void,
+    cb: (x: ImmerContestData["problems"][number]) => void
   ) {
     updateContestData((x) => {
       cb(x.problems[index]);
     });
   }
+  function updateImages(
+    index: number,
+    cb: (x: ImmerContestData["images"][number]) => void
+  ) {
+    updateContestData((x) => {
+      cb(x.images[index]);
+    });
+  }
   const removeProblem = removeProblemCallback(
     modal,
     setPanel,
-    updateContestData,
+    updateContestData
   );
   return (
     <form className="contest-editor-config" ref={formRef}>
@@ -277,7 +271,7 @@ const ConfigPanel: FC<{
                     onClick={() =>
                       updateContestData((x) => {
                         const i = x.support_languages.findIndex(
-                          (v) => v.key === lang.key,
+                          (v) => v.key === lang.key
                         );
                         if (i === -1)
                           throw new Error("Target language not found");
@@ -305,7 +299,7 @@ const ConfigPanel: FC<{
                 for (const p of x.problems)
                   if (!(newLang.name in p.submit_filename))
                     p.submit_filename.push(
-                      p.name + `.lang${x.support_languages.length + 1}`,
+                      p.name + `.lang${x.support_languages.length + 1}`
                     );
                 x.support_languages.push(newLang);
               })
@@ -386,7 +380,7 @@ const ConfigPanel: FC<{
                     onChange={(e) =>
                       updateProblemData(
                         index,
-                        (x) => (x.title = e.target.value),
+                        (x) => (x.title = e.target.value)
                       )
                     }
                   />
@@ -412,7 +406,7 @@ const ConfigPanel: FC<{
                       onChange={(e) =>
                         updateProblemData(
                           index,
-                          (x) => (x.dir = e.target.value),
+                          (x) => (x.dir = e.target.value)
                         )
                       }
                       className="contest-editor-config-monoinput"
@@ -426,7 +420,7 @@ const ConfigPanel: FC<{
                       onChange={(e) =>
                         updateProblemData(
                           index,
-                          (x) => (x.exec = e.target.value),
+                          (x) => (x.exec = e.target.value)
                         )
                       }
                       className="contest-editor-config-monoinput"
@@ -444,7 +438,7 @@ const ConfigPanel: FC<{
                       onChange={(e) =>
                         updateProblemData(
                           index,
-                          (x) => (x.input = e.target.value),
+                          (x) => (x.input = e.target.value)
                         )
                       }
                       className="contest-editor-config-monoinput"
@@ -458,7 +452,7 @@ const ConfigPanel: FC<{
                       onChange={(e) =>
                         updateProblemData(
                           index,
-                          (x) => (x.output = e.target.value),
+                          (x) => (x.output = e.target.value)
                         )
                       }
                       className="contest-editor-config-monoinput"
@@ -475,7 +469,7 @@ const ConfigPanel: FC<{
                     onChange={(e) =>
                       updateProblemData(
                         index,
-                        (x) => (x.time_limit = e.target.value),
+                        (x) => (x.time_limit = e.target.value)
                       )
                     }
                   />
@@ -488,7 +482,7 @@ const ConfigPanel: FC<{
                     onChange={(e) =>
                       updateProblemData(
                         index,
-                        (x) => (x.memory_limit = e.target.value),
+                        (x) => (x.memory_limit = e.target.value)
                       )
                     }
                   />
@@ -503,7 +497,7 @@ const ConfigPanel: FC<{
                     onChange={(e) =>
                       updateProblemData(
                         index,
-                        (x) => (x.testcase = e.target.value),
+                        (x) => (x.testcase = e.target.value)
                       )
                     }
                   />
@@ -517,7 +511,7 @@ const ConfigPanel: FC<{
                       onChange={(e) =>
                         updateProblemData(
                           index,
-                          (x) => (x.point_equal = e.target.value),
+                          (x) => (x.point_equal = e.target.value)
                         )
                       }
                     />
@@ -532,7 +526,7 @@ const ConfigPanel: FC<{
                       onChange={(e) =>
                         updateProblemData(
                           index,
-                          (x) => (x.pretestcase = e.target.value),
+                          (x) => (x.pretestcase = e.target.value)
                         )
                       }
                     />
@@ -551,7 +545,7 @@ const ConfigPanel: FC<{
                       onChange={(e) =>
                         updateProblemData(
                           index,
-                          (x) => (x.submit_filename[findex] = e.target.value),
+                          (x) => (x.submit_filename[findex] = e.target.value)
                         )
                       }
                       className="contest-editor-config-monoinput"
@@ -577,24 +571,20 @@ const ConfigPanel: FC<{
       <div className="contest-editor-config-label contest-editor-config-image">
         <div>本地图片</div>
         <div>
-          {images.map((img, index) => (
+          {contestData.images.map((img, index) => (
             <Card
               key={img.url}
               classNames={{ body: "contest-editor-config-image-card" }}
             >
               <Image src={img.url} alt={img.name} height={150} />
               <div>
-                {!img.editMode ? (
+                {imageEditModeId !== index ? (
                   <>
                     <div>{img.name}</div>
                     <Button
                       type="text"
                       icon={<FontAwesomeIcon icon={faPenToSquare} />}
-                      onClick={() =>
-                        updateImages((x) => {
-                          x[index].editMode = true;
-                        })
-                      }
+                      onClick={() => setImageEditModeId(index)}
                     />
                   </>
                 ) : (
@@ -603,15 +593,11 @@ const ConfigPanel: FC<{
                     value={img.name}
                     autoFocus
                     onChange={(e) =>
-                      updateImages((x) => {
-                        x[index].name = e.target.value;
+                      updateImages(index, (x) => {
+                        x.name = e.target.value;
                       })
                     }
-                    onBlur={() =>
-                      updateImages((x) => {
-                        x[index].editMode = false;
-                      })
-                    }
+                    onBlur={() => setImageEditModeId(undefined)}
                   />
                 )}
               </div>
@@ -628,9 +614,9 @@ const ConfigPanel: FC<{
                           console.error("Error when copy.", e);
                           message.error(
                             "复制失败：" +
-                              (e instanceof Error ? e.message : String(e)),
+                              (e instanceof Error ? e.message : String(e))
                           );
-                        },
+                        }
                       )
                   }
                 />
@@ -638,8 +624,8 @@ const ConfigPanel: FC<{
                   type="text"
                   icon={<FontAwesomeIcon icon={faTrashCan} />}
                   onClick={() =>
-                    updateImages((imgs) => {
-                      imgs.splice(index, 1);
+                    updateContestData((x) => {
+                      x.images.splice(index, 1);
                     })
                   }
                 />
@@ -666,11 +652,10 @@ const ConfigPanel: FC<{
               console.log(options);
               const file = options.file;
               if (!(file instanceof File)) throw new Error("Invalid file");
-              updateImages((imgs) => {
-                imgs.push({
+              updateContestData((x) => {
+                x.images.push({
                   name: file.name,
                   url: URL.createObjectURL(file),
-                  editMode: false,
                 });
               });
             }}

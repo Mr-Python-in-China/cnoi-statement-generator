@@ -1,4 +1,4 @@
-import { type FC, useEffect, useState } from "react";
+import { type FC, useEffect, useRef, useState } from "react";
 import { useImmer } from "use-immer";
 import type { ImmerContestData } from "@/types/contestData";
 import exampleStatements from "./exampleStatements";
@@ -17,10 +17,18 @@ import { compileToPdf, typstInitPromise } from "@/compiler";
 
 const ContestEditor: FC = () => {
   const [contestData, updateContestData] = useImmer<ImmerContestData>(
-    toImmerContestData(exampleStatements["SupportedGrammer"]),
+    toImmerContestData(exampleStatements["SupportedGrammer"])
   );
   const [panel, setPanel] = useState("config");
   const [exportDisabled, setExportDisabled] = useState(true);
+  const imgsUrlRef = useRef<string[]>(contestData.images.map((img) => img.url));
+  useEffect(() => {
+    imgsUrlRef.current = contestData.images.map((img) => img.url);
+  }, [contestData.images]);
+  useEffect(
+    () => () => imgsUrlRef.current.forEach((x) => URL.revokeObjectURL(x)),
+    []
+  );
   const { modal, notification } = App.useApp();
   const items: TabsProps["items"] = [
     {
@@ -58,7 +66,7 @@ const ContestEditor: FC = () => {
   const removeProblem = removeProblemCallback(
     modal,
     setPanel,
-    updateContestData,
+    updateContestData
   );
   return (
     <div className="contest-editor">
