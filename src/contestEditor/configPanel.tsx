@@ -620,16 +620,18 @@ const ConfigPanel: FC<{
                   type="text"
                   icon={<FontAwesomeIcon icon={faMarkdown} />}
                   onClick={() =>
-                    navigator.clipboard.writeText(img.url).then(
-                      () => message.success("复制成功"),
-                      (e) => {
-                        console.error("Error when copy.", e);
-                        message.error(
-                          "复制失败：" +
-                            (e instanceof Error ? e.message : String(e)),
-                        );
-                      },
-                    )
+                    navigator.clipboard
+                      .writeText(`![${img.name}](${img.url})`)
+                      .then(
+                        () => message.success("复制成功"),
+                        (e) => {
+                          console.error("Error when copy.", e);
+                          message.error(
+                            "复制失败：" +
+                              (e instanceof Error ? e.message : String(e)),
+                          );
+                        },
+                      )
                   }
                 />
                 <Button
