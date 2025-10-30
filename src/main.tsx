@@ -15,5 +15,10 @@ createRoot(document.getElementById("root")!).render(
         </TypstInitStatusProvider>
       </AntApp>
     </ConfigProvider>
-  </StrictMode>,
+  </StrictMode>
 );
+
+if (import.meta.env.MODE !== "development")
+  window.addEventListener("beforeunload", (e) => {
+    e.preventDefault();
+  });
