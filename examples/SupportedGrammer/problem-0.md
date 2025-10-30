@@ -38,6 +38,10 @@ This is `inline code`
 2. item 2
 3. item 3
 
+- item 1
+
+- item 2
+
 [NOI website](https://noi.cn/)
 
 ![1.jpg](https://private-static.mrpython.top/cnoi-gen-test-img_324e0508.jpg)

@@ -42,7 +42,7 @@ export function initContext(): CompilerContext {
 
 export function collectDefinitions(
   tree: mdast.Root,
-  { definitionById, footnoteById }: CompilerContext,
+  { definitionById, footnoteById }: CompilerContext
 ) {
   // Collect definitions and footnote definitions
   visit(tree, (node) => {
@@ -60,7 +60,7 @@ export function collectDefinitions(
 // Revert reference nodes to plain text
 function revert(
   node: Extract<mdast.Nodes, mdast.Reference>,
-  ctx: CompilerContext,
+  ctx: CompilerContext
 ) {
   const { data } = ctx;
   let suffix = '#"]';
@@ -75,7 +75,7 @@ function revert(
       '#"!["#"',
       node.alt ? escapeTypstString(node.alt) : "",
       '"',
-      suffix,
+      suffix
     );
     return;
   }
@@ -140,10 +140,10 @@ export const handlers = {
             ? "txt"
             : node.lang === "markdown"
               ? "md"
-              : node.lang,
+              : node.lang
       )}", "`,
       escapeTypstString(node.value),
-      '")\n',
+      '")\n'
     );
   },
   inlineCode: (node, ctx) => {
@@ -151,7 +151,7 @@ export const handlers = {
     data.push(
       `#raw(block: false, lang: "txt", "`,
       escapeTypstString(node.value),
-      '")',
+      '")'
     );
   },
   list: (node, ctx) => {
@@ -163,17 +163,6 @@ export const handlers = {
       data.push("#list(");
     }
     data.push("\n");
-    let loose = node.spread ?? false;
-    if (!loose)
-      for (const item of node.children)
-        if (
-          item.spread ||
-          (typeof item.spread !== "boolean" && item.children.length > 1)
-        ) {
-          loose = true;
-          break;
-        }
-    if (loose) for (const item of node.children) item.spread = true;
     for (const item of node.children) {
       data.push("[");
       parseContent(item, ctx);
@@ -183,7 +172,7 @@ export const handlers = {
   },
   listItem: (node, ctx) => {
     for (const item of node.children) {
-      if (item.type === "paragraph" && !node.spread)
+      if (item.type === "paragraph")
         for (const child of item.children) parseContent(child, ctx);
       else parseContent(item, ctx);
     }
@@ -288,7 +277,7 @@ export const handlers = {
       data.push(
         '#footnote(label("',
         FOOTNOTE_ID_PREFIX + escapeTypstString(node.identifier),
-        '"))',
+        '"))'
       );
     } else {
       data.push('#"[^', escapeTypstString(node.identifier), ']"');
@@ -300,7 +289,7 @@ export const handlers = {
     data.push(
       '#raw(block: false, lang: "html", "',
       escapeTypstString(node.value),
-      '")',
+      '")'
     );
   },
   yaml: () => {
@@ -309,7 +298,7 @@ export const handlers = {
 } as const satisfies {
   [K in keyof mdast.RootContentMap]: (
     node: mdast.RootContentMap[K],
-    ctx: CompilerContext,
+    ctx: CompilerContext
   ) => void;
 };
 

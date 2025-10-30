@@ -525,10 +525,8 @@ describe("Handlers", () => {
       );
       expect(ctx.data.join("")).toBe(
         `#enum(
-[#par[#"Item 1"]
-],
-[#par[#"Item 2"]
-],
+[#"Item 1"],
+[#"Item 2"],
 )
 `,
       );
@@ -567,10 +565,8 @@ describe("Handlers", () => {
       );
       expect(ctx.data.join("")).toBe(
         `#enum(
-[#par[#"Item 1"]
-],
-[#par[#"Item 2"]
-],
+[#"Item 1"],
+[#"Item 2"],
 )
 `,
       );
@@ -610,11 +606,8 @@ describe("Handlers", () => {
       );
       expect(ctx.data.join("")).toBe(
         `#enum(
-[#par[#"Item 1.1"]
-#par[#"Item 1.2"]
-],
-[#par[#"Item 2"]
-],
+[#"Item 1.1"#"Item 1.2"],
+[#"Item 2"],
 )
 `,
       );
