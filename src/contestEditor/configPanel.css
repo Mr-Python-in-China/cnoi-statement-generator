@@ -86,6 +86,7 @@
     display: grid;
     grid-template-columns: repeat(auto-fit, 150px);
     gap: 8px;
+    margin-left: 8px;
     > * {
       height: 216px;
     }
