@@ -1,0 +1,120 @@
+.contest-editor-config {
+  margin: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  label,
+  .contest-editor-config-label {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  > .contest-editor-config-languages {
+    > :nth-child(2) {
+      margin-left: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      > div {
+        display: flex;
+        > :nth-child(1) {
+          width: 64px;
+          margin-right: 8px;
+        }
+        > :nth-child(2) {
+          flex: 1;
+        }
+      }
+    }
+  }
+  > .contest-editor-config-switches {
+    display: flex;
+    &.contest-editor-config-switches-narrow {
+      flex-direction: column;
+      gap: 8px;
+      > label {
+        flex: unset;
+      }
+    }
+    > label {
+      flex: 1;
+      max-width: 200px;
+    }
+  }
+  .contest-editor-config-problem > :nth-child(2) {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    > * {
+      margin-left: 8px;
+    }
+    .contest-editor-config-problem {
+      .ant-card-head-title {
+        font-weight: normal;
+      }
+      .ant-card-body {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        > *:not(.contest-editor-config-problem-languages) {
+          display: flex;
+          gap: 8px;
+          > * {
+            flex: 1;
+          }
+        }
+        > .contest-editor-config-problem-languages {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+          row-gap: 8px;
+          column-gap: 8px;
+        }
+      }
+    }
+    .contest-editor-config-problem.contest-editor-config-problem-narrow {
+      .ant-card-body {
+        > *:not(.contest-editor-config-problem-languages) {
+          flex-direction: column;
+          > * {
+            flex: unset;
+          }
+        }
+      }
+    }
+  }
+  .contest-editor-config-image > :nth-child(2) {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, 150px);
+    gap: 8px;
+    > * {
+      height: 216px;
+    }
+    .contest-editor-config-image-card {
+      height: 100%;
+      padding: unset;
+      display: flex;
+      flex-direction: column;
+      > :nth-child(2) {
+        margin-left: 4px;
+        margin-right: 4px;
+        flex: 1;
+        display: flex;
+        align-items: center;
+        > :nth-child(1) {
+          white-space: nowrap;
+          text-overflow: ellipsis;
+          overflow: hidden;
+        }
+      }
+      > :nth-child(3) {
+        margin-left: auto;
+      }
+    }
+  }
+  .contest-editor-config-monoinput {
+    font-family: monospace;
+  }
+  .contest-editor-config-upload-hint {
+    color: var(--ant-color-text-description);
+  }
+}

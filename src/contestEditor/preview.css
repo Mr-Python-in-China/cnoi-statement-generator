@@ -1,0 +1,27 @@
+.contest-editor-preview {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  > img {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 200px;
+  }
+}
+.contest-editor-preview-error {
+  margin: 8px;
+  width: calc(100% - calc(8px * 2));
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+.contest-editor-preview-container {
+  overflow: auto;
+  height: 100%;
+  > svg {
+    width: 100%;
+    height: auto;
+  }
+}

@@ -1,0 +1,18 @@
+.contest-editor-body {
+  margin-top: -16px;
+  flex: 1;
+  height: 100%;
+  min-height: 0;
+  border: var(--ant-line-width) var(--ant-line-type)
+    var(--ant-color-border-secondary);
+  border-top: none;
+  border-bottom-left-radius: 12px;
+  border-bottom-right-radius: 12px;
+  overflow-x: hidden;
+  > .ant-splitter {
+    height: 100%;
+    > .ant-splitter-panel {
+      overflow-x: hidden;
+    }
+  }
+}
