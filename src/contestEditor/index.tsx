@@ -2,7 +2,7 @@ import { type FC, useEffect, useRef, useState } from "react";
 import { useImmer } from "use-immer";
 import type { ImmerContestData } from "@/types/contestData";
 import exampleStatements from "./exampleStatements";
-import { App, Button, Tabs, type TabsProps } from "antd";
+import { App, Button, Tabs, type TabsProps, Space } from "antd";
 import Body from "./body";
 import {
   newProblem,
@@ -10,15 +10,32 @@ import {
   toImmerContestData,
 } from "@/utils/contestDataUtils";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faFileArrowDown } from "@fortawesome/free-solid-svg-icons";
+import {
+  faFileArrowDown,
+  faFileImport,
+  faFileExport,
+  faRotateLeft,
+} from "@fortawesome/free-solid-svg-icons";
 
 import "./index.css";
 import { compileToPdf, typstInitPromise } from "@/compiler";
+import {
+  saveToLocalStorage,
+  loadFromLocalStorage,
+  clearLocalStorage,
+  exportToFile,
+  importFromFile,
+} from "@/utils/storageUtils";
 
 const ContestEditor: FC = () => {
-  const [contestData, updateContestData] = useImmer<ImmerContestData>(
-    toImmerContestData(exampleStatements["SupportedGrammer"])
-  );
+  const [contestData, updateContestData] = useImmer<ImmerContestData>(() => {
+    // Try to load from localStorage on initialization
+    const stored = loadFromLocalStorage();
+    if (stored) {
+      return toImmerContestData(stored);
+    }
+    return toImmerContestData(exampleStatements["SupportedGrammer"]);
+  });
   const [panel, setPanel] = useState("config");
   const [exportDisabled, setExportDisabled] = useState(true);
   const imgsUrlRef = useRef<string[]>(contestData.images.map((img) => img.url));
@@ -29,7 +46,17 @@ const ContestEditor: FC = () => {
     () => () => imgsUrlRef.current.forEach((x) => URL.revokeObjectURL(x)),
     []
   );
-  const { modal, notification } = App.useApp();
+
+  // Auto-save to localStorage whenever contestData changes
+  useEffect(() => {
+    try {
+      saveToLocalStorage(contestData);
+    } catch (error) {
+      console.error("Failed to auto-save:", error);
+    }
+  }, [contestData]);
+
+  const { modal, notification, message } = App.useApp();
   const items: TabsProps["items"] = [
     {
       key: "config",
@@ -89,39 +116,114 @@ const ContestEditor: FC = () => {
         }}
         tabBarExtraContent={{
           right: (
-            <Button
-              type="primary"
-              icon={<FontAwesomeIcon icon={faFileArrowDown} />}
-              disabled={exportDisabled}
-              onClick={async () => {
-                if (exportDisabled) return;
-                setExportDisabled(true);
-                try {
-                  const data = await compileToPdf(contestData);
-                  if (!data) throw new Error("编译器未返回任何数据");
-                  const blob = new Blob([data.slice().buffer], {
-                    type: "application/pdf",
+            <Space>
+              <Button
+                type="default"
+                icon={<FontAwesomeIcon icon={faRotateLeft} />}
+                onClick={async () => {
+                  const confirmed = await modal.confirm({
+                    title: "确认重置配置",
+                    content: "这将清除所有当前的编辑，恢复为初始配置。此操作不可撤销。",
                   });
-                  const url = URL.createObjectURL(blob);
-                  const a = document.createElement("a");
-                  a.href = url;
-                  a.download = `${contestData.title || "statement"}${
-                    contestData.dayname ? `-${contestData.dayname}` : ""
-                  }.pdf`;
-                  a.click();
-                  URL.revokeObjectURL(url);
-                } catch (e) {
-                  console.log("Error when exporting PDF.", e);
-                  notification.error({
-                    message: "导出失败",
-                    description: (
-                      <>
-                        <div>{e instanceof Error ? e.message : String(e)}</div>
-                        <div>
-                          如果你认为这是网站的错误，请{" "}
-                          <a
-                            href="https://github.com/Mr-Python-in-China/cnoi-statement-generator/issues"
-                            target="_blank"
+                  if (confirmed) {
+                    clearLocalStorage();
+                    const initialData = toImmerContestData(
+                      exampleStatements["SupportedGrammer"]
+                    );
+                    updateContestData(() => initialData);
+                    setPanel("config");
+                    message.success("配置已重置");
+                  }
+                }}
+                title="重置配置"
+              >
+                重置
+              </Button>
+              <Button
+                type="default"
+                icon={<FontAwesomeIcon icon={faFileImport} />}
+                onClick={() => {
+                  const input = document.createElement("input");
+                  input.type = "file";
+                  input.accept = "application/json,.json";
+                  input.onchange = async (e) => {
+                    const file = (e.target as HTMLInputElement).files?.[0];
+                    if (!file) return;
+                    try {
+                      const data = await importFromFile(file);
+                      updateContestData(() => toImmerContestData(data));
+                      setPanel("config");
+                      message.success("配置导入成功");
+                    } catch (error) {
+                      notification.error({
+                        message: "导入失败",
+                        description:
+                          error instanceof Error
+                            ? error.message
+                            : String(error),
+                        duration: 5,
+                      });
+                    }
+                  };
+                  input.click();
+                }}
+                title="导入配置"
+              >
+                导入
+              </Button>
+              <Button
+                type="default"
+                icon={<FontAwesomeIcon icon={faFileExport} />}
+                onClick={() => {
+                  try {
+                    exportToFile(contestData);
+                    message.success("配置导出成功");
+                  } catch (error) {
+                    notification.error({
+                      message: "导出失败",
+                      description:
+                        error instanceof Error ? error.message : String(error),
+                      duration: 5,
+                    });
+                  }
+                }}
+                title="导出配置"
+              >
+                导出
+              </Button>
+              <Button
+                type="primary"
+                icon={<FontAwesomeIcon icon={faFileArrowDown} />}
+                disabled={exportDisabled}
+                onClick={async () => {
+                  if (exportDisabled) return;
+                  setExportDisabled(true);
+                  try {
+                    const data = await compileToPdf(contestData);
+                    if (!data) throw new Error("编译器未返回任何数据");
+                    const blob = new Blob([data.slice().buffer], {
+                      type: "application/pdf",
+                    });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement("a");
+                    a.href = url;
+                    a.download = `${contestData.title || "statement"}${
+                      contestData.dayname ? `-${contestData.dayname}` : ""
+                    }.pdf`;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                  } catch (e) {
+                    console.log("Error when exporting PDF.", e);
+                    notification.error({
+                      message: "导出失败",
+                      description: (
+                        <>
+                          <div>{e instanceof Error ? e.message : String(e)}</div>
+                          <div>
+                            如果你认为这是网站的错误，请{" "}
+                            <a
+                              href="https://github.com/Mr-Python-in-China/cnoi-statement-generator/issues"
+                              target="_blank"
                           >
                             提交 issue
                           </a>
@@ -139,6 +241,7 @@ const ContestEditor: FC = () => {
             >
               导出 PDF
             </Button>
+          </Space>
           ),
         }}
       />
