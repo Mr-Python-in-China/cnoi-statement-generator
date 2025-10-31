@@ -80,7 +80,7 @@ export async function saveConfigToDB(
   // Convert blob URLs back to UUIDs for storage
   const storedData: StoredContestData = {
     ...data,
-    images: Array.from(imageMapping.entries()).map(([uuid, url]) => {
+    images: Array.from(imageMapping.entries()).map(([uuid]) => {
       const img = data.images?.find((i: { uuid: string; name: string; url?: string }) => i.uuid === uuid);
       return {
         uuid,

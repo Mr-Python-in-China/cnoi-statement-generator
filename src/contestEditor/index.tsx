@@ -20,7 +20,7 @@ import {
 import debounce from "lodash.debounce";
 
 import "./index.css";
-import { compileToPdf, typstInitPromise } from "@/compiler";
+import { compileToPdf, typstInitPromise, registerAssetBlobs } from "@/compiler";
 import {
   saveConfigToDB,
   loadConfigFromDB,
@@ -41,6 +41,11 @@ const ContestEditor: FC = () => {
   const [contestData, updateContestData] = useImmer<ImmerContestData>(() => {
     return toImmerContestData(exampleStatements["SupportedGrammer"]);
   });
+
+  // Register asset blobs with compiler whenever they change
+  useEffect(() => {
+    registerAssetBlobs(imageBlobsRef.current);
+  }, [contestData.images]);
 
   // Load data from IndexedDB on mount
   useEffect(() => {

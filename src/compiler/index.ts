@@ -355,16 +355,51 @@ export const compileToSvgDebounced = (() => {
   };
 })();
 
-listenMain<FetchAssetMessage>("fetchAsset", worker, (url) =>
-  axiosInstance
-    .get<ArrayBuffer>(url)
-    .then((x) => x.data)
-    .catch((e) => {
-      if (isAxiosError(e)) {
-        console.error("Failed to download assets.", e);
-        throw new Error(
-          "下载资源失败。这或许是因为浏览器的跨域限制。你可以尝试手动上传图片。",
-        );
-      } else throw e;
-    }),
-);
+// Global mapping for asset:// protocol - maps UUID to blob
+const assetBlobMapping = new Map<string, Blob>();
+
+/**
+ * Register image blobs for asset:// protocol resolution
+ * Called from ContestEditor when images are loaded/updated
+ */
+export function registerAssetBlobs(uuidToBlobMap: Map<string, Blob>): void {
+  assetBlobMapping.clear();
+  for (const [uuid, blob] of uuidToBlobMap.entries()) {
+    assetBlobMapping.set(uuid, blob);
+  }
+}
+
+/**
+ * Fetch asset with support for asset:// protocol
+ * asset://uuid -> resolve to blob from assetBlobMapping
+ * other URLs -> fetch via axios
+ */
+async function fetchAsset(url: string): Promise<ArrayBuffer> {
+  // Handle asset:// protocol
+  if (url.startsWith("asset://")) {
+    const uuid = url.substring(8); // Remove "asset://" prefix
+    const blob = assetBlobMapping.get(uuid);
+    
+    if (!blob) {
+      throw new Error(`Asset not found: ${uuid}`);
+    }
+    
+    return await blob.arrayBuffer();
+  }
+  
+  // Handle regular URLs
+  try {
+    const response = await axiosInstance.get<ArrayBuffer>(url);
+    return response.data;
+  } catch (e) {
+    if (isAxiosError(e)) {
+      console.error("Failed to download assets.", e);
+      throw new Error(
+        "下载资源失败。这或许是因为浏览器的跨域限制。你可以尝试手动上传图片。",
+      );
+    }
+    throw e;
+  }
+}
+
+listenMain<FetchAssetMessage>("fetchAsset", worker, fetchAsset);
