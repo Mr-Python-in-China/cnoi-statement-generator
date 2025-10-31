@@ -167,7 +167,7 @@
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["uuid", "name"],
+        "required": ["uuid", "name", "base64", "mimeType"],
         "properties": {
           "uuid": {
             "type": "string",
@@ -179,7 +179,7 @@
           },
           "base64": {
             "type": "string",
-            "description": "Base64-encoded image data (for export/import)"
+            "description": "Base64-encoded image data"
           },
           "mimeType": {
             "type": "string",
