@@ -167,15 +167,23 @@
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["name", "url"],
+        "required": ["uuid", "name"],
         "properties": {
+          "uuid": {
+            "type": "string",
+            "description": "Unique identifier for the image"
+          },
           "name": {
             "type": "string",
             "description": "Image name"
           },
-          "url": {
+          "base64": {
             "type": "string",
-            "description": "Image URL (blob URL or data URL)"
+            "description": "Base64-encoded image data (for export/import)"
+          },
+          "mimeType": {
+            "type": "string",
+            "description": "MIME type of the image (e.g., image/png, image/jpeg)"
           }
         }
       }
