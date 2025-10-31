@@ -9,9 +9,9 @@ const validateSchema = ajv.compile(configSchema);
 
 /**
  * Serialize contest data for storage
- * Note: Images with blob URLs will not persist correctly and will need to be re-uploaded
+ * Note: Images with blob URLs are excluded as they will not persist correctly across sessions
  */
-export function serializeContestData(
+export function serializeContestDataForStorage(
   data: ContestData<{ withMarkdown: true }>
 ): string {
   // Create a clean copy without internal keys
@@ -51,11 +51,21 @@ export function serializeContestData(
 
 /**
  * Deserialize contest data from storage
+ * @throws Error if JSON parsing fails or validation fails
  */
 export function deserializeContestData(
   json: string
 ): ContestData<{ withMarkdown: true }> {
   const data = JSON.parse(json);
+  
+  // Validate before type assertion
+  const validation = validateContestData(data);
+  if (!validation.valid) {
+    throw new Error(
+      "数据验证失败：" + (validation.errors?.join(", ") || "未知错误")
+    );
+  }
+  
   return data as ContestData<{ withMarkdown: true }>;
 }
 
@@ -82,7 +92,7 @@ export function saveToLocalStorage(
   data: ContestData<{ withMarkdown: true }>
 ): void {
   try {
-    const serialized = serializeContestData(data);
+    const serialized = serializeContestDataForStorage(data);
     localStorage.setItem(STORAGE_KEY, serialized);
   } catch (error) {
     console.error("Failed to save to localStorage:", error);
@@ -101,11 +111,6 @@ export function loadFromLocalStorage(): ContestData<{
     if (!stored) return null;
 
     const data = deserializeContestData(stored);
-    const validation = validateContestData(data);
-    if (!validation.valid) {
-      console.error("Stored data validation failed:", validation.errors);
-      return null;
-    }
     return data;
   } catch (error) {
     console.error("Failed to load from localStorage:", error);
@@ -127,7 +132,7 @@ export function exportToFile(
   data: ContestData<{ withMarkdown: true }>,
   filename?: string
 ): void {
-  const json = serializeContestData(data);
+  const json = serializeContestDataForStorage(data);
   const blob = new Blob([json], { type: "application/json" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");

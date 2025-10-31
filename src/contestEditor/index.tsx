@@ -1,4 +1,4 @@
-import { type FC, useEffect, useRef, useState } from "react";
+import { type FC, useEffect, useRef, useState, useMemo } from "react";
 import { useImmer } from "use-immer";
 import type { ImmerContestData } from "@/types/contestData";
 import exampleStatements from "./exampleStatements";
@@ -16,6 +16,7 @@ import {
   faFileExport,
   faRotateLeft,
 } from "@fortawesome/free-solid-svg-icons";
+import debounce from "lodash.debounce";
 
 import "./index.css";
 import { compileToPdf, typstInitPromise } from "@/compiler";
@@ -47,14 +48,23 @@ const ContestEditor: FC = () => {
     []
   );
 
-  // Auto-save to localStorage whenever contestData changes
+  // Create a debounced save function (saves at most once per 500ms)
+  const debouncedSave = useMemo(
+    () =>
+      debounce((data: ImmerContestData) => {
+        try {
+          saveToLocalStorage(data);
+        } catch (error) {
+          console.error("Failed to auto-save:", error);
+        }
+      }, 500),
+    []
+  );
+
+  // Auto-save to localStorage whenever contestData changes (debounced)
   useEffect(() => {
-    try {
-      saveToLocalStorage(contestData);
-    } catch (error) {
-      console.error("Failed to auto-save:", error);
-    }
-  }, [contestData]);
+    debouncedSave(contestData);
+  }, [contestData, debouncedSave]);
 
   const { modal, notification, message } = App.useApp();
   const items: TabsProps["items"] = [
