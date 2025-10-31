@@ -1,17 +1,19 @@
 import axiosInstance from "@/utils/axiosInstance";
 import type { PackageSpec } from "@myriaddreamin/typst.ts/internal.types";
-import { send } from "promise-worker-ts";
-import {
-  type CompileTypstMessage,
-  type RenderTypstMessage,
-  type InitMessage,
-} from "./typst.worker";
+import { listenMain, send } from "@mr.python/promise-worker-ts";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import remarkParse from "remark-parse";
 import { unified } from "unified";
 import remarkTypst from "./remarkTypst";
+import { isAxiosError } from "axios";
 import type ContestData from "@/types/contestData";
+import {
+  type CompileTypstMessage,
+  type RenderTypstMessage,
+  type InitMessage,
+  type FetchAssetMessage,
+} from "./typst.worker";
 
 import fontUrlEntries from "virtual:typst-font-url-entries";
 import TypstCompilerWasmUrl from "@myriaddreamin/typst-ts-web-compiler/pkg/typst_ts_web_compiler_bg.wasm?url";
@@ -352,3 +354,17 @@ export const compileToSvgDebounced = (() => {
     return nextDeferred.promise;
   };
 })();
+
+listenMain<FetchAssetMessage>("fetchAsset", worker, (url) =>
+  axiosInstance
+    .get<ArrayBuffer>(url)
+    .then((x) => x.data)
+    .catch((e) => {
+      if (isAxiosError(e)) {
+        console.error("Failed to download assets.", e);
+        throw new Error(
+          "下载资源失败。这或许是因为浏览器的跨域限制。你可以尝试手动上传图片。",
+        );
+      } else throw e;
+    }),
+);

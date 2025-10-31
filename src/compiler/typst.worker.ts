@@ -12,9 +12,8 @@ import {
   withAccessModel,
   withPackageRegistry,
 } from "@myriaddreamin/typst.ts/options.init";
-import { listen } from "promise-worker-ts";
+import { listen, sendToMain } from "@mr.python/promise-worker-ts";
 import { Mutex } from "async-mutex";
-import axiosInstance from "@/utils/axiosInstance";
 import type ContestData from "../types/contestData";
 
 import TypstDocMain from "typst-template/main.typ?raw";
@@ -71,19 +70,13 @@ async function typstPrepare(
   await Promise.all(
     assets.map(async ([filename, assetUrl]) => {
       const cached = shadowCacheTime.get(filename);
-      if (cached === undefined) {
-        const res = await axiosInstance
-          .get<ArrayBuffer>(assetUrl)
-          .catch((e) => {
-            if (isAxiosError(e)) {
-              console.error("Failed to download assets.", e);
-              throw new Error(
-                "下载资源失败。这或许是因为浏览器的跨域限制。你可以尝试手动上传图片。",
-              );
-            } else throw e;
-          });
-        $typst.mapShadow("/" + filename, new Uint8Array(res.data));
-      }
+      if (cached === undefined)
+        $typst.mapShadow(
+          "/" + filename,
+          new Uint8Array(
+            await sendToMain<FetchAssetMessage>("fetchAsset", assetUrl),
+          ),
+        );
       shadowCacheTime.set(filename, -1);
     }),
   );
@@ -118,8 +111,7 @@ listen<RenderTypstMessage>("renderTypst", async ([data, assets]) =>
   ),
 );
 
-import type { PromiseWorkerTagged } from "promise-worker-ts";
-import { isAxiosError } from "axios";
+import type { PromiseWorkerTagged } from "@mr.python/promise-worker-ts";
 export type InitMessage = PromiseWorkerTagged<
   "init",
   {
@@ -139,4 +131,9 @@ export type RenderTypstMessage = PromiseWorkerTagged<
   "renderTypst",
   [ContestData<{ withTypst: true }>, [string, string][]],
   string | undefined
+>;
+export type FetchAssetMessage = PromiseWorkerTagged<
+  "fetchAsset",
+  string,
+  ArrayBuffer
 >;
