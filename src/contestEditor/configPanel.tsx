@@ -17,6 +17,7 @@ import {
   type Dispatch,
   type SetStateAction,
 } from "react";
+import type React from "react";
 import { type Updater } from "use-immer";
 import type { DateArr, ImmerContestData } from "@/types/contestData";
 import dayjs from "dayjs";
@@ -32,6 +33,11 @@ import {
   faXmark,
 } from "@fortawesome/free-solid-svg-icons";
 import { newProblem, removeProblemCallback } from "@/utils/contestDataUtils";
+import {
+  generateUUID,
+  saveImageToDB,
+  deleteImageFromDB,
+} from "@/utils/indexedDBUtils";
 
 import "./configPanel.css";
 import { faMarkdown } from "@fortawesome/free-brands-svg-icons";
@@ -48,7 +54,17 @@ const ConfigPanel: FC<{
   contestData: ImmerContestData;
   updateContestData: Updater<ImmerContestData>;
   setPanel: Dispatch<SetStateAction<string>>;
-}> = ({ contestData, updateContestData, setPanel }) => {
+  imageMapping: Map<string, string>;
+  imageBlobsRef: React.MutableRefObject<Map<string, Blob>>;
+  setImageMapping: Dispatch<SetStateAction<Map<string, string>>>;
+}> = ({
+  contestData,
+  updateContestData,
+  setPanel,
+  imageMapping,
+  imageBlobsRef,
+  setImageMapping,
+}) => {
   const { modal, message } = App.useApp();
   const formRef = useRef<HTMLFormElement>(null);
   const [width, setWidth] = useState(220);
@@ -607,7 +623,7 @@ const ConfigPanel: FC<{
                   icon={<FontAwesomeIcon icon={faMarkdown} />}
                   onClick={() =>
                     navigator.clipboard
-                      .writeText(`![${img.name}](${img.url})`)
+                      .writeText(`![${img.name}](asset://${img.uuid})`)
                       .then(
                         () => message.success("复制成功"),
                         (e) => {
@@ -623,11 +639,27 @@ const ConfigPanel: FC<{
                 <Button
                   type="text"
                   icon={<FontAwesomeIcon icon={faTrashCan} />}
-                  onClick={() =>
+                  onClick={async () => {
+                    const imageToDelete = contestData.images[index];
+                    // Delete from IndexedDB
+                    await deleteImageFromDB(imageToDelete.uuid);
+                    // Revoke blob URL
+                    const blobUrl = imageMapping.get(imageToDelete.uuid);
+                    if (blobUrl) {
+                      URL.revokeObjectURL(blobUrl);
+                    }
+                    // Remove from mapping
+                    setImageMapping((prev) => {
+                      const newMap = new Map(prev);
+                      newMap.delete(imageToDelete.uuid);
+                      return newMap;
+                    });
+                    imageBlobsRef.current.delete(imageToDelete.uuid);
+                    // Remove from contest data
                     updateContestData((x) => {
                       x.images.splice(index, 1);
-                    })
-                  }
+                    });
+                  }}
                 />
               </div>
             </Card>
@@ -652,10 +684,29 @@ const ConfigPanel: FC<{
               console.log(options);
               const file = options.file;
               if (!(file instanceof File)) throw new Error("Invalid file");
+
+              // Generate UUID for the image
+              const uuid = generateUUID();
+
+              // Convert File to Blob
+              const blob = new Blob([file], { type: file.type });
+
+              // Create blob URL for display
+              const blobUrl = URL.createObjectURL(blob);
+
+              // Save to IndexedDB
+              await saveImageToDB(uuid, file.name, blob);
+
+              // Update mappings
+              setImageMapping((prev) => new Map(prev).set(uuid, blobUrl));
+              imageBlobsRef.current.set(uuid, blob);
+
+              // Update contest data
               updateContestData((x) => {
                 x.images.push({
+                  uuid,
                   name: file.name,
-                  url: URL.createObjectURL(file),
+                  url: blobUrl,
                 });
               });
             }}

@@ -7,6 +7,7 @@ import {
   type Dispatch,
   type SetStateAction,
 } from "react";
+import type React from "react";
 import { type Updater } from "use-immer";
 import Preview from "./preview";
 import { Splitter } from "antd";
@@ -20,7 +21,18 @@ const Body: FC<{
   updateContestData: Updater<ImmerContestData>;
   panel: string;
   setPanel: Dispatch<SetStateAction<string>>;
-}> = ({ panel, contestData, updateContestData, setPanel }) => {
+  imageMapping: Map<string, string>;
+  imageBlobsRef: React.MutableRefObject<Map<string, Blob>>;
+  setImageMapping: Dispatch<SetStateAction<Map<string, string>>>;
+}> = ({
+  panel,
+  contestData,
+  updateContestData,
+  setPanel,
+  imageMapping,
+  imageBlobsRef,
+  setImageMapping,
+}) => {
   const divRef = useRef<HTMLDivElement>(null);
   const [sizes, setSizes] = useState<number[] | undefined>(undefined);
 
@@ -58,7 +70,16 @@ const Body: FC<{
           size={sizes === undefined ? "50%" : sizes[0]}
         >
           {panel === "config" ? (
-            <ConfigPanel {...{ contestData, updateContestData, setPanel }} />
+            <ConfigPanel
+              {...{
+                contestData,
+                updateContestData,
+                setPanel,
+                imageMapping,
+                imageBlobsRef,
+                setImageMapping,
+              }}
+            />
           ) : (
             <MarkdownPanel
               {...(panel === "precaution"
