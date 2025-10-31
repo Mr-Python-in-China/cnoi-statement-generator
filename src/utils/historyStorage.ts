@@ -43,6 +43,7 @@ export function saveHistory(
     const dataToSave = {
       ...data,
       // Don't save image URLs as they're blob URLs and won't persist
+      // Note: When loading from history, users will need to re-upload images
       images: data.images.map((img) => ({
         name: img.name,
         url: "", // Clear blob URLs
