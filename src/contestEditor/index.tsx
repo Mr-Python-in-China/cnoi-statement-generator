@@ -17,7 +17,7 @@ import {
   faFileExport,
   faRotateLeft,
 } from "@fortawesome/free-solid-svg-icons";
-import debounce from "lodash.debounce";
+import { debounce } from "lodash";
 
 import "./index.css";
 import { compileToPdf, typstInitPromise, registerAssetBlobs } from "@/compiler";
@@ -190,7 +190,8 @@ const ContestEditor: FC = () => {
                 onClick={async () => {
                   const confirmed = await modal.confirm({
                     title: "确认重置配置",
-                    content: "这将清除所有当前的编辑，恢复为初始配置。此操作不可撤销。",
+                    content:
+                      "这将清除所有当前的编辑，恢复为初始配置。此操作不可撤销。",
                   });
                   if (confirmed) {
                     // Clear IndexedDB and revoke blob URLs
@@ -229,7 +230,9 @@ const ContestEditor: FC = () => {
                           const { data, images } = await importConfig(json);
 
                           // Clear old images
-                          imageMapping.forEach((url) => URL.revokeObjectURL(url));
+                          imageMapping.forEach((url) =>
+                            URL.revokeObjectURL(url)
+                          );
                           const newImageMapping = new Map<string, string>();
                           imageBlobsRef.current.clear();
 
@@ -239,7 +242,7 @@ const ContestEditor: FC = () => {
                             const url = URL.createObjectURL(blob);
                             newImageMapping.set(uuid, url);
                             imageBlobsRef.current.set(uuid, blob);
-                            
+
                             // Find image name
                             const imgData = (
                               data.images as Array<{
@@ -270,7 +273,9 @@ const ContestEditor: FC = () => {
 
                           updateContestData(() =>
                             toImmerContestData(
-                              dataWithUrls as ContestData<{ withMarkdown: true }>
+                              dataWithUrls as ContestData<{
+                                withMarkdown: true;
+                              }>
                             )
                           );
                           setPanel("config");
@@ -363,30 +368,32 @@ const ContestEditor: FC = () => {
                       message: "导出失败",
                       description: (
                         <>
-                          <div>{e instanceof Error ? e.message : String(e)}</div>
+                          <div>
+                            {e instanceof Error ? e.message : String(e)}
+                          </div>
                           <div>
                             如果你认为这是网站的错误，请{" "}
                             <a
                               href="https://github.com/Mr-Python-in-China/cnoi-statement-generator/issues"
                               target="_blank"
-                          >
-                            提交 issue
-                          </a>
-                          。
-                        </div>
-                      </>
-                    ),
-                    duration: 5,
-                    showProgress: true,
-                    pauseOnHover: true,
-                  });
-                }
-                setExportDisabled(false);
-              }}
-            >
-              导出 PDF
-            </Button>
-          </Space>
+                            >
+                              提交 issue
+                            </a>
+                            。
+                          </div>
+                        </>
+                      ),
+                      duration: 5,
+                      showProgress: true,
+                      pauseOnHover: true,
+                    });
+                  }
+                  setExportDisabled(false);
+                }}
+              >
+                导出 PDF
+              </Button>
+            </Space>
           ),
         }}
       />
