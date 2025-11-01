@@ -355,39 +355,40 @@ export const compileToSvgDebounced = (() => {
   };
 })();
 
-// Global mapping for asset:// protocol - maps UUID to blob
-const assetBlobMapping = new Map<string, Blob>();
+// Global mapping for asset:// protocol - maps UUID to blob URL
+const assetUrlMapping = new Map<string, string>();
 
 /**
- * Register image blobs for asset:// protocol resolution
+ * Register image blob URLs for asset:// protocol resolution
  * Called from ContestEditor when images are loaded/updated
  */
-export function registerAssetBlobs(uuidToBlobMap: Map<string, Blob>): void {
-  assetBlobMapping.clear();
-  for (const [uuid, blob] of uuidToBlobMap.entries()) {
-    assetBlobMapping.set(uuid, blob);
+export function registerAssetUrls(uuidToUrlMap: Map<string, string>): void {
+  assetUrlMapping.clear();
+  for (const [uuid, url] of uuidToUrlMap.entries()) {
+    assetUrlMapping.set(uuid, url);
   }
 }
 
 /**
  * Fetch asset with support for asset:// protocol
- * asset://uuid -> resolve to blob from assetBlobMapping
+ * asset://uuid -> map to blob URL and fetch via axios
  * other URLs -> fetch via axios
  */
 async function fetchAsset(url: string): Promise<ArrayBuffer> {
   // Handle asset:// protocol
   if (url.startsWith("asset://")) {
     const uuid = url.substring(8); // Remove "asset://" prefix
-    const blob = assetBlobMapping.get(uuid);
+    const blobUrl = assetUrlMapping.get(uuid);
     
-    if (!blob) {
+    if (!blobUrl) {
       throw new Error(`Asset not found: ${uuid}`);
     }
     
-    return await blob.arrayBuffer();
+    // Fetch the blob URL using axios
+    url = blobUrl;
   }
   
-  // Handle regular URLs
+  // Handle regular URLs (including mapped blob URLs)
   try {
     const response = await axiosInstance.get<ArrayBuffer>(url);
     return response.data;
