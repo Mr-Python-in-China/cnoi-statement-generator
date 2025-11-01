@@ -64,7 +64,8 @@ export interface ImmerContestData extends ContestData<{ withMarkdown: true }> {
     key: import("crypto").UUID;
   })[];
   images: {
+    uuid: string;
     name: string;
-    url: string;
+    url: string; // blob URL for display
   }[];
 }

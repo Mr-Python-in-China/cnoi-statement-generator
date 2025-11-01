@@ -6,6 +6,7 @@ import {
   type FC,
   type Dispatch,
   type SetStateAction,
+  type RefObject
 } from "react";
 import { type Updater } from "use-immer";
 import Preview from "./preview";
@@ -20,7 +21,18 @@ const Body: FC<{
   updateContestData: Updater<ImmerContestData>;
   panel: string;
   setPanel: Dispatch<SetStateAction<string>>;
-}> = ({ panel, contestData, updateContestData, setPanel }) => {
+  imageMapping: Map<string, string>;
+  imageBlobsRef: RefObject<Map<string, Blob>>;
+  setImageMapping: Dispatch<SetStateAction<Map<string, string>>>;
+}> = ({
+  panel,
+  contestData,
+  updateContestData,
+  setPanel,
+  imageMapping,
+  imageBlobsRef,
+  setImageMapping,
+}) => {
   const divRef = useRef<HTMLDivElement>(null);
   const [sizes, setSizes] = useState<number[] | undefined>(undefined);
 
@@ -58,7 +70,16 @@ const Body: FC<{
           size={sizes === undefined ? "50%" : sizes[0]}
         >
           {panel === "config" ? (
-            <ConfigPanel {...{ contestData, updateContestData, setPanel }} />
+            <ConfigPanel
+              {...{
+                contestData,
+                updateContestData,
+                setPanel,
+                imageMapping,
+                imageBlobsRef,
+                setImageMapping,
+              }}
+            />
           ) : (
             <MarkdownPanel
               {...(panel === "precaution"
@@ -73,7 +94,7 @@ const Body: FC<{
                 : {
                     code: (() => {
                       const p = contestData.problems.find(
-                        (y) => y.key === panel,
+                        (y) => y.key === panel
                       );
                       if (!p) throw new Error("Target panel not found");
                       return p.statementMarkdown;
