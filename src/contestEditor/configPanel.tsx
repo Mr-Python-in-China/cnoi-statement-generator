@@ -16,8 +16,8 @@ import {
   type FC,
   type Dispatch,
   type SetStateAction,
+  type RefObject,
 } from "react";
-import type React from "react";
 import { type Updater } from "use-immer";
 import type { DateArr, ImmerContestData } from "@/types/contestData";
 import dayjs from "dayjs";
@@ -33,11 +33,7 @@ import {
   faXmark,
 } from "@fortawesome/free-solid-svg-icons";
 import { newProblem, removeProblemCallback } from "@/utils/contestDataUtils";
-import {
-  generateUUID,
-  saveImageToDB,
-  deleteImageFromDB,
-} from "@/utils/indexedDBUtils";
+import { saveImageToDB, deleteImageFromDB } from "@/utils/indexedDBUtils";
 
 import "./configPanel.css";
 import { faMarkdown } from "@fortawesome/free-brands-svg-icons";
@@ -55,7 +51,7 @@ const ConfigPanel: FC<{
   updateContestData: Updater<ImmerContestData>;
   setPanel: Dispatch<SetStateAction<string>>;
   imageMapping: Map<string, string>;
-  imageBlobsRef: React.MutableRefObject<Map<string, Blob>>;
+  imageBlobsRef: RefObject<Map<string, Blob>>;
   setImageMapping: Dispatch<SetStateAction<Map<string, string>>>;
 }> = ({
   contestData,
@@ -686,7 +682,7 @@ const ConfigPanel: FC<{
               if (!(file instanceof File)) throw new Error("Invalid file");
 
               // Generate UUID for the image
-              const uuid = generateUUID();
+              const uuid = crypto.randomUUID();
 
               // Convert File to Blob
               const blob = new Blob([file], { type: file.type });

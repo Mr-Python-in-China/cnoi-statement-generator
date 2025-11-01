@@ -60,13 +60,6 @@ function openDB(): Promise<IDBDatabase> {
 }
 
 /**
- * Generate UUID v4
- */
-export function generateUUID(): string {
-  return crypto.randomUUID();
-}
-
-/**
  * Save config to IndexedDB
  */
 export async function saveConfigToDB(

@@ -6,8 +6,8 @@ import {
   type FC,
   type Dispatch,
   type SetStateAction,
+  type RefObject
 } from "react";
-import type React from "react";
 import { type Updater } from "use-immer";
 import Preview from "./preview";
 import { Splitter } from "antd";
@@ -22,7 +22,7 @@ const Body: FC<{
   panel: string;
   setPanel: Dispatch<SetStateAction<string>>;
   imageMapping: Map<string, string>;
-  imageBlobsRef: React.MutableRefObject<Map<string, Blob>>;
+  imageBlobsRef: RefObject<Map<string, Blob>>;
   setImageMapping: Dispatch<SetStateAction<Map<string, string>>>;
 }> = ({
   panel,
@@ -94,7 +94,7 @@ const Body: FC<{
                 : {
                     code: (() => {
                       const p = contestData.problems.find(
-                        (y) => y.key === panel,
+                        (y) => y.key === panel
                       );
                       if (!p) throw new Error("Target panel not found");
                       return p.statementMarkdown;
