@@ -356,17 +356,14 @@ export const compileToSvgDebounced = (() => {
 })();
 
 // Global mapping for asset:// protocol - maps UUID to blob URL
-const assetUrlMapping = new Map<string, string>();
+let assetUrlMapping = new Map<string, string>();
 
 /**
  * Register image blob URLs for asset:// protocol resolution
  * Called from ContestEditor when images are loaded/updated
  */
 export function registerAssetUrls(uuidToUrlMap: Map<string, string>): void {
-  assetUrlMapping.clear();
-  for (const [uuid, url] of uuidToUrlMap.entries()) {
-    assetUrlMapping.set(uuid, url);
-  }
+  assetUrlMapping = new Map(uuidToUrlMap);
 }
 
 /**
