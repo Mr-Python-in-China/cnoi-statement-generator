@@ -13,7 +13,6 @@ const validateSchema = ajv.compile(configSchema);
 
 interface ImageData {
   uuid: string;
-  name: string;
   blob: Blob;
 }
 
@@ -74,7 +73,7 @@ export async function saveConfigToDB(
   const storedData: StoredContestData = {
     ...data,
     images: Array.from(imageMapping.entries()).map(([uuid]) => {
-      const img = data.images?.find((i: { uuid: string; name: string; url?: string }) => i.uuid === uuid);
+      const img = data.images?.find((i) => i.uuid === uuid);
       return {
         uuid,
         name: img?.name || "image",
@@ -166,14 +165,13 @@ export async function loadConfigFromDB(): Promise<{
  */
 export async function saveImageToDB(
   uuid: string,
-  name: string,
   blob: Blob
 ): Promise<void> {
   const db = await openDB();
   const transaction = db.transaction(IMAGE_STORE, "readwrite");
   const store = transaction.objectStore(IMAGE_STORE);
 
-  const imageData: ImageData = { uuid, name, blob };
+  const imageData: ImageData = { uuid, blob };
   store.put(imageData);
 
   return new Promise((resolve, reject) => {

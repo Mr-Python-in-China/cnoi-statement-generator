@@ -16,14 +16,11 @@ export async function addImage(params: {
   // Generate UUID for the image
   const uuid = crypto.randomUUID();
 
-  // Convert File to Blob
-  const blob = new Blob([file], { type: file.type });
-
   // Create blob URL for display
-  const blobUrl = URL.createObjectURL(blob);
+  const blobUrl = URL.createObjectURL(file);
 
   // Save to IndexedDB
-  await saveImageToDB(uuid, file.name, blob);
+  await saveImageToDB(uuid, file);
 
   // Update mappings
   setImageMapping((prev) => new Map(prev).set(uuid, blobUrl));
