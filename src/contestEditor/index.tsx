@@ -216,6 +216,7 @@ const ContestEditorImpl: FC<{
                         } catch (error) {
                           notification.error({
                             message: "导入失败",
+                            placement: "bottomRight",
                             description:
                               error instanceof Error
                                 ? error.message
@@ -228,6 +229,7 @@ const ContestEditorImpl: FC<{
                     } catch (error) {
                       notification.error({
                         message: "导入失败",
+                        placement: "bottomRight",
                         description:
                           error instanceof Error
                             ? error.message
@@ -240,7 +242,7 @@ const ContestEditorImpl: FC<{
                 }}
                 title="导入配置"
               >
-                导入
+                导入配置
               </Button>
               <Button
                 type="default"
@@ -261,15 +263,18 @@ const ContestEditorImpl: FC<{
                   } catch (error) {
                     notification.error({
                       message: "导出失败",
+                      placement: "bottomRight",
                       description:
                         error instanceof Error ? error.message : String(error),
                       duration: 5,
+                      showProgress: true,
+                      pauseOnHover: true,
                     });
                   }
                 }}
                 title="导出配置"
               >
-                导出
+                导出配置
               </Button>
               <Button
                 type="primary"
@@ -296,6 +301,7 @@ const ContestEditorImpl: FC<{
                     console.error("Error when exporting PDF.", e);
                     notification.error({
                       message: "导出失败",
+                      placement: "bottomRight",
                       description: (
                         <>
                           <div>
