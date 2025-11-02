@@ -73,7 +73,7 @@ export async function saveConfigToDB(
   const storedData: StoredContestData = {
     ...data,
     images: Array.from(imageMapping.entries()).map(([uuid]) => {
-      const img = data.images?.find((i) => i.uuid === uuid);
+      const img = data.images.find((i) => i.uuid === uuid);
       return {
         uuid,
         name: img?.name || "image",
@@ -289,7 +289,7 @@ export async function exportConfig(
   }[] = [];
 
   for (const [uuid, blobUrl] of imageMapping.entries()) {
-    const img = data.images?.find((i: { uuid: string; name: string; url?: string }) => i.uuid === uuid);
+    const img = data.images.find((i) => i.uuid === uuid);
     
     // Fetch blob from blob URL
     const response = await fetch(blobUrl);
