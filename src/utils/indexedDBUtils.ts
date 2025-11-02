@@ -281,7 +281,7 @@ export function validateContestData(
  */
 export async function exportConfig(
   data: ContestDataWithImages,
-  imageMapping: Map<string, Blob> // uuid -> Blob
+  imageMapping: Map<string, string> // uuid -> blob URL
 ): Promise<string> {
   const imageData: {
     uuid: string;
@@ -290,8 +290,13 @@ export async function exportConfig(
     mimeType: string;
   }[] = [];
 
-  for (const [uuid, blob] of imageMapping.entries()) {
+  for (const [uuid, blobUrl] of imageMapping.entries()) {
     const img = data.images?.find((i: { uuid: string; name: string; url?: string }) => i.uuid === uuid);
+    
+    // Fetch blob from blob URL
+    const response = await fetch(blobUrl);
+    const blob = await response.blob();
+    
     const base64 = await blobToBase64(blob);
     imageData.push({
       uuid,

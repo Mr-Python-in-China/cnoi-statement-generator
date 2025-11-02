@@ -316,7 +316,7 @@ const ContestEditor: FC = () => {
                   try {
                     const json = await exportConfig(
                       contestData,
-                      imageBlobsRef.current
+                      imageMapping
                     );
                     const blob = new Blob([json], {
                       type: "application/json",
