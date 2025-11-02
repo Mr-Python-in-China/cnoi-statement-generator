@@ -639,7 +639,6 @@ const ConfigPanel: FC<{
                       imageMapping,
                       setImageMapping,
                       updateContestData,
-                      contestData,
                     });
                   }}
                 />

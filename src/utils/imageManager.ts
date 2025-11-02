@@ -48,14 +48,12 @@ export async function deleteImage(params: {
   imageMapping: Map<string, string>;
   setImageMapping: Dispatch<SetStateAction<Map<string, string>>>;
   updateContestData: Updater<ImmerContestData>;
-  contestData: ImmerContestData;
 }): Promise<void> {
   const {
     uuid,
     imageMapping,
     setImageMapping,
     updateContestData,
-    contestData,
   } = params;
 
   // Delete from IndexedDB
@@ -75,10 +73,10 @@ export async function deleteImage(params: {
   });
 
   // Remove from contest data
-  const index = contestData.images.findIndex((img) => img.uuid === uuid);
-  if (index !== -1) {
-    updateContestData((x) => {
+  updateContestData((x) => {
+    const index = x.images.findIndex((img) => img.uuid === uuid);
+    if (index !== -1) {
       x.images.splice(index, 1);
-    });
-  }
+    }
+  });
 }
