@@ -658,7 +658,6 @@ const ConfigPanel: FC<{
               return true;
             }}
             customRequest={async (options) => {
-              console.log(options);
               const file = options.file;
               if (!(file instanceof File)) throw new Error("Invalid file");
 

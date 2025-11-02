@@ -302,7 +302,7 @@ const ContestEditorImpl: FC<{
                     a.click();
                     URL.revokeObjectURL(url);
                   } catch (e) {
-                    console.log("Error when exporting PDF.", e);
+                    console.error("Error when exporting PDF.", e);
                     notification.error({
                       message: "导出失败",
                       description: (
