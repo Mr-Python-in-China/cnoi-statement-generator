@@ -30,7 +30,6 @@ export async function addImage(params: {
     x.images.push({
       uuid,
       name: file.name,
-      url: blobUrl,
     });
   });
 

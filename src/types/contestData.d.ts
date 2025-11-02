@@ -66,6 +66,5 @@ export interface ImmerContestData extends ContestData<{ withMarkdown: true }> {
   images: {
     uuid: string;
     name: string;
-    url: string; // blob URL for display
   }[];
 }

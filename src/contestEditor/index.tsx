@@ -1,4 +1,4 @@
-import { type FC, useEffect, useRef, useState, useMemo } from "react";
+import { type FC, useEffect, useState, useMemo } from "react";
 import { useImmer } from "use-immer";
 import type { ImmerContestData } from "@/types/contestData";
 import type ContestData from "@/types/contestData";
@@ -66,19 +66,10 @@ const ContestEditor: FC = () => {
 
           setImageMapping(newImageMapping);
 
-          // Update contest data with blob URLs
-          const dataWithUrls = {
-            ...stored.data,
-            images: images.map((img) => ({
-              uuid: img.uuid,
-              name: img.name,
-              url: newImageMapping.get(img.uuid) || "",
-            })),
-          };
-
+          // Update contest data (no need to add URLs)
           updateContestData(() =>
             toImmerContestData(
-              dataWithUrls as ContestData<{ withMarkdown: true }>
+              stored.data as ContestData<{ withMarkdown: true }>
             )
           );
         }
@@ -93,13 +84,14 @@ const ContestEditor: FC = () => {
 
   const [panel, setPanel] = useState("config");
   const [exportDisabled, setExportDisabled] = useState(true);
-  const imgsUrlRef = useRef<string[]>(contestData.images.map((img) => img.url));
-  useEffect(() => {
-    imgsUrlRef.current = contestData.images.map((img) => img.url);
-  }, [contestData.images]);
+  
+  // Cleanup blob URLs on unmount
   useEffect(
-    () => () => imgsUrlRef.current.forEach((x) => URL.revokeObjectURL(x)),
-    []
+    () => () => {
+      imageMapping.forEach((blobUrl) => URL.revokeObjectURL(blobUrl));
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [] // Only run on unmount
   );
 
   // Create a debounced save function (saves at most once per 500ms)
@@ -247,7 +239,6 @@ const ContestEditor: FC = () => {
                             imageList.push({
                               uuid,
                               name: imgData?.name || "image",
-                              url,
                             });
 
                             // Save to IndexedDB
@@ -396,6 +387,7 @@ const ContestEditor: FC = () => {
           updateContestData,
           panel,
           setPanel,
+          imageMapping,
           setImageMapping,
         }}
       />
