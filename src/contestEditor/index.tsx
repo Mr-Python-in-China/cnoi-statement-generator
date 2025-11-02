@@ -18,8 +18,6 @@ import {
   faRotateLeft,
 } from "@fortawesome/free-solid-svg-icons";
 import { debounce } from "lodash";
-
-import "./index.css";
 import { compileToPdf, typstInitPromise, registerAssetUrls } from "@/compiler";
 import {
   saveConfigToDB,
@@ -29,6 +27,8 @@ import {
   importConfig,
   saveImageToDB,
 } from "@/utils/indexedDBUtils";
+
+import "./index.css";
 
 const ContestEditor: FC = () => {
   // Map of UUID to blob URL for images
@@ -68,9 +68,7 @@ const ContestEditor: FC = () => {
 
           // Update contest data (no need to add URLs)
           updateContestData(() =>
-            toImmerContestData(
-              stored.data as ContestData<{ withMarkdown: true }>
-            )
+            toImmerContestData(stored.data)
           );
         }
       } catch (error) {
