@@ -370,7 +370,7 @@
   },
   numbering: (now, total) => [#text(
     size: 10pt,
-  )[第 #(now) 页 ~~~~ 共 #text(fill: rgb("#0000ff"))[#(total)] 页]],
+  )[第 #(now) 页 ~~~~ 共 #link((page: total, x: 2.5cm, y: 1.5cm))[#text(fill: rgb("#0000ff"))[#(total)]] 页]],
 )
 
 #for (i, p) in problems.enumerate() {
