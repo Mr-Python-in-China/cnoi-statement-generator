@@ -1,5 +1,8 @@
-import type ContestData from "@/types/contestData";
-import type { ImmerContestData } from "@/types/contestData";
+import type {
+  ContestDataWithImages,
+  StoredContestData,
+  EditorImageData,
+} from "@/types/contestData";
 import configSchema from "../../typst-template/config-schema.json";
 import Ajv from "ajv";
 
@@ -10,27 +13,6 @@ const IMAGE_STORE = "images";
 
 const ajv = new Ajv({ allErrors: true });
 const validateSchema = ajv.compile(configSchema);
-
-interface ImageData {
-  uuid: string;
-  blob: Blob;
-}
-
-interface StoredContestData extends ContestData<{ withMarkdown: true }> {
-  images: {
-    uuid: string;
-    name: string;
-  }[];
-}
-
-type ContestDataWithImages = Omit<ImmerContestData, "problems" | "support_languages" | "images"> & {
-  images: {
-    uuid: string;
-    name: string;
-  }[];
-  problems: Omit<ImmerContestData["problems"][number], "key">[];
-  support_languages: Omit<ImmerContestData["support_languages"][number], "key">[];
-};
 
 /**
  * Open IndexedDB connection
@@ -126,7 +108,7 @@ export async function loadConfigFromDB(): Promise<{
           new Promise<void>((resolveImg, rejectImg) => {
             const imgRequest = imageStore.get(img.uuid);
             imgRequest.onsuccess = () => {
-              const imageData = imgRequest.result as ImageData | undefined;
+              const imageData = imgRequest.result as EditorImageData | undefined;
               if (imageData) {
                 imageMap.set(imageData.uuid, imageData.blob);
               }
@@ -163,15 +145,12 @@ export async function loadConfigFromDB(): Promise<{
 /**
  * Save image to IndexedDB
  */
-export async function saveImageToDB(
-  uuid: string,
-  blob: Blob
-): Promise<void> {
+export async function saveImageToDB(uuid: string, blob: Blob): Promise<void> {
   const db = await openDB();
   const transaction = db.transaction(IMAGE_STORE, "readwrite");
   const store = transaction.objectStore(IMAGE_STORE);
 
-  const imageData: ImageData = { uuid, blob };
+  const imageData: EditorImageData = { uuid, blob };
   store.put(imageData);
 
   return new Promise((resolve, reject) => {
@@ -261,9 +240,10 @@ export function base64ToBlob(base64: string, mimeType: string): Blob {
 /**
  * Validate contest data against schema
  */
-export function validateContestData(
-  data: unknown
-): { valid: boolean; errors?: string[] } {
+export function validateContestData(data: unknown): {
+  valid: boolean;
+  errors?: string[];
+} {
   const valid = validateSchema(data);
   if (!valid && validateSchema.errors) {
     const errors = validateSchema.errors.map(
@@ -290,11 +270,11 @@ export async function exportConfig(
 
   for (const [uuid, blobUrl] of imageMapping.entries()) {
     const img = data.images.find((i) => i.uuid === uuid);
-    
+
     // Fetch blob from blob URL
     const response = await fetch(blobUrl);
     const blob = await response.blob();
-    
+
     const base64 = await blobToBase64(blob);
     imageData.push({
       uuid,

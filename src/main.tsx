@@ -18,7 +18,4 @@ createRoot(document.getElementById("root")!).render(
   </StrictMode>
 );
 
-if (import.meta.env.MODE !== "development")
-  window.addEventListener("beforeunload", (e) => {
-    e.preventDefault();
-  });
+console.debug("App started");

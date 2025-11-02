@@ -1,4 +1,4 @@
-import { type FC, useEffect, useState, useMemo } from "react";
+import { type FC, useEffect, useState, useMemo, use, Suspense } from "react";
 import { useImmer } from "use-immer";
 import type { ImmerContestData } from "@/types/contestData";
 import type ContestData from "@/types/contestData";
@@ -30,59 +30,31 @@ import {
 
 import "./index.css";
 
-const ContestEditor: FC = () => {
+interface InitialData {
+  ContestData: ImmerContestData;
+  imageMapping: Map<string, string>;
+}
+
+const ContestEditorImpl: FC<{
+  initialData: InitialData;
+}> = ({ initialData }) => {
   // Map of UUID to blob URL for images
   const [imageMapping, setImageMapping] = useState<Map<string, string>>(
-    new Map()
+    initialData.imageMapping
   );
 
-  const [contestData, updateContestData] = useImmer<ImmerContestData>(() => {
-    return toImmerContestData(exampleStatements["SupportedGrammer"]);
-  });
+  const [contestData, updateContestData] = useImmer<ImmerContestData>(
+    initialData.ContestData
+  );
 
   // Register asset blob URLs with compiler whenever they change
   useEffect(() => {
     registerAssetUrls(imageMapping);
   }, [imageMapping]);
 
-  // Load data from IndexedDB on mount
-  useEffect(() => {
-    let mounted = true;
-    (async () => {
-      try {
-        const stored = await loadConfigFromDB();
-        if (stored && mounted) {
-          // Create blob URLs for images
-          const newImageMapping = new Map<string, string>();
-          const images = stored.data.images || [];
-
-          for (const img of images) {
-            const blob = stored.images.get(img.uuid);
-            if (blob) {
-              const url = URL.createObjectURL(blob);
-              newImageMapping.set(img.uuid, url);
-            }
-          }
-
-          setImageMapping(newImageMapping);
-
-          // Update contest data (no need to add URLs)
-          updateContestData(() =>
-            toImmerContestData(stored.data)
-          );
-        }
-      } catch (error) {
-        console.error("Failed to load from IndexedDB:", error);
-      }
-    })();
-    return () => {
-      mounted = false;
-    };
-  }, [updateContestData]);
-
   const [panel, setPanel] = useState("config");
   const [exportDisabled, setExportDisabled] = useState(true);
-  
+
   // Cleanup blob URLs on unmount
   useEffect(
     () => () => {
@@ -240,10 +212,7 @@ const ContestEditor: FC = () => {
                             });
 
                             // Save to IndexedDB
-                            await saveImageToDB(
-                              uuid,
-                              blob
-                            );
+                            await saveImageToDB(uuid, blob);
                           }
 
                           setImageMapping(newImageMapping);
@@ -296,10 +265,7 @@ const ContestEditor: FC = () => {
                 icon={<FontAwesomeIcon icon={faFileExport} />}
                 onClick={async () => {
                   try {
-                    const json = await exportConfig(
-                      contestData,
-                      imageMapping
-                    );
+                    const json = await exportConfig(contestData, imageMapping);
                     const blob = new Blob([json], {
                       type: "application/json",
                     });
@@ -390,6 +356,49 @@ const ContestEditor: FC = () => {
         }}
       />
     </div>
+  );
+};
+
+const ContestEditorWithInitalPromise: FC<{
+  initialPromise: Promise<InitialData>;
+}> = ({ initialPromise }) => {
+  console.debug("test");
+  const initialData = use(initialPromise);
+  return <ContestEditorImpl initialData={initialData} />;
+};
+
+const ContestEditor: FC = () => {
+  console.debug("Rendering ContestEditor");
+  const initialPromise = (async () => {
+    const stored = await loadConfigFromDB();
+
+    if (!stored)
+      return {
+        ContestData: toImmerContestData(exampleStatements["SupportedGrammer"]),
+        imageMapping: new Map<string, string>(),
+      };
+
+    // Create blob URLs for images
+    const imageMapping = new Map<string, string>();
+    const images = stored.data.images || [];
+
+    for (const img of images) {
+      const blob = stored.images.get(img.uuid);
+      if (blob) {
+        const url = URL.createObjectURL(blob);
+        imageMapping.set(img.uuid, url);
+      }
+    }
+
+    return {
+      ContestData: toImmerContestData(stored.data),
+      imageMapping,
+    };
+  })();
+  return (
+    <Suspense fallback={<div className="contest-editor" />}>
+      <ContestEditorWithInitalPromise initialPromise={initialPromise} />
+    </Suspense>
   );
 };
 
