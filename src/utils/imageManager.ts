@@ -42,13 +42,11 @@ export async function addImage(params: {
  */
 export async function deleteImage(params: {
   uuid: string;
-  imageMapping: Map<string, string>;
   setImageMapping: Dispatch<SetStateAction<Map<string, string>>>;
   updateContestData: Updater<ImmerContestData>;
 }): Promise<void> {
   const {
     uuid,
-    imageMapping,
     setImageMapping,
     updateContestData,
   } = params;
@@ -56,14 +54,13 @@ export async function deleteImage(params: {
   // Delete from IndexedDB
   await deleteImageFromDB(uuid);
 
-  // Revoke blob URL
-  const blobUrl = imageMapping.get(uuid);
-  if (blobUrl) {
-    URL.revokeObjectURL(blobUrl);
-  }
-
   // Remove from mapping
   setImageMapping((prev) => {
+    const blobUrl = prev.get(uuid);
+    if (blobUrl) {
+      URL.revokeObjectURL(blobUrl);
+    }
+
     const newMap = new Map(prev);
     newMap.delete(uuid);
     return newMap;

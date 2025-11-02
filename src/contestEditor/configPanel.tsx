@@ -49,13 +49,11 @@ const ConfigPanel: FC<{
   contestData: ImmerContestData;
   updateContestData: Updater<ImmerContestData>;
   setPanel: Dispatch<SetStateAction<string>>;
-  imageMapping: Map<string, string>;
   setImageMapping: Dispatch<SetStateAction<Map<string, string>>>;
 }> = ({
   contestData,
   updateContestData,
   setPanel,
-  imageMapping,
   setImageMapping,
 }) => {
   const { modal, message } = App.useApp();
@@ -636,7 +634,6 @@ const ConfigPanel: FC<{
                     const imageToDelete = contestData.images[index];
                     await deleteImage({
                       uuid: imageToDelete.uuid,
-                      imageMapping,
                       setImageMapping,
                       updateContestData,
                     });

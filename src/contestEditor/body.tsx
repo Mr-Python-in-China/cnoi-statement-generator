@@ -20,14 +20,12 @@ const Body: FC<{
   updateContestData: Updater<ImmerContestData>;
   panel: string;
   setPanel: Dispatch<SetStateAction<string>>;
-  imageMapping: Map<string, string>;
   setImageMapping: Dispatch<SetStateAction<Map<string, string>>>;
 }> = ({
   panel,
   contestData,
   updateContestData,
   setPanel,
-  imageMapping,
   setImageMapping,
 }) => {
   const divRef = useRef<HTMLDivElement>(null);
@@ -72,7 +70,6 @@ const Body: FC<{
                 contestData,
                 updateContestData,
                 setPanel,
-                imageMapping,
                 setImageMapping,
               }}
             />

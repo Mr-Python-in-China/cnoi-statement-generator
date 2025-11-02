@@ -253,7 +253,6 @@ const ContestEditor: FC = () => {
                             // Save to IndexedDB
                             await saveImageToDB(
                               uuid,
-                              imgData?.name || "image",
                               blob
                             );
                           }
@@ -397,7 +396,6 @@ const ContestEditor: FC = () => {
           updateContestData,
           panel,
           setPanel,
-          imageMapping,
           setImageMapping,
         }}
       />
