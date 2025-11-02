@@ -35,8 +35,6 @@ const ContestEditor: FC = () => {
   const [imageMapping, setImageMapping] = useState<Map<string, string>>(
     new Map()
   );
-  // Map of UUID to Blob for persistence
-  const imageBlobsRef = useRef<Map<string, Blob>>(new Map());
 
   const [contestData, updateContestData] = useImmer<ImmerContestData>(() => {
     return toImmerContestData(exampleStatements["SupportedGrammer"]);
@@ -63,7 +61,6 @@ const ContestEditor: FC = () => {
             if (blob) {
               const url = URL.createObjectURL(blob);
               newImageMapping.set(img.uuid, url);
-              imageBlobsRef.current.set(img.uuid, blob);
             }
           }
 
@@ -198,7 +195,6 @@ const ContestEditor: FC = () => {
                     await clearDB();
                     imageMapping.forEach((url) => URL.revokeObjectURL(url));
                     setImageMapping(new Map());
-                    imageBlobsRef.current.clear();
 
                     const initialData = toImmerContestData(
                       exampleStatements["SupportedGrammer"]
@@ -234,14 +230,12 @@ const ContestEditor: FC = () => {
                             URL.revokeObjectURL(url)
                           );
                           const newImageMapping = new Map<string, string>();
-                          imageBlobsRef.current.clear();
 
                           // Create blob URLs and save to IndexedDB
                           const imageList: typeof contestData.images = [];
                           for (const [uuid, blob] of images.entries()) {
                             const url = URL.createObjectURL(blob);
                             newImageMapping.set(uuid, url);
-                            imageBlobsRef.current.set(uuid, blob);
 
                             // Find image name
                             const imgData = (
@@ -404,7 +398,6 @@ const ContestEditor: FC = () => {
           panel,
           setPanel,
           imageMapping,
-          imageBlobsRef,
           setImageMapping,
         }}
       />

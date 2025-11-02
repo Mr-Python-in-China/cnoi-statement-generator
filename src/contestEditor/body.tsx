@@ -6,7 +6,6 @@ import {
   type FC,
   type Dispatch,
   type SetStateAction,
-  type RefObject
 } from "react";
 import { type Updater } from "use-immer";
 import Preview from "./preview";
@@ -22,7 +21,6 @@ const Body: FC<{
   panel: string;
   setPanel: Dispatch<SetStateAction<string>>;
   imageMapping: Map<string, string>;
-  imageBlobsRef: RefObject<Map<string, Blob>>;
   setImageMapping: Dispatch<SetStateAction<Map<string, string>>>;
 }> = ({
   panel,
@@ -30,7 +28,6 @@ const Body: FC<{
   updateContestData,
   setPanel,
   imageMapping,
-  imageBlobsRef,
   setImageMapping,
 }) => {
   const divRef = useRef<HTMLDivElement>(null);
@@ -76,7 +73,6 @@ const Body: FC<{
                 updateContestData,
                 setPanel,
                 imageMapping,
-                imageBlobsRef,
                 setImageMapping,
               }}
             />

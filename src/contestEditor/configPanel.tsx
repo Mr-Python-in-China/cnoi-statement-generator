@@ -16,7 +16,6 @@ import {
   type FC,
   type Dispatch,
   type SetStateAction,
-  type RefObject,
 } from "react";
 import { type Updater } from "use-immer";
 import type { DateArr, ImmerContestData } from "@/types/contestData";
@@ -51,14 +50,12 @@ const ConfigPanel: FC<{
   updateContestData: Updater<ImmerContestData>;
   setPanel: Dispatch<SetStateAction<string>>;
   imageMapping: Map<string, string>;
-  imageBlobsRef: RefObject<Map<string, Blob>>;
   setImageMapping: Dispatch<SetStateAction<Map<string, string>>>;
 }> = ({
   contestData,
   updateContestData,
   setPanel,
   imageMapping,
-  imageBlobsRef,
   setImageMapping,
 }) => {
   const { modal, message } = App.useApp();
@@ -650,7 +647,6 @@ const ConfigPanel: FC<{
                       newMap.delete(imageToDelete.uuid);
                       return newMap;
                     });
-                    imageBlobsRef.current.delete(imageToDelete.uuid);
                     // Remove from contest data
                     updateContestData((x) => {
                       x.images.splice(index, 1);
@@ -695,7 +691,6 @@ const ConfigPanel: FC<{
 
               // Update mappings
               setImageMapping((prev) => new Map(prev).set(uuid, blobUrl));
-              imageBlobsRef.current.set(uuid, blob);
 
               // Update contest data
               updateContestData((x) => {
