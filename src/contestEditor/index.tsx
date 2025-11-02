@@ -1,7 +1,6 @@
 import { type FC, useEffect, useState, useMemo, use, Suspense } from "react";
 import { useImmer } from "use-immer";
 import type { ImmerContestData } from "@/types/contestData";
-import type ContestData from "@/types/contestData";
 import exampleStatements from "./exampleStatements";
 import { App, Button, Tabs, type TabsProps, Space } from "antd";
 import Body from "./body";
@@ -43,7 +42,9 @@ const ContestEditorImpl: FC<{
 
   // Register asset blob URLs with compiler whenever images change
   useEffect(() => {
-    const mapping = new Map(contestData.images.map((img) => [img.uuid, img.url]));
+    const mapping = new Map(
+      contestData.images.map((img) => [img.uuid, img.url])
+    );
     registerAssetUrls(mapping);
   }, [contestData.images]);
 
@@ -141,11 +142,14 @@ const ContestEditorImpl: FC<{
                   if (confirmed) {
                     // Clear IndexedDB and revoke blob URLs
                     await clearDB();
-                    contestData.images.forEach((img) => URL.revokeObjectURL(img.url));
-
-                    const initialData = toImmerContestData(
-                      exampleStatements["SupportedGrammer"]
+                    contestData.images.forEach((img) =>
+                      URL.revokeObjectURL(img.url)
                     );
+
+                    const initialData = toImmerContestData({
+                      ...exampleStatements["SupportedGrammer"],
+                      images: [],
+                    });
                     updateContestData(() => initialData);
                     setPanel("config");
                     message.success("配置已重置");
@@ -205,11 +209,7 @@ const ContestEditorImpl: FC<{
                           };
 
                           updateContestData(() =>
-                            toImmerContestData(
-                              dataWithUrls as ContestData<{
-                                withMarkdown: true;
-                              }>
-                            )
+                            toImmerContestData(dataWithUrls)
                           );
                           setPanel("config");
                           message.success("配置导入成功");
@@ -352,7 +352,10 @@ const ContestEditor: FC = () => {
 
     if (!stored)
       return {
-        ContestData: toImmerContestData(exampleStatements["SupportedGrammer"]),
+        ContestData: toImmerContestData({
+          ...exampleStatements["SupportedGrammer"],
+          images: [],
+        }),
       };
 
     // Create blob URLs for images and add them to images array
@@ -375,7 +378,7 @@ const ContestEditor: FC = () => {
       ContestData: toImmerContestData({
         ...stored.data,
         images: imageList,
-      } as ContestData<{ withMarkdown: true }>),
+      }),
     };
   })();
   return (
