@@ -32,7 +32,7 @@ import {
   faXmark,
 } from "@fortawesome/free-solid-svg-icons";
 import { newProblem, removeProblemCallback } from "@/utils/contestDataUtils";
-import { saveImageToDB, deleteImageFromDB } from "@/utils/indexedDBUtils";
+import { addImage, deleteImage } from "@/utils/imageManager";
 
 import "./configPanel.css";
 import { faMarkdown } from "@fortawesome/free-brands-svg-icons";
@@ -634,22 +634,12 @@ const ConfigPanel: FC<{
                   icon={<FontAwesomeIcon icon={faTrashCan} />}
                   onClick={async () => {
                     const imageToDelete = contestData.images[index];
-                    // Delete from IndexedDB
-                    await deleteImageFromDB(imageToDelete.uuid);
-                    // Revoke blob URL
-                    const blobUrl = imageMapping.get(imageToDelete.uuid);
-                    if (blobUrl) {
-                      URL.revokeObjectURL(blobUrl);
-                    }
-                    // Remove from mapping
-                    setImageMapping((prev) => {
-                      const newMap = new Map(prev);
-                      newMap.delete(imageToDelete.uuid);
-                      return newMap;
-                    });
-                    // Remove from contest data
-                    updateContestData((x) => {
-                      x.images.splice(index, 1);
+                    await deleteImage({
+                      uuid: imageToDelete.uuid,
+                      imageMapping,
+                      setImageMapping,
+                      updateContestData,
+                      contestData,
                     });
                   }}
                 />
@@ -677,28 +667,10 @@ const ConfigPanel: FC<{
               const file = options.file;
               if (!(file instanceof File)) throw new Error("Invalid file");
 
-              // Generate UUID for the image
-              const uuid = crypto.randomUUID();
-
-              // Convert File to Blob
-              const blob = new Blob([file], { type: file.type });
-
-              // Create blob URL for display
-              const blobUrl = URL.createObjectURL(blob);
-
-              // Save to IndexedDB
-              await saveImageToDB(uuid, file.name, blob);
-
-              // Update mappings
-              setImageMapping((prev) => new Map(prev).set(uuid, blobUrl));
-
-              // Update contest data
-              updateContestData((x) => {
-                x.images.push({
-                  uuid,
-                  name: file.name,
-                  url: blobUrl,
-                });
+              await addImage({
+                file,
+                setImageMapping,
+                updateContestData,
               });
             }}
             showUploadList={false}
