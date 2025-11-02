@@ -49,14 +49,10 @@ const ConfigPanel: FC<{
   contestData: ImmerContestData;
   updateContestData: Updater<ImmerContestData>;
   setPanel: Dispatch<SetStateAction<string>>;
-  imageMapping: Map<string, string>;
-  setImageMapping: Dispatch<SetStateAction<Map<string, string>>>;
 }> = ({
   contestData,
   updateContestData,
   setPanel,
-  imageMapping,
-  setImageMapping,
 }) => {
   const { modal, message } = App.useApp();
   const formRef = useRef<HTMLFormElement>(null);
@@ -581,13 +577,12 @@ const ConfigPanel: FC<{
         <div>本地图片</div>
         <div>
           {contestData.images.map((img, index) => {
-            const blobUrl = imageMapping.get(img.uuid);
             return (
             <Card
               key={img.uuid}
               classNames={{ body: "contest-editor-config-image-card" }}
             >
-              <Image src={blobUrl} alt={img.name} height={150} />
+              <Image src={img.url} alt={img.name} height={150} />
               <div>
                 {imageEditModeId !== index ? (
                   <>
@@ -638,7 +633,6 @@ const ConfigPanel: FC<{
                     const imageToDelete = contestData.images[index];
                     await deleteImage({
                       uuid: imageToDelete.uuid,
-                      setImageMapping,
                       updateContestData,
                     });
                   }}
@@ -670,7 +664,6 @@ const ConfigPanel: FC<{
 
               await addImage({
                 file,
-                setImageMapping,
                 updateContestData,
               });
             }}

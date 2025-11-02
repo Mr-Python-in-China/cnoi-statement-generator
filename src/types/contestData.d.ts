@@ -66,6 +66,7 @@ export interface ImmerContestData extends ContestData<{ withMarkdown: true }> {
   images: {
     uuid: string;
     name: string;
+    url: string; // blob URL for display
   }[];
 }
 
@@ -85,6 +86,7 @@ export type ContestDataWithImages = Omit<ImmerContestData, "problems" | "support
   images: {
     uuid: string;
     name: string;
+    url: string; // blob URL for display (not stored in DB/export)
   }[];
   problems: Omit<ImmerContestData["problems"][number], "key">[];
   support_languages: Omit<ImmerContestData["support_languages"][number], "key">[];

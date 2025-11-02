@@ -32,25 +32,20 @@ import "./index.css";
 
 interface InitialData {
   ContestData: ImmerContestData;
-  imageMapping: Map<string, string>;
 }
 
 const ContestEditorImpl: FC<{
   initialData: InitialData;
 }> = ({ initialData }) => {
-  // Map of UUID to blob URL for images
-  const [imageMapping, setImageMapping] = useState<Map<string, string>>(
-    initialData.imageMapping
-  );
-
   const [contestData, updateContestData] = useImmer<ImmerContestData>(
     initialData.ContestData
   );
 
-  // Register asset blob URLs with compiler whenever they change
+  // Register asset blob URLs with compiler whenever images change
   useEffect(() => {
-    registerAssetUrls(imageMapping);
-  }, [imageMapping]);
+    const mapping = new Map(contestData.images.map((img) => [img.uuid, img.url]));
+    registerAssetUrls(mapping);
+  }, [contestData.images]);
 
   const [panel, setPanel] = useState("config");
   const [exportDisabled, setExportDisabled] = useState(true);
@@ -58,7 +53,7 @@ const ContestEditorImpl: FC<{
   // Cleanup blob URLs on unmount
   useEffect(
     () => () => {
-      imageMapping.forEach((blobUrl) => URL.revokeObjectURL(blobUrl));
+      contestData.images.forEach((img) => URL.revokeObjectURL(img.url));
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [] // Only run on unmount
@@ -67,9 +62,9 @@ const ContestEditorImpl: FC<{
   // Create a debounced save function (saves at most once per 500ms)
   const debouncedSave = useMemo(
     () =>
-      debounce(async (data: ImmerContestData, mapping: Map<string, string>) => {
+      debounce(async (data: ImmerContestData) => {
         try {
-          await saveConfigToDB(data, mapping);
+          await saveConfigToDB(data);
         } catch (error) {
           console.error("Failed to auto-save:", error);
         }
@@ -79,8 +74,8 @@ const ContestEditorImpl: FC<{
 
   // Auto-save to IndexedDB whenever contestData changes (debounced)
   useEffect(() => {
-    debouncedSave(contestData, imageMapping);
-  }, [contestData, imageMapping, debouncedSave]);
+    debouncedSave(contestData);
+  }, [contestData, debouncedSave]);
 
   const { modal, notification, message } = App.useApp();
   const items: TabsProps["items"] = [
@@ -155,8 +150,7 @@ const ContestEditorImpl: FC<{
                   if (confirmed) {
                     // Clear IndexedDB and revoke blob URLs
                     await clearDB();
-                    imageMapping.forEach((url) => URL.revokeObjectURL(url));
-                    setImageMapping(new Map());
+                    contestData.images.forEach((img) => URL.revokeObjectURL(img.url));
 
                     const initialData = toImmerContestData(
                       exampleStatements["SupportedGrammer"]
@@ -188,16 +182,14 @@ const ContestEditorImpl: FC<{
                           const { data, images } = await importConfig(json);
 
                           // Clear old images
-                          imageMapping.forEach((url) =>
-                            URL.revokeObjectURL(url)
+                          contestData.images.forEach((img) =>
+                            URL.revokeObjectURL(img.url)
                           );
-                          const newImageMapping = new Map<string, string>();
 
                           // Create blob URLs and save to IndexedDB
                           const imageList: typeof contestData.images = [];
                           for (const [uuid, blob] of images.entries()) {
                             const url = URL.createObjectURL(blob);
-                            newImageMapping.set(uuid, url);
 
                             // Find image name
                             const imgData = (
@@ -209,13 +201,12 @@ const ContestEditorImpl: FC<{
                             imageList.push({
                               uuid,
                               name: imgData?.name || "image",
+                              url,
                             });
 
                             // Save to IndexedDB
                             await saveImageToDB(uuid, blob);
                           }
-
-                          setImageMapping(newImageMapping);
 
                           const dataWithUrls = {
                             ...data,
@@ -265,7 +256,7 @@ const ContestEditorImpl: FC<{
                 icon={<FontAwesomeIcon icon={faFileExport} />}
                 onClick={async () => {
                   try {
-                    const json = await exportConfig(contestData, imageMapping);
+                    const json = await exportConfig(contestData);
                     const blob = new Blob([json], {
                       type: "application/json",
                     });
@@ -351,8 +342,6 @@ const ContestEditorImpl: FC<{
           updateContestData,
           panel,
           setPanel,
-          imageMapping,
-          setImageMapping,
         }}
       />
     </div>
@@ -375,24 +364,29 @@ const ContestEditor: FC = () => {
     if (!stored)
       return {
         ContestData: toImmerContestData(exampleStatements["SupportedGrammer"]),
-        imageMapping: new Map<string, string>(),
       };
 
-    // Create blob URLs for images
-    const imageMapping = new Map<string, string>();
+    // Create blob URLs for images and add them to images array
     const images = stored.data.images || [];
+    const imageList = [];
 
     for (const img of images) {
       const blob = stored.images.get(img.uuid);
       if (blob) {
         const url = URL.createObjectURL(blob);
-        imageMapping.set(img.uuid, url);
+        imageList.push({
+          uuid: img.uuid,
+          name: img.name,
+          url,
+        });
       }
     }
 
     return {
-      ContestData: toImmerContestData(stored.data),
-      imageMapping,
+      ContestData: toImmerContestData({
+        ...stored.data,
+        images: imageList,
+      } as ContestData<{ withMarkdown: true }>),
     };
   })();
   return (

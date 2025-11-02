@@ -44,23 +44,19 @@ function openDB(): Promise<IDBDatabase> {
  * Save config to IndexedDB
  */
 export async function saveConfigToDB(
-  data: ContestDataWithImages,
-  imageMapping: Map<string, string> // uuid -> blobURL
+  data: ContestDataWithImages
 ): Promise<void> {
   const db = await openDB();
   const transaction = db.transaction(CONFIG_STORE, "readwrite");
   const store = transaction.objectStore(CONFIG_STORE);
 
-  // Convert blob URLs back to UUIDs for storage
+  // Remove url field from images for storage
   const storedData: StoredContestData = {
     ...data,
-    images: Array.from(imageMapping.entries()).map(([uuid]) => {
-      const img = data.images.find((i) => i.uuid === uuid);
-      return {
-        uuid,
-        name: img?.name || "image",
-      };
-    }),
+    images: data.images.map(({ uuid, name }) => ({
+      uuid,
+      name,
+    })),
   };
 
   store.put(storedData, "current");
@@ -81,7 +77,7 @@ export async function saveConfigToDB(
  * Load config from IndexedDB
  */
 export async function loadConfigFromDB(): Promise<{
-  data: ContestDataWithImages;
+  data: StoredContestData;
   images: Map<string, Blob>; // uuid -> Blob
 } | null> {
   const db = await openDB();
@@ -122,13 +118,7 @@ export async function loadConfigFromDB(): Promise<{
         await Promise.all(imagePromises);
         db.close();
 
-        // Restore data structure expected by the app
-        const data: ContestDataWithImages = {
-          ...storedData,
-          images: storedData.images || [],
-        };
-
-        resolve({ data, images: imageMap });
+        resolve({ data: storedData, images: imageMap });
       } catch (error) {
         db.close();
         reject(error);
@@ -258,8 +248,7 @@ export function validateContestData(data: unknown): {
  * Export configuration with images as base64
  */
 export async function exportConfig(
-  data: ContestDataWithImages,
-  imageMapping: Map<string, string> // uuid -> blob URL
+  data: ContestDataWithImages
 ): Promise<string> {
   const imageData: {
     uuid: string;
@@ -268,17 +257,15 @@ export async function exportConfig(
     mimeType: string;
   }[] = [];
 
-  for (const [uuid, blobUrl] of imageMapping.entries()) {
-    const img = data.images.find((i) => i.uuid === uuid);
-
+  for (const img of data.images) {
     // Fetch blob from blob URL
-    const response = await fetch(blobUrl);
+    const response = await fetch(img.url);
     const blob = await response.blob();
 
     const base64 = await blobToBase64(blob);
     imageData.push({
-      uuid,
-      name: img?.name || "image",
+      uuid: img.uuid,
+      name: img.name,
       base64,
       mimeType: blob.type,
     });
@@ -296,7 +283,7 @@ export async function exportConfig(
  * Import configuration with base64 images
  */
 export async function importConfig(json: string): Promise<{
-  data: ContestDataWithImages;
+  data: StoredContestData;
   images: Map<string, Blob>; // uuid -> Blob
 }> {
   const importData = JSON.parse(json);
@@ -320,8 +307,8 @@ export async function importConfig(json: string): Promise<{
     }
   }
 
-  // Return data structure
-  const data: ContestDataWithImages = {
+  // Return data structure without url field
+  const data: StoredContestData = {
     ...importData,
     images: imageData.map((img: { uuid: string; name: string }) => ({
       uuid: img.uuid,
