@@ -351,13 +351,11 @@ const ContestEditorImpl: FC<{
 const ContestEditorWithInitalPromise: FC<{
   initialPromise: Promise<InitialData>;
 }> = ({ initialPromise }) => {
-  console.debug("test");
   const initialData = use(initialPromise);
   return <ContestEditorImpl initialData={initialData} />;
 };
 
 const ContestEditor: FC = () => {
-  console.debug("Rendering ContestEditor");
   const initialPromise = (async () => {
     const stored = await loadConfigFromDB();
 
