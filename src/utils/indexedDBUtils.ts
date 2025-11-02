@@ -242,7 +242,7 @@ export function blobToBase64(blob: Blob): Promise<string> {
       const base64 = (reader.result as string).split(",")[1];
       resolve(base64);
     };
-    reader.onerror = reject;
+    reader.onerror = () => reject(reader.error);
     reader.readAsDataURL(blob);
   });
 }
