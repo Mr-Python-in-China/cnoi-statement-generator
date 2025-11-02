@@ -50,15 +50,6 @@ const ContestEditorImpl: FC<{
   const [panel, setPanel] = useState("config");
   const [exportDisabled, setExportDisabled] = useState(true);
 
-  // Cleanup blob URLs on unmount
-  useEffect(
-    () => () => {
-      contestData.images.forEach((img) => URL.revokeObjectURL(img.url));
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [] // Only run on unmount
-  );
-
   // Create a debounced save function (saves at most once per 500ms)
   const debouncedSave = useMemo(
     () =>
