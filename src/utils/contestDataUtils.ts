@@ -1,11 +1,13 @@
-import type { ImmerContestData } from "@/types/contestData";
-import type ContestData from "@/types/contestData";
+import type {
+  ContestDataWithImages,
+  ImmerContestData,
+} from "@/types/contestData";
 import type { HookAPI as ModalHookAPI } from "antd/es/modal/useModal";
 import type React from "react";
 import type { Updater } from "use-immer";
 
 export function toImmerContestData(
-  data: ContestData<{ withMarkdown: true }>
+  data: ContestDataWithImages
 ): ImmerContestData {
   return {
     ...data,
@@ -17,7 +19,6 @@ export function toImmerContestData(
       ...problem,
       key: crypto.randomUUID(),
     })),
-    images: [],
   };
 }
 

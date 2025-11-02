@@ -64,7 +64,30 @@ export interface ImmerContestData extends ContestData<{ withMarkdown: true }> {
     key: import("crypto").UUID;
   })[];
   images: {
+    uuid: string;
     name: string;
-    url: string;
+    url: string; // blob URL for display
   }[];
 }
+
+export interface EditorImageData {
+  uuid: string;
+  blob: Blob;
+}
+
+export interface StoredContestData extends ContestData<{ withMarkdown: true }> {
+  images: {
+    uuid: string;
+    name: string;
+  }[];
+}
+
+export type ContestDataWithImages = Omit<ImmerContestData, "problems" | "support_languages" | "images"> & {
+  images: {
+    uuid: string;
+    name: string;
+    url: string; // blob URL for display (not stored in DB/export)
+  }[];
+  problems: Omit<ImmerContestData["problems"][number], "key">[];
+  support_languages: Omit<ImmerContestData["support_languages"][number], "key">[];
+};

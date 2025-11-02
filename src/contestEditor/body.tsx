@@ -20,7 +20,12 @@ const Body: FC<{
   updateContestData: Updater<ImmerContestData>;
   panel: string;
   setPanel: Dispatch<SetStateAction<string>>;
-}> = ({ panel, contestData, updateContestData, setPanel }) => {
+}> = ({
+  panel,
+  contestData,
+  updateContestData,
+  setPanel,
+}) => {
   const divRef = useRef<HTMLDivElement>(null);
   const [sizes, setSizes] = useState<number[] | undefined>(undefined);
 
@@ -58,7 +63,13 @@ const Body: FC<{
           size={sizes === undefined ? "50%" : sizes[0]}
         >
           {panel === "config" ? (
-            <ConfigPanel {...{ contestData, updateContestData, setPanel }} />
+            <ConfigPanel
+              {...{
+                contestData,
+                updateContestData,
+                setPanel,
+              }}
+            />
           ) : (
             <MarkdownPanel
               {...(panel === "precaution"
@@ -73,7 +84,7 @@ const Body: FC<{
                 : {
                     code: (() => {
                       const p = contestData.problems.find(
-                        (y) => y.key === panel,
+                        (y) => y.key === panel
                       );
                       if (!p) throw new Error("Target panel not found");
                       return p.statementMarkdown;

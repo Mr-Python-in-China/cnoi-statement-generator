@@ -32,6 +32,7 @@ import {
   faXmark,
 } from "@fortawesome/free-solid-svg-icons";
 import { newProblem, removeProblemCallback } from "@/utils/contestDataUtils";
+import { addImage, deleteImage } from "@/utils/imageManager";
 
 import "./configPanel.css";
 import { faMarkdown } from "@fortawesome/free-brands-svg-icons";
@@ -48,7 +49,11 @@ const ConfigPanel: FC<{
   contestData: ImmerContestData;
   updateContestData: Updater<ImmerContestData>;
   setPanel: Dispatch<SetStateAction<string>>;
-}> = ({ contestData, updateContestData, setPanel }) => {
+}> = ({
+  contestData,
+  updateContestData,
+  setPanel,
+}) => {
   const { modal, message } = App.useApp();
   const formRef = useRef<HTMLFormElement>(null);
   const [width, setWidth] = useState(220);
@@ -571,9 +576,10 @@ const ConfigPanel: FC<{
       <div className="contest-editor-config-label contest-editor-config-image">
         <div>本地图片</div>
         <div>
-          {contestData.images.map((img, index) => (
+          {contestData.images.map((img, index) => {
+            return (
             <Card
-              key={img.url}
+              key={img.uuid}
               classNames={{ body: "contest-editor-config-image-card" }}
             >
               <Image src={img.url} alt={img.name} height={150} />
@@ -607,7 +613,7 @@ const ConfigPanel: FC<{
                   icon={<FontAwesomeIcon icon={faMarkdown} />}
                   onClick={() =>
                     navigator.clipboard
-                      .writeText(`![${img.name}](${img.url})`)
+                      .writeText(`![${img.name}](asset://${img.uuid})`)
                       .then(
                         () => message.success("复制成功"),
                         (e) => {
@@ -623,15 +629,18 @@ const ConfigPanel: FC<{
                 <Button
                   type="text"
                   icon={<FontAwesomeIcon icon={faTrashCan} />}
-                  onClick={() =>
-                    updateContestData((x) => {
-                      x.images.splice(index, 1);
-                    })
-                  }
+                  onClick={async () => {
+                    const imageToDelete = contestData.images[index];
+                    await deleteImage({
+                      uuid: imageToDelete.uuid,
+                      updateContestData,
+                    });
+                  }}
                 />
               </div>
             </Card>
-          ))}
+          );
+          })}
           <Upload.Dragger
             name="add image"
             beforeUpload={(file) => {
@@ -649,14 +658,12 @@ const ConfigPanel: FC<{
               return true;
             }}
             customRequest={async (options) => {
-              console.log(options);
               const file = options.file;
               if (!(file instanceof File)) throw new Error("Invalid file");
-              updateContestData((x) => {
-                x.images.push({
-                  name: file.name,
-                  url: URL.createObjectURL(file),
-                });
+
+              await addImage({
+                file,
+                updateContestData,
               });
             }}
             showUploadList={false}

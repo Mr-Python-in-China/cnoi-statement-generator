@@ -1,17 +1,19 @@
 import axiosInstance from "@/utils/axiosInstance";
 import type { PackageSpec } from "@myriaddreamin/typst.ts/internal.types";
-import { send } from "promise-worker-ts";
-import {
-  type CompileTypstMessage,
-  type RenderTypstMessage,
-  type InitMessage,
-} from "./typst.worker";
+import { listenMain, send } from "@mr.python/promise-worker-ts";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import remarkParse from "remark-parse";
 import { unified } from "unified";
 import remarkTypst from "./remarkTypst";
+import { isAxiosError } from "axios";
 import type ContestData from "@/types/contestData";
+import {
+  type CompileTypstMessage,
+  type RenderTypstMessage,
+  type InitMessage,
+  type FetchAssetMessage,
+} from "./typst.worker";
 
 import fontUrlEntries from "virtual:typst-font-url-entries";
 import TypstCompilerWasmUrl from "@myriaddreamin/typst-ts-web-compiler/pkg/typst_ts_web_compiler_bg.wasm?url";
@@ -352,3 +354,50 @@ export const compileToSvgDebounced = (() => {
     return nextDeferred.promise;
   };
 })();
+
+// Global mapping for asset:// protocol - maps UUID to blob URL
+let assetUrlMapping = new Map<string, string>();
+
+/**
+ * Register image blob URLs for asset:// protocol resolution
+ * Called from ContestEditor when images are loaded/updated
+ */
+export function registerAssetUrls(uuidToUrlMap: Map<string, string>): void {
+  assetUrlMapping = new Map(uuidToUrlMap);
+}
+
+/**
+ * Fetch asset with support for asset:// protocol
+ * asset://uuid -> map to blob URL and fetch via axios
+ * other URLs -> fetch via axios
+ */
+async function fetchAsset(url: string): Promise<ArrayBuffer> {
+  // Handle asset:// protocol
+  if (url.startsWith("asset://")) {
+    const uuid = url.substring(8); // Remove "asset://" prefix
+    const blobUrl = assetUrlMapping.get(uuid);
+    
+    if (!blobUrl) {
+      throw new Error(`Asset not found: ${uuid}`);
+    }
+    
+    // Fetch the blob URL using axios
+    url = blobUrl;
+  }
+  
+  // Handle regular URLs (including mapped blob URLs)
+  try {
+    const response = await axiosInstance.get<ArrayBuffer>(url);
+    return response.data;
+  } catch (e) {
+    if (isAxiosError(e)) {
+      console.error("Failed to download assets.", e);
+      throw new Error(
+        "下载资源失败。这或许是因为浏览器的跨域限制。你可以尝试手动上传图片。",
+      );
+    }
+    throw e;
+  }
+}
+
+listenMain<FetchAssetMessage>("fetchAsset", worker, fetchAsset);
