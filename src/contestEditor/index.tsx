@@ -354,7 +354,13 @@ const ContestEditorWithInitalPromise: FC<{
 
 const ContestEditor: FC = () => {
   const initialPromise = (async () => {
-    const stored = await loadConfigFromDB();
+    const stored = await loadConfigFromDB().catch((e) => {
+      console.warn(
+        "Error when loading config from DB. Will use default config.",
+        e,
+      );
+      return undefined;
+    });
 
     if (!stored)
       return {
