@@ -14,7 +14,7 @@ import {
 } from "@myriaddreamin/typst.ts/options.init";
 import { listen, sendToMain } from "@mr.python/promise-worker-ts";
 import { Mutex } from "async-mutex";
-import type ContestData from "../types/contestData";
+import type { ContestData } from "@/types/contestData";
 
 import TypstDocMain from "typst-template/main.typ?raw";
 import TypstDocUtils from "typst-template/utils.typ?raw";

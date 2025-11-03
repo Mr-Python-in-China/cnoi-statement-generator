@@ -1,4 +1,11 @@
-export interface ProblemData {
+export type DateArr = [number, number, number, number, number, number];
+
+export interface LanguageConfig {
+  name: string;
+  compile_options: string;
+}
+
+export interface ProblemDataBase {
   name: string;
   title: string;
   type: string;
@@ -14,65 +21,70 @@ export interface ProblemData {
   pretestcase: string;
 }
 
-/** [year, month, day, hour, minute, second] */
-export type DateArr = [number, number, number, number, number, number];
+export type ContentFlags = {
+  withMarkdown?: boolean;
+  withTypst?: boolean;
+};
 
-type ContestData<
-  Conf extends {
-    withMarkdown?: boolean;
-    withTypst?: boolean;
-  } = {
-    withMarkdown: false;
-    withTypst: false;
-  },
-> = {
+type MarkdownProblemExt<Conf extends ContentFlags> =
+  Conf["withMarkdown"] extends true ? { statementMarkdown: string } : object;
+type TypstProblemExt<Conf extends ContentFlags> = Conf["withTypst"] extends true
+  ? { statementTypst: string }
+  : object;
+
+export type ProblemData<Conf extends ContentFlags = ContentFlags> =
+  ProblemDataBase & MarkdownProblemExt<Conf> & TypstProblemExt<Conf>;
+
+export interface ContestDateRange {
+  start: DateArr;
+  end: DateArr;
+}
+
+type MarkdownContestExt<Conf extends ContentFlags> =
+  Conf["withMarkdown"] extends true ? { precautionMarkdown: string } : object;
+type TypstContestExt<Conf extends ContentFlags> = Conf["withTypst"] extends true
+  ? { precautionTypst: string }
+  : object;
+
+/**
+ * 基础比赛配置（不含可选扩展）。
+ */
+export interface ContestDataBase<Conf extends ContentFlags = ContentFlags> {
   title: string;
   subtitle: string;
   dayname: string;
-  date: {
-    start: DateArr;
-    end: DateArr;
-  };
+  date: ContestDateRange;
   noi_style: boolean;
   file_io: boolean;
   use_pretest: boolean;
-  support_languages: {
-    name: string;
-    compile_options: string;
-  }[];
-  problems: (ProblemData &
-    (Conf["withMarkdown"] extends true // with markdown
-      ? { statementMarkdown: string }
-      : unknown) &
-    (Conf["withTypst"] extends true // with typst
-      ? { statementTypst: string }
-      : unknown))[];
-} & (Conf["withMarkdown"] extends true
-  ? { precautionMarkdown: string }
-  : unknown) &
-  (Conf["withTypst"] extends true ? { precautionTypst: string } : unknown);
+  support_languages: LanguageConfig[];
+  problems: ProblemData<Conf>[];
+}
 
-export default ContestData;
+export type ContestData<
+  Conf extends ContentFlags = { withMarkdown: false; withTypst: false },
+> = ContestDataBase<Conf> & MarkdownContestExt<Conf> & TypstContestExt<Conf>;
 
-export interface ImmerContestData extends ContestData<{ withMarkdown: true }> {
-  problems: (ContestData<{ withMarkdown: true }>["problems"][number] & {
-    key: import("crypto").UUID;
-  })[];
-  support_languages: (ContestData<{
-    withMarkdown: true;
-  }>["support_languages"][number] & {
-    key: import("crypto").UUID;
-  })[];
-  images: {
-    uuid: string;
-    name: string;
-    url: string; // blob URL for display
-  }[];
+export type UILanguageConfig = LanguageConfig & { key: import("crypto").UUID };
+
+export type UIProblemData<Conf extends ContentFlags = { withMarkdown: true }> =
+  ProblemData<Conf> & { key: import("crypto").UUID };
+
+export interface UIImageItem {
+  uuid: string;
+  name: string;
+  url: string; // blob URL for display
 }
 
 export interface EditorImageData {
   uuid: string;
   blob: Blob;
+}
+
+export interface ImmerContestData extends ContestData<{ withMarkdown: true }> {
+  problems: UIProblemData<{ withMarkdown: true }>[];
+  support_languages: UILanguageConfig[];
+  images: UIImageItem[];
 }
 
 export interface StoredContestData extends ContestData<{ withMarkdown: true }> {
@@ -82,12 +94,6 @@ export interface StoredContestData extends ContestData<{ withMarkdown: true }> {
   }[];
 }
 
-export type ContestDataWithImages = Omit<ImmerContestData, "problems" | "support_languages" | "images"> & {
-  images: {
-    uuid: string;
-    name: string;
-    url: string; // blob URL for display (not stored in DB/export)
-  }[];
-  problems: Omit<ImmerContestData["problems"][number], "key">[];
-  support_languages: Omit<ImmerContestData["support_languages"][number], "key">[];
+export type ContestDataWithImages = ContestData<{ withMarkdown: true }> & {
+  images: UIImageItem[];
 };

@@ -7,7 +7,7 @@ import remarkParse from "remark-parse";
 import { unified } from "unified";
 import remarkTypst from "./remarkTypst";
 import { isAxiosError } from "axios";
-import type ContestData from "@/types/contestData";
+import type { ContestData } from "@/types/contestData";
 import {
   type CompileTypstMessage,
   type RenderTypstMessage,
@@ -45,11 +45,11 @@ async function downloadMultiData(
     percent: number;
     loaded: number;
     total: number | undefined;
-  }) => void,
+  }) => void
 ) {
   const tasks = urls.map(
     (
-      url,
+      url
     ): {
       loaded: number;
       total: number | undefined;
@@ -70,7 +70,7 @@ async function downloadMultiData(
                 a == undefined || b.total === undefined
                   ? undefined
                   : a + b.total,
-              0,
+              0
             );
             report({
               percent: totalSize ? (totalLoaded / totalSize) * 100 : 0,
@@ -83,11 +83,11 @@ async function downloadMultiData(
           url,
           new Response(res.data, {
             headers: { "Content-Type": "application/octet-stream" },
-          }),
+          })
         );
         return res.data;
       },
-    }),
+    })
   );
   return await Promise.all(tasks.map((x) => x.exec()));
 }
@@ -109,7 +109,7 @@ export class TypstInitTask {
       (e) => {
         this.status = "rejected";
         throw e;
-      },
+      }
     );
   }
   updateProgress(info: {
@@ -143,7 +143,7 @@ export const typstInitInfo: {
 } = {
   compiler: new TypstInitTask(
     downloadMultiData([TypstCompilerWasmUrl, TypstRendererWasmUrl], (x) =>
-      typstInitInfo.compiler.updateProgress(x),
+      typstInitInfo.compiler.updateProgress(x)
     ).then(
       (res) => {
         typstCompilerWasm = res[0];
@@ -153,8 +153,8 @@ export const typstInitInfo: {
       (e) => {
         typstInitInfo.compiler.status = "rejected";
         throw e;
-      },
-    ),
+      }
+    )
   ),
   font: new TypstInitTask(
     (async () => {
@@ -174,7 +174,7 @@ export const typstInitInfo: {
               postscriptName: fontName,
               blob: () => cached.blob(),
             });
-        }),
+        })
       );
       if (unCachedFontUrlEntries.length && window.queryLocalFonts) {
         await requestFontAccessConfirm();
@@ -189,18 +189,18 @@ export const typstInitInfo: {
               blob: async () => {
                 const blob = await x.blob();
                 const fontUrl = unCachedFontUrlEntries.find(
-                  (v) => v[0] === x.postscriptName,
+                  (v) => v[0] === x.postscriptName
                 )?.[1];
                 if (fontUrl)
                   browserCache.put(
                     fontUrl,
                     new Response(blob, {
                       headers: { "Content-Type": "application/octet-stream" },
-                    }),
+                    })
                   );
                 return blob;
               },
-            })),
+            }))
           );
         } catch {
           // ignore
@@ -208,11 +208,11 @@ export const typstInitInfo: {
       }
       for (const [fontName, fontUrl] of fontUrlEntries) {
         const fontData = localFontDatas.find(
-          (x) => x.postscriptName === fontName,
+          (x) => x.postscriptName === fontName
         );
         if (fontData)
           localFontPromises.push(
-            fontData.blob().then(async (b) => await b.arrayBuffer()),
+            fontData.blob().then(async (b) => await b.arrayBuffer())
           );
         else remoteFontUrls.push(fontUrl);
       }
@@ -220,29 +220,29 @@ export const typstInitInfo: {
         await Promise.all([
           ...localFontPromises,
           downloadMultiData(remoteFontUrls, (x) =>
-            typstInitInfo.font.updateProgress(x),
+            typstInitInfo.font.updateProgress(x)
           ),
         ])
       ).flat();
-    })(),
+    })()
   ),
   package: new TypstInitTask(
     (async () => {
       const urls = RequiredPreloadPackages.map(
         (pkg) =>
-          `https://packages.typst.org/preview/${pkg.name}-${pkg.version}.tar.gz`,
+          `https://packages.typst.org/preview/${pkg.name}-${pkg.version}.tar.gz`
       );
       const datas = await downloadMultiData(urls, (x) =>
-        typstInitInfo.package.updateProgress(x),
+        typstInitInfo.package.updateProgress(x)
       );
       for (let i = 0; i < urls.length; ++i)
         preloadedPackages.set(urls[i], datas[i]);
-    })(),
+    })()
   ),
 };
 export let typstInitStatus: PromiseStatus = "pending";
 export const typstInitPromise = Promise.all(
-  Object.values(typstInitInfo).map((x) => x.promise),
+  Object.values(typstInitInfo).map((x) => x.promise)
 )
   .then(async () => {
     await send<InitMessage>("init", worker, {
@@ -266,7 +266,7 @@ const processor = unified()
   .freeze();
 
 function compilerPrepare(
-  data: ContestData<{ withMarkdown: true }>,
+  data: ContestData<{ withMarkdown: true }>
 ): [ContestData<{ withTypst: true }>, [string, string][]] {
   const assets = new Map<string, string>();
   const problemsWithTypst = data.problems.map((problem) => {
@@ -376,15 +376,15 @@ async function fetchAsset(url: string): Promise<ArrayBuffer> {
   if (url.startsWith("asset://")) {
     const uuid = url.substring(8); // Remove "asset://" prefix
     const blobUrl = assetUrlMapping.get(uuid);
-    
+
     if (!blobUrl) {
       throw new Error(`Asset not found: ${uuid}`);
     }
-    
+
     // Fetch the blob URL using axios
     url = blobUrl;
   }
-  
+
   // Handle regular URLs (including mapped blob URLs)
   try {
     const response = await axiosInstance.get<ArrayBuffer>(url);
@@ -393,7 +393,7 @@ async function fetchAsset(url: string): Promise<ArrayBuffer> {
     if (isAxiosError(e)) {
       console.error("Failed to download assets.", e);
       throw new Error(
-        "下载资源失败。这或许是因为浏览器的跨域限制。你可以尝试手动上传图片。",
+        "下载资源失败。这或许是因为浏览器的跨域限制。你可以尝试手动上传图片。"
       );
     }
     throw e;

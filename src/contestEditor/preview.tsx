@@ -1,5 +1,5 @@
 import { memo, useEffect, useRef, useState } from "react";
-import type ContestData from "@/types/contestData";
+import type { ContestData } from "@/types/contestData";
 import { compileToSvgDebounced } from "@/compiler";
 import { Alert } from "antd";
 import { isEqual } from "lodash";

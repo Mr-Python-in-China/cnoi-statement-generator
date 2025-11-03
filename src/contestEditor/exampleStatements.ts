@@ -1,4 +1,4 @@
-import type ContestData from "@/types/contestData";
+import type { ContestData } from "@/types/contestData";
 
 const exampleFiles = import.meta.glob<true, "raw">(
   ["./*/data.json", "./*/precaution.md", "./*/problem-*.md"],
