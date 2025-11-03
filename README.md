@@ -1,4 +1,4 @@
-# COI Statement Generator
+# CNOI Statement Generator
 
 在浏览器中快速将 Markdown 格式的题目转为 tuack 风格的 PDF 文件。
 
