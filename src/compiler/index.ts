@@ -296,62 +296,45 @@ export const compileToSvg = (data: ContestData<{ withMarkdown: true }>) =>
   send<RenderTypstMessage>("renderTypst", worker, compilerPrepare(data));
 
 export const compileToSvgDebounced = (() => {
-  let inFlight: Promise<string | undefined> | undefined = undefined;
-  let pendingData: ContestData<{ withMarkdown: true }> | undefined = undefined;
-  let nextDeferred:
-    | {
-        resolve: (v: string | undefined) => void;
-        reject: (e: unknown) => void;
-        promise: Promise<string | undefined>;
-      }
-    | undefined = undefined;
+  type Task = {
+    args: ContestData<{ withMarkdown: true }>;
+    promise: Promise<string | undefined>;
+    resolve: (v: string | undefined) => void;
+    reject: (e: unknown) => void;
+  };
+  let currentTask: Task | undefined = undefined;
+  let waitingTask: Task | undefined = undefined;
 
-  const runNext = () => {
-    if (!pendingData) {
-      // Nothing to run next
-      inFlight = undefined;
-      return;
-    }
-    const data = pendingData;
-    pendingData = undefined;
-    const deferred = nextDeferred!;
-    nextDeferred = undefined;
-    inFlight = compileToSvg(data)
-      .then((res) => {
-        deferred.resolve(res);
-        return res;
-      })
-      .catch((err) => {
-        deferred.reject(err);
-        throw err;
-      })
-      .finally(() => {
-        if (pendingData) runNext();
-        else inFlight = undefined;
+  const run = () => {
+    if (currentTask) return;
+    if (waitingTask) {
+      currentTask = waitingTask;
+      waitingTask = undefined;
+    } else return;
+    const task = currentTask;
+    compileToSvg(task.args)
+      .then(task.resolve, task.reject)
+      .then(() => {
+        currentTask = undefined;
+        run();
       });
   };
-
-  return (data: ContestData<{ withMarkdown: true }>) => {
-    if (!inFlight) {
-      // No job running, execute immediately
-      inFlight = compileToSvg(data).finally(() => {
-        if (pendingData) runNext();
-        else inFlight = undefined;
-      });
-      return inFlight;
-    }
-    // A job is running: coalesce into the next run with the latest data
-    pendingData = data;
-    if (!nextDeferred) {
-      let resolve!: (v: string | undefined) => void;
-      let reject!: (e: unknown) => void;
-      const promise = new Promise<string | undefined>((res, rej) => {
-        resolve = res;
-        reject = rej;
-      });
-      nextDeferred = { resolve, reject, promise };
-    }
-    return nextDeferred.promise;
+  return (args: ContestData<{ withMarkdown: true }>) => {
+    let resolve: (v: string | undefined) => void, reject: (e: unknown) => void;
+    const promise = new Promise<string | undefined>((res, rej) => {
+      resolve = res;
+      reject = rej;
+    });
+    const newTask: Task = {
+      args,
+      promise,
+      resolve: resolve!,
+      reject: reject!,
+    };
+    if (waitingTask) waitingTask.reject("Aborted");
+    waitingTask = newTask;
+    run();
+    return promise;
   };
 })();
 
