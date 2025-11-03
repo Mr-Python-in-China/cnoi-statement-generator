@@ -15,7 +15,7 @@ createRoot(document.getElementById("root")!).render(
         </TypstInitStatusProvider>
       </AntApp>
     </ConfigProvider>
-  </StrictMode>
+  </StrictMode>,
 );
 
 console.debug("App started");

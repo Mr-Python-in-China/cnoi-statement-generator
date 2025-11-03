@@ -44,7 +44,7 @@ function openDB(): Promise<IDBDatabase> {
  * Save config to IndexedDB
  */
 export async function saveConfigToDB(
-  data: ContestDataWithImages
+  data: ContestDataWithImages,
 ): Promise<void> {
   const db = await openDB();
   const transaction = db.transaction(CONFIG_STORE, "readwrite");
@@ -104,14 +104,16 @@ export async function loadConfigFromDB(): Promise<{
           new Promise<void>((resolveImg, rejectImg) => {
             const imgRequest = imageStore.get(img.uuid);
             imgRequest.onsuccess = () => {
-              const imageData = imgRequest.result as EditorImageData | undefined;
+              const imageData = imgRequest.result as
+                | EditorImageData
+                | undefined;
               if (imageData) {
                 imageMap.set(imageData.uuid, imageData.blob);
               }
               resolveImg();
             };
             imgRequest.onerror = () => rejectImg(imgRequest.error);
-          })
+          }),
       );
 
       try {
@@ -237,7 +239,7 @@ export function validateContestData(data: unknown): {
   const valid = validateSchema(data);
   if (!valid && validateSchema.errors) {
     const errors = validateSchema.errors.map(
-      (err) => `${err.instancePath} ${err.message}`
+      (err) => `${err.instancePath} ${err.message}`,
     );
     return { valid: false, errors };
   }
@@ -248,7 +250,7 @@ export function validateContestData(data: unknown): {
  * Export configuration with images as base64
  */
 export async function exportConfig(
-  data: ContestDataWithImages
+  data: ContestDataWithImages,
 ): Promise<string> {
   const imageData: {
     uuid: string;
@@ -292,7 +294,7 @@ export async function importConfig(json: string): Promise<{
   const validation = validateContestData(importData);
   if (!validation.valid) {
     throw new Error(
-      "配置文件验证失败：" + (validation.errors?.join(", ") || "未知错误")
+      "配置文件验证失败：" + (validation.errors?.join(", ") || "未知错误"),
     );
   }
 

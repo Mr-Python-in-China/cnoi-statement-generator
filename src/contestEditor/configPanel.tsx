@@ -49,16 +49,12 @@ const ConfigPanel: FC<{
   contestData: ImmerContestData;
   updateContestData: Updater<ImmerContestData>;
   setPanel: Dispatch<SetStateAction<string>>;
-}> = ({
-  contestData,
-  updateContestData,
-  setPanel,
-}) => {
+}> = ({ contestData, updateContestData, setPanel }) => {
   const { modal, message } = App.useApp();
   const formRef = useRef<HTMLFormElement>(null);
   const [width, setWidth] = useState(220);
   const [imageEditModeId, setImageEditModeId] = useState<number | undefined>(
-    undefined
+    undefined,
   );
   useEffect(() => {
     if (!formRef.current) return;
@@ -89,7 +85,7 @@ const ConfigPanel: FC<{
   }
   function updateLang(
     index: number,
-    cb: (x: ImmerContestData["support_languages"][number]) => void
+    cb: (x: ImmerContestData["support_languages"][number]) => void,
   ) {
     updateContestData((x) => {
       cb(x.support_languages[index]);
@@ -97,7 +93,7 @@ const ConfigPanel: FC<{
   }
   function updateProblemData(
     index: number,
-    cb: (x: ImmerContestData["problems"][number]) => void
+    cb: (x: ImmerContestData["problems"][number]) => void,
   ) {
     updateContestData((x) => {
       cb(x.problems[index]);
@@ -105,7 +101,7 @@ const ConfigPanel: FC<{
   }
   function updateImages(
     index: number,
-    cb: (x: ImmerContestData["images"][number]) => void
+    cb: (x: ImmerContestData["images"][number]) => void,
   ) {
     updateContestData((x) => {
       cb(x.images[index]);
@@ -114,7 +110,7 @@ const ConfigPanel: FC<{
   const removeProblem = removeProblemCallback(
     modal,
     setPanel,
-    updateContestData
+    updateContestData,
   );
   return (
     <form className="contest-editor-config" ref={formRef}>
@@ -276,7 +272,7 @@ const ConfigPanel: FC<{
                     onClick={() =>
                       updateContestData((x) => {
                         const i = x.support_languages.findIndex(
-                          (v) => v.key === lang.key
+                          (v) => v.key === lang.key,
                         );
                         if (i === -1)
                           throw new Error("Target language not found");
@@ -304,7 +300,7 @@ const ConfigPanel: FC<{
                 for (const p of x.problems)
                   if (!(newLang.name in p.submit_filename))
                     p.submit_filename.push(
-                      p.name + `.lang${x.support_languages.length + 1}`
+                      p.name + `.lang${x.support_languages.length + 1}`,
                     );
                 x.support_languages.push(newLang);
               })
@@ -385,7 +381,7 @@ const ConfigPanel: FC<{
                     onChange={(e) =>
                       updateProblemData(
                         index,
-                        (x) => (x.title = e.target.value)
+                        (x) => (x.title = e.target.value),
                       )
                     }
                   />
@@ -411,7 +407,7 @@ const ConfigPanel: FC<{
                       onChange={(e) =>
                         updateProblemData(
                           index,
-                          (x) => (x.dir = e.target.value)
+                          (x) => (x.dir = e.target.value),
                         )
                       }
                       className="contest-editor-config-monoinput"
@@ -425,7 +421,7 @@ const ConfigPanel: FC<{
                       onChange={(e) =>
                         updateProblemData(
                           index,
-                          (x) => (x.exec = e.target.value)
+                          (x) => (x.exec = e.target.value),
                         )
                       }
                       className="contest-editor-config-monoinput"
@@ -443,7 +439,7 @@ const ConfigPanel: FC<{
                       onChange={(e) =>
                         updateProblemData(
                           index,
-                          (x) => (x.input = e.target.value)
+                          (x) => (x.input = e.target.value),
                         )
                       }
                       className="contest-editor-config-monoinput"
@@ -457,7 +453,7 @@ const ConfigPanel: FC<{
                       onChange={(e) =>
                         updateProblemData(
                           index,
-                          (x) => (x.output = e.target.value)
+                          (x) => (x.output = e.target.value),
                         )
                       }
                       className="contest-editor-config-monoinput"
@@ -474,7 +470,7 @@ const ConfigPanel: FC<{
                     onChange={(e) =>
                       updateProblemData(
                         index,
-                        (x) => (x.time_limit = e.target.value)
+                        (x) => (x.time_limit = e.target.value),
                       )
                     }
                   />
@@ -487,7 +483,7 @@ const ConfigPanel: FC<{
                     onChange={(e) =>
                       updateProblemData(
                         index,
-                        (x) => (x.memory_limit = e.target.value)
+                        (x) => (x.memory_limit = e.target.value),
                       )
                     }
                   />
@@ -502,7 +498,7 @@ const ConfigPanel: FC<{
                     onChange={(e) =>
                       updateProblemData(
                         index,
-                        (x) => (x.testcase = e.target.value)
+                        (x) => (x.testcase = e.target.value),
                       )
                     }
                   />
@@ -516,7 +512,7 @@ const ConfigPanel: FC<{
                       onChange={(e) =>
                         updateProblemData(
                           index,
-                          (x) => (x.point_equal = e.target.value)
+                          (x) => (x.point_equal = e.target.value),
                         )
                       }
                     />
@@ -531,7 +527,7 @@ const ConfigPanel: FC<{
                       onChange={(e) =>
                         updateProblemData(
                           index,
-                          (x) => (x.pretestcase = e.target.value)
+                          (x) => (x.pretestcase = e.target.value),
                         )
                       }
                     />
@@ -550,7 +546,7 @@ const ConfigPanel: FC<{
                       onChange={(e) =>
                         updateProblemData(
                           index,
-                          (x) => (x.submit_filename[findex] = e.target.value)
+                          (x) => (x.submit_filename[findex] = e.target.value),
                         )
                       }
                       className="contest-editor-config-monoinput"
@@ -578,68 +574,68 @@ const ConfigPanel: FC<{
         <div>
           {contestData.images.map((img, index) => {
             return (
-            <Card
-              key={img.uuid}
-              classNames={{ body: "contest-editor-config-image-card" }}
-            >
-              <Image src={img.url} alt={img.name} height={150} />
-              <div>
-                {imageEditModeId !== index ? (
-                  <>
-                    <div>{img.name}</div>
-                    <Button
-                      type="text"
-                      icon={<FontAwesomeIcon icon={faPenToSquare} />}
-                      onClick={() => setImageEditModeId(index)}
+              <Card
+                key={img.uuid}
+                classNames={{ body: "contest-editor-config-image-card" }}
+              >
+                <Image src={img.url} alt={img.name} height={150} />
+                <div>
+                  {imageEditModeId !== index ? (
+                    <>
+                      <div>{img.name}</div>
+                      <Button
+                        type="text"
+                        icon={<FontAwesomeIcon icon={faPenToSquare} />}
+                        onClick={() => setImageEditModeId(index)}
+                      />
+                    </>
+                  ) : (
+                    <Input
+                      name="edit image name"
+                      value={img.name}
+                      autoFocus
+                      onChange={(e) =>
+                        updateImages(index, (x) => {
+                          x.name = e.target.value;
+                        })
+                      }
+                      onBlur={() => setImageEditModeId(undefined)}
                     />
-                  </>
-                ) : (
-                  <Input
-                    name="edit image name"
-                    value={img.name}
-                    autoFocus
-                    onChange={(e) =>
-                      updateImages(index, (x) => {
-                        x.name = e.target.value;
-                      })
+                  )}
+                </div>
+                <div>
+                  <Button
+                    type="text"
+                    icon={<FontAwesomeIcon icon={faMarkdown} />}
+                    onClick={() =>
+                      navigator.clipboard
+                        .writeText(`![${img.name}](asset://${img.uuid})`)
+                        .then(
+                          () => message.success("复制成功"),
+                          (e) => {
+                            console.error("Error when copy.", e);
+                            message.error(
+                              "复制失败：" +
+                                (e instanceof Error ? e.message : String(e)),
+                            );
+                          },
+                        )
                     }
-                    onBlur={() => setImageEditModeId(undefined)}
                   />
-                )}
-              </div>
-              <div>
-                <Button
-                  type="text"
-                  icon={<FontAwesomeIcon icon={faMarkdown} />}
-                  onClick={() =>
-                    navigator.clipboard
-                      .writeText(`![${img.name}](asset://${img.uuid})`)
-                      .then(
-                        () => message.success("复制成功"),
-                        (e) => {
-                          console.error("Error when copy.", e);
-                          message.error(
-                            "复制失败：" +
-                              (e instanceof Error ? e.message : String(e))
-                          );
-                        }
-                      )
-                  }
-                />
-                <Button
-                  type="text"
-                  icon={<FontAwesomeIcon icon={faTrashCan} />}
-                  onClick={async () => {
-                    const imageToDelete = contestData.images[index];
-                    await deleteImage({
-                      uuid: imageToDelete.uuid,
-                      updateContestData,
-                    });
-                  }}
-                />
-              </div>
-            </Card>
-          );
+                  <Button
+                    type="text"
+                    icon={<FontAwesomeIcon icon={faTrashCan} />}
+                    onClick={async () => {
+                      const imageToDelete = contestData.images[index];
+                      await deleteImage({
+                        uuid: imageToDelete.uuid,
+                        updateContestData,
+                      });
+                    }}
+                  />
+                </div>
+              </Card>
+            );
           })}
           <Upload.Dragger
             name="add image"

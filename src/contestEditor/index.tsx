@@ -37,13 +37,13 @@ const ContestEditorImpl: FC<{
   initialData: InitialData;
 }> = ({ initialData }) => {
   const [contestData, updateContestData] = useImmer<ImmerContestData>(
-    initialData.ContestData
+    initialData.ContestData,
   );
 
   // Register asset blob URLs with compiler whenever images change
   useEffect(() => {
     const mapping = new Map(
-      contestData.images.map((img) => [img.uuid, img.url])
+      contestData.images.map((img) => [img.uuid, img.url]),
     );
     registerAssetUrls(mapping);
   }, [contestData.images]);
@@ -61,7 +61,7 @@ const ContestEditorImpl: FC<{
           console.error("Failed to auto-save:", error);
         }
       }, 500),
-    []
+    [],
   );
 
   // Auto-save to IndexedDB whenever contestData changes (debounced)
@@ -106,7 +106,7 @@ const ContestEditorImpl: FC<{
   const removeProblem = removeProblemCallback(
     modal,
     setPanel,
-    updateContestData
+    updateContestData,
   );
   return (
     <div className="contest-editor">
@@ -143,7 +143,7 @@ const ContestEditorImpl: FC<{
                     // Clear IndexedDB and revoke blob URLs
                     await clearDB();
                     contestData.images.forEach((img) =>
-                      URL.revokeObjectURL(img.url)
+                      URL.revokeObjectURL(img.url),
                     );
 
                     const initialData = toImmerContestData({
@@ -178,7 +178,7 @@ const ContestEditorImpl: FC<{
 
                           // Clear old images
                           contestData.images.forEach((img) =>
-                            URL.revokeObjectURL(img.url)
+                            URL.revokeObjectURL(img.url),
                           );
 
                           // Create blob URLs and save to IndexedDB
@@ -209,7 +209,7 @@ const ContestEditorImpl: FC<{
                           };
 
                           updateContestData(() =>
-                            toImmerContestData(dataWithUrls)
+                            toImmerContestData(dataWithUrls),
                           );
                           setPanel("config");
                           message.success("配置导入成功");
