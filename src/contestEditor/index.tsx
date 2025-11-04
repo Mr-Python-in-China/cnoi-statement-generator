@@ -158,8 +158,14 @@ const ContestEditorImpl: FC<{
                     message.success("示例配置已经载入");
                   },
                 }}
+                trigger={["click", "hover"]}
               >
-                <a>
+                <a
+                  role="button"
+                  tabIndex={0}
+                  href="#"
+                  onClick={(e) => e.preventDefault()}
+                >
                   载入示例配置 <FontAwesomeIcon icon={faChevronDown} />
                 </a>
               </Dropdown>
