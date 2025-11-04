@@ -102,7 +102,7 @@ const ContestEditorImpl: FC<{
     return () => {
       mounted = false;
     };
-  });
+  }, []);
   const removeProblem = removeProblemCallback(
     modal,
     setPanel,
