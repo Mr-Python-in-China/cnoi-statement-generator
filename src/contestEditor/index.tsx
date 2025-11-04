@@ -2,7 +2,7 @@ import { type FC, useEffect, useState, useMemo, use, Suspense } from "react";
 import { useImmer } from "use-immer";
 import type { ImmerContestData } from "@/types/contestData";
 import exampleStatements from "./exampleStatements";
-import { App, Button, Tabs, type TabsProps, Space } from "antd";
+import { App, Button, Tabs, type TabsProps, Space, Dropdown } from "antd";
 import Body from "./body";
 import {
   newProblem,
@@ -14,17 +14,17 @@ import {
   faFileArrowDown,
   faFileImport,
   faFileExport,
-  faRotateLeft,
+  faChevronDown,
 } from "@fortawesome/free-solid-svg-icons";
 import { debounce } from "lodash";
 import { compileToPdf, typstInitPromise, registerAssetUrls } from "@/compiler";
 import {
   saveConfigToDB,
   loadConfigFromDB,
-  clearDB,
   exportConfig,
   importConfig,
   saveImageToDB,
+  clearDB,
 } from "@/utils/indexedDBUtils";
 
 import "./index.css";
@@ -130,35 +130,45 @@ const ContestEditorImpl: FC<{
         tabBarExtraContent={{
           right: (
             <Space>
-              <Button
-                type="default"
-                icon={<FontAwesomeIcon icon={faRotateLeft} />}
-                onClick={async () => {
-                  const confirmed = await modal.confirm({
-                    title: "确认重置配置",
-                    content:
-                      "这将清除所有当前的编辑，恢复为初始配置。此操作不可撤销。",
-                  });
-                  if (confirmed) {
-                    // Clear IndexedDB and revoke blob URLs
-                    await clearDB();
-                    contestData.images.forEach((img) =>
-                      URL.revokeObjectURL(img.url),
-                    );
-
-                    const initialData = toImmerContestData({
-                      ...exampleStatements["SupportedGrammer"],
+              <Dropdown
+                menu={{
+                  items: Object.keys(exampleStatements).map((x) => ({
+                    key: x,
+                    label: x,
+                  })),
+                  onClick: async ({ key }) => {
+                    const r = await modal.confirm({
+                      title: "载入示例配置",
+                      content: "载入示例配置将会覆盖当前的所有配置，是否继续？",
+                      okText: "继续",
+                      cancelText: "取消",
+                    });
+                    if (!r) return;
+                    for (const i of contestData.images)
+                      URL.revokeObjectURL(i.url);
+                    const example = exampleStatements[key];
+                    setPanel("config");
+                    const conf = toImmerContestData({
+                      ...example,
                       images: [],
                     });
-                    updateContestData(() => initialData);
-                    setPanel("config");
-                    message.success("配置已重置");
-                  }
+                    updateContestData(() => conf);
+                    await clearDB();
+                    await saveConfigToDB(conf);
+                    message.success("示例配置已经载入");
+                  },
                 }}
-                title="重置配置"
+                trigger={["click", "hover"]}
               >
-                重置
-              </Button>
+                <a
+                  role="button"
+                  tabIndex={0}
+                  href="#"
+                  onClick={(e) => e.preventDefault()}
+                >
+                  载入示例配置 <FontAwesomeIcon icon={faChevronDown} />
+                </a>
+              </Dropdown>
               <Button
                 type="default"
                 icon={<FontAwesomeIcon icon={faFileImport} />}
