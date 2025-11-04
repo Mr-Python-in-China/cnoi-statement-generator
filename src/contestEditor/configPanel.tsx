@@ -112,6 +112,12 @@ const ConfigPanel: FC<{
     setPanel,
     updateContestData,
   );
+  function syncAdvancedFields(problem: ImmerContestData["problems"][number]) {
+    if (problem.advancedEditing) return;
+    problem.dir = problem.exec = problem.name;
+    problem.input = problem.name + ".in";
+    problem.output = problem.name + ".out";
+  }
   return (
     <form className="contest-editor-config" ref={formRef}>
       <label>
@@ -317,7 +323,23 @@ const ConfigPanel: FC<{
           {contestData.problems.map((problem, index) => (
             <Card
               key={problem.key}
-              title={`第 ${index + 1} 题`}
+              title={
+                <div className="contest-editor-config-problem-card-title">
+                  <div>第 {index + 1} 题</div>
+                  <div>
+                    <Switch
+                      checked={problem.advancedEditing ?? false}
+                      onChange={(x) =>
+                        updateProblemData(index, (v) => {
+                          v.advancedEditing = x;
+                          syncAdvancedFields(v);
+                        })
+                      }
+                    />
+                    高级编辑
+                  </div>
+                </div>
+              }
               extra={[
                 <Button
                   key="move-up"
@@ -369,7 +391,10 @@ const ConfigPanel: FC<{
                     name={`problem ${index} name`}
                     value={problem.name}
                     onChange={(e) =>
-                      updateProblemData(index, (x) => (x.name = e.target.value))
+                      updateProblemData(index, (x) => {
+                        x.name = e.target.value;
+                        syncAdvancedFields(x);
+                      })
                     }
                   />
                 </label>
@@ -397,7 +422,7 @@ const ConfigPanel: FC<{
                   />
                 </label>
               </div>
-              {contestData.noi_style && (
+              {problem.advancedEditing && contestData.noi_style && (
                 <div>
                   <label>
                     <div>目录</div>
@@ -429,7 +454,7 @@ const ConfigPanel: FC<{
                   </label>
                 </div>
               )}
-              {contestData.file_io && (
+              {problem.advancedEditing && contestData.file_io && (
                 <div>
                   <label>
                     <div>输入文件名</div>

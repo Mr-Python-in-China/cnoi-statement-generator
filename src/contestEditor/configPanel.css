@@ -41,6 +41,16 @@
       max-width: 200px;
     }
   }
+  .contest-editor-config-problem-card-title {
+    display: flex;
+    align-items: center;
+    gap: 2em;
+    > :nth-child(2){
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+  }
   .contest-editor-config-problem > :nth-child(2) {
     display: flex;
     flex-direction: column;
