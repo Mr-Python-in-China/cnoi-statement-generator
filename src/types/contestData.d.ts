@@ -68,7 +68,7 @@ export type ContestData<
 export type UILanguageConfig = LanguageConfig & { key: import("crypto").UUID };
 
 export type UIProblemData<Conf extends ContentFlags = { withMarkdown: true }> =
-  ProblemData<Conf> & { key: import("crypto").UUID };
+  ProblemData<Conf> & { key: import("crypto").UUID; advancedEditing?: boolean };
 
 export interface UIImageItem {
   uuid: string;
@@ -87,11 +87,16 @@ export interface ImmerContestData extends ContestData<{ withMarkdown: true }> {
   images: UIImageItem[];
 }
 
+export interface StoredProblemData extends ProblemData<{ withMarkdown: true }> {
+  advancedEditing?: boolean;
+}
+
 export interface StoredContestData extends ContestData<{ withMarkdown: true }> {
   images: {
     uuid: string;
     name: string;
   }[];
+  problems: StoredProblemData[];
 }
 
 export type ContestDataWithImages = ContestData<{ withMarkdown: true }> & {
