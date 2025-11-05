@@ -44,7 +44,7 @@ This is `inline code`
 
 [NOI website](https://noi.cn/)
 
-Inline ![](https://private-static.mrpython.top/cnoi-gen-test-img-small_e06124f5.jpg) image
+Inline ![img](https://private-static.mrpython.top/cnoi-gen-test-img-small_e06124f5.jpg) image
 
 :::figure{caption=居中图片。在这里添加一些图片描述。}
 ![1.jpg](https://private-static.mrpython.top/cnoi-gen-test-img_324e0508.jpg)
@@ -58,7 +58,11 @@ caption 参数是可选的。
 文本也可以放进去。
 :::
 
-<https://luogu.com.cn>
+小![small](https://private-static.mrpython.top/cnoi-gen-test-img_324e0508.jpg){height=4em}![small](https://private-static.mrpython.top/cnoi-gen-test-img_324e0508.jpg){width=4em}图片
+
+支持的单位有 `pt`, `mm`, `cm`, `in`, `em` 和按页面比例的 `%`。
+
+简单链接：<https://luogu.com.cn>
 
 ---
 

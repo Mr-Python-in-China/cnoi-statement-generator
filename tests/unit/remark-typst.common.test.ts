@@ -4,10 +4,72 @@ import compileMdast, {
   collectDefinitions,
   escapeTypstString,
   handlers,
+  TYPST_RELATIVE_VALUE_REGEX,
 } from "@/compiler/remarkTypst/compiler";
 import { h64 } from "xxhashjs";
 
 const hash = (s: string) => h64(s, 147154220).toString(16).padStart(16, "0");
+
+describe("TYPST_RELATIVE_VALUE_REGEX", () => {
+  test("should match valid relative length expressions", () => {
+    const valid = [
+      // single term
+      "1pt",
+      "+1pt",
+      "-1pt",
+      "1.5pt",
+      ".5pt",
+      "0pt",
+      "  1pt  ",
+
+      // multiple terms with different spacings
+      "1pt+2mm",
+      "1pt +2mm",
+      "1pt+ 2mm",
+      "1pt + 2mm",
+      "  +.5em - .25em +1em   ",
+      "1pt-2mm+3.25cm-.5in+10em-20%",
+      "12cm+0.5in- .75mm + 100%",
+      "  -   .5mm    +   2cm    ",
+    ];
+
+    for (const s of valid)
+      expect(TYPST_RELATIVE_VALUE_REGEX.test(s)).toBeTruthy();
+  });
+
+  test("should not match invalid expressions", () => {
+    const invalid = [
+      "",
+      " ",
+      // missing unit
+      "1",
+      "1.5",
+      ".5",
+      // bad decimals
+      "1.pt",
+      ".pt",
+      "-.pt",
+      // invalid units or spaces between number and unit
+      "1 px",
+      "1pxs",
+      "1pt + 2 px",
+      "1pt + 2. mm",
+      // operator issues
+      "1pt +",
+      "+",
+      "1pt ++ 2mm",
+      "1pt -+ 2mm",
+      "1pt + -2mm",
+      // missing unit in subsequent term
+      "1pt + 2",
+      // missing operator between terms
+      "1% 2%",
+    ];
+
+    for (const s of invalid)
+      expect(TYPST_RELATIVE_VALUE_REGEX.test(s)).toBeFalsy();
+  });
+});
 
 test("Context Initialization", () => {
   const ctx = initContext();
@@ -996,6 +1058,39 @@ describe("Handlers", () => {
         filename: imageId!,
       });
     });
+    describe("Image with width and height", () => {
+      for (const width of ["100pt", "50%", "5em", undefined])
+        for (const height of ["200pt", "75%", "10em", undefined])
+          test(`width: ${width ?? "undefined"}, height: ${
+            height ?? "undefined"
+          }`, () => {
+            const ctx = initContext();
+            handlers.image(
+              {
+                type: "image",
+                url: "https://example.com/image.png",
+                alt: "test",
+                data: {
+                  attr: {
+                    width,
+                    height,
+                  },
+                },
+              },
+              ctx,
+            );
+            const result = ctx.data.join("");
+            expect(result.startsWith('#box(image("img-')).toBeTruthy();
+            expect(
+              result.endsWith(
+                '"' +
+                  (width ? `, width: ${width}` : "") +
+                  (height ? `, height: ${height}` : "") +
+                  ', alt: "test"))',
+              ),
+            ).toBeTruthy();
+          });
+    });
   });
   describe("Link Reference", () => {
     describe("Defined Reference", () => {
@@ -1143,6 +1238,43 @@ describe("Handlers", () => {
           );
         },
       );
+    });
+    describe("Image Reference with width and height", () => {
+      for (const width of ["100pt", "50%", "5em", undefined])
+        for (const height of ["200pt", "75%", "10em", undefined])
+          test(`width: ${width ?? "undefined"}, height: ${height ?? "undefined"}`, () => {
+            const ctx = initContext();
+            ctx.definitionById.set("ref1", {
+              type: "definition",
+              identifier: "ref1",
+              url: "https://example.com/ref1.png",
+            });
+            handlers.imageReference(
+              {
+                type: "imageReference",
+                identifier: "ref1",
+                referenceType: "full",
+                alt: "test",
+                data: {
+                  attr: {
+                    width,
+                    height,
+                  },
+                },
+              },
+              ctx,
+            );
+            const result = ctx.data.join("");
+            expect(result.startsWith('#box(image("img-')).toBeTruthy();
+            expect(
+              result.endsWith(
+                '"' +
+                  (width ? `, width: ${width}` : "") +
+                  (height ? `, height: ${height}` : "") +
+                  ', alt: "test"))',
+              ),
+            ).toBeTruthy();
+          });
     });
   });
   describe("Footnote Reference", () => {
