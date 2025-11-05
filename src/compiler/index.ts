@@ -1,12 +1,8 @@
 import axiosInstance from "@/utils/axiosInstance";
 import type { PackageSpec } from "@myriaddreamin/typst.ts/internal.types";
 import { listenMain, send } from "@mr.python/promise-worker-ts";
-import remarkGfm from "remark-gfm";
-import remarkMath from "remark-math";
-import remarkParse from "remark-parse";
-import { unified } from "unified";
-import remarkTypst from "./remarkTypst";
 import { isAxiosError } from "axios";
+import processor from "./processor";
 import type { ContestData } from "@/types/contestData";
 import {
   type CompileTypstMessage,
@@ -257,13 +253,6 @@ export const typstInitPromise = Promise.all(
     typstInitStatus = "rejected";
     throw new Error("Typst initialization failed.", { cause: err });
   });
-
-const processor = unified()
-  .use(remarkParse)
-  .use(remarkMath)
-  .use(remarkGfm)
-  .use(remarkTypst)
-  .freeze();
 
 function compilerPrepare(
   data: ContestData<{ withMarkdown: true }>,

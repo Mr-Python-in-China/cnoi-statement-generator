@@ -85,6 +85,10 @@ function revert(
   data.push(suffix);
 }
 
+function fallbackHandler(node: mdast.RootContent, ctx: CompilerContext) {
+  if ("children" in node)
+    for (const child of node.children) parseContent(child, ctx);
+}
 export const handlers = {
   text: (node, ctx) => {
     const { data } = ctx;
@@ -232,9 +236,9 @@ export const handlers = {
   image: (node, ctx) => {
     const { data, assets } = ctx;
     const assertID = "img-" + hash(node.url);
-    data.push('#box(figure(image("', assertID);
+    data.push('#box(image("', assertID);
     if (node.alt) data.push('", alt: "', escapeTypstString(node.alt));
-    data.push('")), width: 100%)');
+    data.push('"))');
     assets.push({
       assetUrl: node.url,
       filename: assertID,
@@ -260,9 +264,9 @@ export const handlers = {
     const def = definitionById.get(node.identifier);
     if (def) {
       const assertID = "img-" + hash(def.url);
-      data.push('#box(figure(image("', assertID);
+      data.push('#box(image("', assertID);
       if (node.alt) data.push('", alt: "', escapeTypstString(node.alt));
-      data.push('")), width: 100%)');
+      data.push('"))');
       assets.push({
         assetUrl: def.url,
         filename: assertID,
@@ -294,6 +298,27 @@ export const handlers = {
   },
   yaml: () => {
     // we have no use now, skip it
+  },
+  containerDirective: (node, ctx) => {
+    const { data } = ctx;
+    if (node.name === "figure") {
+      data.push("#figure(");
+      if (node.attributes?.caption)
+        data.push(
+          'caption: "',
+          escapeTypstString(String(node.attributes.caption)),
+          '", ',
+        );
+      data.push(")[\n");
+      for (const child of node.children) parseContent(child, ctx);
+      data.push("]\n");
+    } else fallbackHandler(node, ctx);
+  },
+  textDirective: (node, ctx) => {
+    fallbackHandler(node, ctx);
+  },
+  leafDirective: (node, ctx) => {
+    fallbackHandler(node, ctx);
   },
 } as const satisfies {
   [K in keyof mdast.RootContentMap]: (

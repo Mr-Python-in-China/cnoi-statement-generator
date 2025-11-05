@@ -967,7 +967,7 @@ describe("Handlers", () => {
       );
       const result = ctx.data.join("");
       const imageId = result.match(
-        /^#box\(figure\(image\("(img-[0-9a-f]{16})", alt: "Example\\\\Image"\)\), width: 100%\)$/,
+        /^#box\(image\("(img-[0-9a-f]{16})", alt: "Example\\\\Image"\)\)$/,
       )?.[1];
       expect(imageId).toBe("img-" + hash("https://example.com/image.png"));
       expect(ctx.assets.length).toBe(1);
@@ -987,7 +987,7 @@ describe("Handlers", () => {
       );
       const result = ctx.data.join("");
       const imageId = result.match(
-        /^#box\(figure\(image\("(img-[0-9a-f]{16})"\)\), width: 100%\)$/,
+        /^#box\(image\("(img-[0-9a-f]{16})"\)\)$/,
       )?.[1];
       expect(imageId).toBe("img-" + hash("https://example.com/image.png"));
       expect(ctx.assets.length).toBe(1);
@@ -1082,7 +1082,7 @@ describe("Handlers", () => {
           );
           const result = ctx.data.join("");
           const imageId = result.match(
-            /^#box\(figure\(image\("(img-[0-9a-f]{16})", alt: "img \\\\"\)\), width: 100%\)$/,
+            /^#box\(image\("(img-[0-9a-f]{16})", alt: "img \\\\"\)\)$/,
           )?.[1];
           expect(imageId).toBe("img-" + hash("https://example.com/ref1.png"));
           expect(ctx.assets.length).toBe(1);
@@ -1216,6 +1216,141 @@ describe("Handlers", () => {
     expect(ctx.assets.length).toBe(0);
     expect(ctx.definitionById.size).toBe(0);
     expect(ctx.footnoteById.size).toBe(0);
+  });
+  describe("Figure", () => {
+    test("Figure without caption", () => {
+      const ctx = initContext();
+      handlers.containerDirective(
+        {
+          type: "containerDirective",
+          name: "figure",
+          children: [
+            {
+              type: "paragraph",
+              children: [
+                {
+                  type: "text",
+                  value: "This is a figure caption.",
+                },
+              ],
+            },
+            {
+              type: "paragraph",
+              children: [
+                {
+                  type: "text",
+                  value: "This is figure content.",
+                },
+              ],
+            },
+          ],
+        },
+        ctx,
+      );
+      expect(ctx.data.join("")).toBe(`#figure()[
+#par[#"This is a figure caption."]
+#par[#"This is figure content."]
+]
+`);
+    });
+    test("Figure with caption", () => {
+      const ctx = initContext();
+      handlers.containerDirective(
+        {
+          type: "containerDirective",
+          name: "figure",
+          children: [
+            {
+              type: "paragraph",
+              children: [
+                {
+                  type: "text",
+                  value: "This is a figure caption.",
+                },
+              ],
+            },
+            {
+              type: "paragraph",
+              children: [
+                {
+                  type: "text",
+                  value: "This is figure content.",
+                },
+              ],
+            },
+          ],
+          attributes: {
+            caption: "Figure Caption Attribute",
+          },
+        },
+        ctx,
+      );
+      expect(ctx.data.join(""))
+        .toBe(`#figure(caption: "Figure Caption Attribute", )[
+#par[#"This is a figure caption."]
+#par[#"This is figure content."]
+]
+`);
+    });
+  });
+  describe("unknown directive node", () => {
+    test("unknown container directive", () => {
+      const ctx = initContext();
+      handlers.containerDirective(
+        {
+          type: "containerDirective",
+          name: "unknown",
+          children: [
+            {
+              type: "paragraph",
+              children: [
+                {
+                  type: "text",
+                  value: "Some content",
+                },
+              ],
+            },
+          ],
+        },
+        ctx,
+      );
+      expect(ctx.data.join("")).toBe(`#par[#"Some content"]
+`);
+    });
+    test("unknown leaf directive", () => {
+      const ctx = initContext();
+      handlers.leafDirective(
+        {
+          type: "leafDirective",
+          name: "unknownLeaf",
+          children: [
+            {
+              type: "text",
+              value: "Leaf content",
+            },
+          ],
+        },
+        ctx,
+      );
+      expect(ctx.data.join("")).toBe(`#"Leaf content"`);
+    });
+    test("unknown text directive", () => {
+      const ctx = initContext();
+      handlers.textDirective(
+        {
+          type: "textDirective",
+          name: "unknownText",
+          children: [
+            {
+              type: "text",
+              value: "Text content",
+            },
+          ],
+        },
+        ctx,
+      );
+      expect(ctx.data.join("")).toBe(`#"Text content"`);
+    });
   });
 });
 
@@ -1366,7 +1501,7 @@ test("Compiler Integration Test", () => {
 
 #heading(level: 1, [#"Remark-typst"#"[^fn1]"#" Integration Test"#footnote(label("user-footnote: fn2"))#" Document"])
 #par[#"!["#"Undefined Image Reference"#"][img1]"]
-#par[#box(figure(image("{{hash}}", alt: "Defined Image Reference")), width: 100%)]
+#par[#box(image("{{hash}}", alt: "Defined Image Reference"))]
 #par[#"["#"Undefined Link Reference"#"][link1]"]
 #par[#link("https://example.com/link2", [#"Defined Link Reference"])]
 
