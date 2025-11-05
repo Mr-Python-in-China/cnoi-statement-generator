@@ -22,6 +22,9 @@ export interface CompilerContext {
 const TYPST_HEADER = `#import "utils.typ": *\n\n`;
 const FOOTNOTE_ID_PREFIX = "user-footnote: ";
 
+export const TYPST_RELATIVE_VALUE_REGEX =
+  /^(?: *[+-]? *(?:\d+(?:\.\d+)?|\.\d+)(?:pt|mm|cm|in|em|%))(?: *[+-] *(?:\d+(?:\.\d+)?|\.\d+)(?:pt|mm|cm|in|em|%))* *$/;
+
 export function escapeTypstString(s: string) {
   return s
     .replace(/\\/g, "\\\\")
@@ -236,9 +239,15 @@ export const handlers = {
   image: (node, ctx) => {
     const { data, assets } = ctx;
     const assertID = "img-" + hash(node.url);
-    data.push('#box(image("', assertID);
-    if (node.alt) data.push('", alt: "', escapeTypstString(node.alt));
-    data.push('"))');
+    data.push('#box(image("', assertID, '"');
+    for (const k of ["width", "height"] as const) {
+      const val = node.data?.attr?.[k];
+      if (typeof val !== "string" || !TYPST_RELATIVE_VALUE_REGEX.test(val))
+        continue;
+      data.push(`, ${k}: ${val}`);
+    }
+    if (node.alt) data.push(', alt: "', escapeTypstString(node.alt), '"');
+    data.push("))");
     assets.push({
       assetUrl: node.url,
       filename: assertID,
@@ -264,9 +273,15 @@ export const handlers = {
     const def = definitionById.get(node.identifier);
     if (def) {
       const assertID = "img-" + hash(def.url);
-      data.push('#box(image("', assertID);
-      if (node.alt) data.push('", alt: "', escapeTypstString(node.alt));
-      data.push('"))');
+      data.push('#box(image("', assertID, '"');
+      for (const k of ["width", "height"] as const) {
+        const val = node.data?.attr?.[k];
+        if (typeof val !== "string" || !TYPST_RELATIVE_VALUE_REGEX.test(val))
+          continue;
+        data.push(`, ${k}: ${val}`);
+      }
+      if (node.alt) data.push(', alt: "', escapeTypstString(node.alt), '"');
+      data.push("))");
       assets.push({
         assetUrl: def.url,
         filename: assertID,
