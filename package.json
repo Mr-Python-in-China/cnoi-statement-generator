@@ -3,7 +3,7 @@
   "private": true,
   "description": "A website to generate CNOI-style statements for competitive programming.",
   "license": "AGPL-3.0",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "type": "module",
   "repository": {
     "url": "https://github.com/Mr-Python-in-China/cnoi-statement-generator"
