@@ -1,22 +1,11 @@
 import fs from "fs/promises";
 import path from "path";
-import remarkTypst from "../src/compiler/remarkTypst";
-import { unified } from "unified";
-import remarkParse from "remark-parse";
-import remarkMath from "remark-math";
-import remarkGfm from "remark-gfm";
-import type contestData from "../src/types/contestData";
+import { type ContestData } from "../src/types/contestData";
 import { exec } from "child_process";
 import axiosInstance from "../src/utils/axiosInstance";
+import processor from "../src/compiler/processor";
 
 const TYPST_CMD = process.env.TYPST_CMD || "typst";
-
-const processor = unified()
-  .use(remarkParse)
-  .use(remarkMath)
-  .use(remarkGfm)
-  .use(remarkTypst)
-  .freeze();
 
 (async () => {
   const examplesDir = path.resolve("examples");
@@ -29,7 +18,7 @@ const processor = unified()
       .readFile(dataJsonPath, { encoding: "utf8" })
       .catch(() => undefined);
     if (!jsonFile) continue;
-    const jsonData = JSON.parse(jsonFile) as contestData;
+    const jsonData = JSON.parse(jsonFile) as ContestData;
     for (const mdFileName of [
       "precaution.md" as const,
       ...jsonData.problems.map((_, i) => `problem-${i}.md` as const),

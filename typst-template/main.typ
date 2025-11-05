@@ -202,9 +202,12 @@
   }
   block(it)
 }
+
 #show figure: it => {
   pad(top: 9pt, bottom: 6pt, it)
 }
+#set figure(numbering: none)
+
 #show math.equation: set text(font: "Latin Modern Math")
 
 #set table(stroke: 0.3pt)
