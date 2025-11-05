@@ -18,4 +18,14 @@ createRoot(document.getElementById("root")!).render(
   </StrictMode>,
 );
 
-console.debug("App started");
+import("browser-update").then(({ default: browserUpdate }) => {
+  browserUpdate({
+    required: {
+      f: 117,
+      c: 131,
+      e: 131,
+      o: 116,
+    },
+    unsupported: true,
+  });
+});
