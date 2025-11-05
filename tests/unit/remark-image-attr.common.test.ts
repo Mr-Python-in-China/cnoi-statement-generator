@@ -23,10 +23,7 @@ describe("parseAttr", () => {
   test("allows quoted values with '=' and ',' inside", () => {
     const input = "{a='1,2=3', b=\"x,y=z\"}";
     const res = parseAttr(input);
-    expect(res).toEqual([
-      { a: "1,2=3", b: "x,y=z" },
-      "",
-    ]);
+    expect(res).toEqual([{ a: "1,2=3", b: "x,y=z" }, ""]);
   });
 
   test("allows trailing comma and spaces before '}'", () => {
