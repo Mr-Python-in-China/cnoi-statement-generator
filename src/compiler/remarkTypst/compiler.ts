@@ -205,9 +205,9 @@ export const handlers = {
     data.push(`#figure(table(columns: ${columns}, align: (`);
     for (let i = 0; i < columns; ++i) {
       const align = node.align?.[i];
-      if (!align || align === "center") data.push("center, ");
-      else if (align === "left") data.push("left, ");
-      else if (align === "right") data.push("right, ");
+      if (!align || align === "center") data.push("center + horizon, ");
+      else if (align === "left") data.push("left + horizon, ");
+      else if (align === "right") data.push("right + horizon, ");
       else {
         align satisfies never;
         throw new Error(`Unknown table alignment: ${align}`, { cause: node });
@@ -218,9 +218,10 @@ export const handlers = {
       row.type satisfies "tableRow";
       for (let i = 0; i < columns; ++i) {
         const cell: mdast.TableCell | undefined = row.children[i];
-        data.push("[");
-        if (cell) parseContent(cell, ctx);
-        data.push("], ");
+        if (cell && !cell.data?.removedByExtendedTable) {
+          parseContent(cell, ctx);
+          data.push(", ");
+        }
       }
       data.push("\n");
     }
@@ -230,7 +231,13 @@ export const handlers = {
     throw new Error("tableRow nodes should be handled in table nodes");
   },
   tableCell: (node, ctx) => {
+    const { data } = ctx;
+    data.push("table.cell(");
+    if (node.data?.colspan) data.push(`colspan: ${node.data.colspan}, `);
+    if (node.data?.rowspan) data.push(`rowspan: ${node.data.rowspan}, `);
+    data.push(")[");
     for (const child of node.children) parseContent(child, ctx);
+    data.push("]");
   },
   thematicBreak: (_node, ctx) => {
     const { data } = ctx;
