@@ -39,8 +39,8 @@ const remarkExtendedTable: Plugin<[], mdast.Root, mdast.Root> = () => {
       (row, index, parent) => {
         if (
           row.type !== "tableRow" ||
-          index == undefined ||
-          parent == undefined
+          index === undefined ||
+          parent === undefined
         )
           return;
         const prevRow = parent.children[index - 1];
