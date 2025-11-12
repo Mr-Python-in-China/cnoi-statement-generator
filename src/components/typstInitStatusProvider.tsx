@@ -1,5 +1,5 @@
 import { type FC, type ReactNode, useEffect, useState } from "react";
-import { App, Button, Progress } from "antd";
+import { App, Button, Progress, Space } from "antd";
 import {
   typstInitInfo,
   typstInitStatus,
@@ -87,11 +87,25 @@ const TypstInitStatusProvider: FC<{
           description: <>{progressBars}请前往控制台查看错误。</>,
           closable: false,
           duration: null,
-          actions: [
-            <Button onClick={() => window.location.reload()} type="primary">
-              刷新
-            </Button>,
-          ],
+          actions: (
+            <Space>
+              <Button
+                onClick={async () => {
+                  await window.caches.delete("typst-assets");
+                  window.location.reload();
+                }}
+                type="default"
+              >
+                清空缓存
+              </Button>
+              <Button
+                onClick={() => window.location.reload()}
+                type="primary"
+              >
+                刷新
+              </Button>
+            </Space>
+          ),
         });
       else if (typstInitStatus === "fulfilled")
         if (elapsed >= 1000)
