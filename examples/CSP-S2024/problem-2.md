@@ -82,7 +82,7 @@
 
 对于第三组数据，一种最优的染色方案为将 $A_1, A_2, A_4, A_5, A_7$ 染为红色，将 $A_3, A_6, A_8$ 染为蓝色（$\color{red}{35}\color{blue}{2}\color{red}{51}\color{blue}{2}\color{red}{1}\color{blue}{4}$），其对应 $C = [0, 0, 0, 5, 0, 2, 1, 0]$，最终得分为 $8$。
 
-# 样例 2
+## 样例 2
 
 见选手目录下的 _color/color2.in_ 与 _color/color2.ans_。
 
