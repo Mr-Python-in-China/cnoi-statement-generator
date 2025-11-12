@@ -218,7 +218,16 @@ export const handlers = {
       row.type satisfies "tableRow";
       for (let i = 0; i < columns; ++i) {
         const cell: mdast.TableCell | undefined = row.children[i];
-        if (cell && !cell.data?.removedByExtendedTable) {
+        if (!cell) {
+          parseContent(
+            {
+              type: "tableCell",
+              children: [],
+            },
+            ctx,
+          );
+          data.push(", ");
+        } else if (!cell.data?.removedByExtendedTable) {
           parseContent(cell, ctx);
           data.push(", ");
         }

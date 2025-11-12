@@ -858,11 +858,11 @@ describe("Handlers", () => {
         ctx,
       );
       expect(ctx.data.join("")).toBe(
-        `#figure(table(columns: 4, align: (left, center, right, center, ),
-[#"Header 1"], [#"Header 2"], [#"Header 3"], [#"Header 4"], 
-[#"Body 1,1"], [#"Body 1,2"], [#"Body 1,3"], [#"Body 1,4"], 
-[#"Body 2,1"], [#"Body 2,2"], [#"Body 2,3"], [], 
-[#"Body 3,1"], [#"Body 3,2"], [#"Body 3,3"], [#"Body 3,4"], 
+        `#figure(table(columns: 4, align: (left + horizon, center + horizon, right + horizon, center + horizon, ),
+table.cell()[#"Header 1"], table.cell()[#"Header 2"], table.cell()[#"Header 3"], table.cell()[#"Header 4"], 
+table.cell()[#"Body 1,1"], table.cell()[#"Body 1,2"], table.cell()[#"Body 1,3"], table.cell()[#"Body 1,4"], 
+table.cell()[#"Body 2,1"], table.cell()[#"Body 2,2"], table.cell()[#"Body 2,3"], table.cell()[], 
+table.cell()[#"Body 3,1"], table.cell()[#"Body 3,2"], table.cell()[#"Body 3,3"], table.cell()[#"Body 3,4"], 
 ))
 `,
       );
@@ -905,9 +905,9 @@ describe("Handlers", () => {
         ctx,
       );
       expect(ctx.data.join("")).toBe(
-        `#figure(table(columns: 2, align: (left, right, ),
-[#"Header 1"], [], 
-[#"Body 1,1"], [#"Body 1,2"], 
+        `#figure(table(columns: 2, align: (left + horizon, right + horizon, ),
+table.cell()[#"Header 1"], table.cell()[], 
+table.cell()[#"Body 1,1"], table.cell()[#"Body 1,2"], 
 ))
 `,
       );
@@ -954,9 +954,9 @@ describe("Handlers", () => {
         ctx,
       );
       expect(ctx.data.join("")).toBe(
-        `#figure(table(columns: 2, align: (center, center, ),
-[#"Header 1"], [#"Header 2"], 
-[#"Body 1,1"], [#"Body 1,2"], 
+        `#figure(table(columns: 2, align: (center + horizon, center + horizon, ),
+table.cell()[#"Header 1"], table.cell()[#"Header 2"], 
+table.cell()[#"Body 1,1"], table.cell()[#"Body 1,2"], 
 ))
 `,
       );
@@ -1002,6 +1002,113 @@ describe("Handlers", () => {
           ctx,
         ),
       ).toThrowError("Unknown table alignment: unknownString");
+    });
+    test("Cell with colspan merges horizontally", () => {
+      const ctx = initContext();
+      handlers.table(
+        {
+          type: "table",
+          align: ["center", "center", "center"],
+          children: [
+            {
+              type: "tableRow",
+              children: [
+                {
+                  type: "tableCell",
+                  children: [{ type: "text", value: "H1" }],
+                },
+                {
+                  type: "tableCell",
+                  children: [{ type: "text", value: "H2" }],
+                },
+                {
+                  type: "tableCell",
+                  children: [{ type: "text", value: "H3" }],
+                },
+              ],
+            },
+            {
+              type: "tableRow",
+              children: [
+                {
+                  type: "tableCell",
+                  data: { colspan: 2 },
+                  children: [{ type: "text", value: "A" }],
+                },
+                {
+                  type: "tableCell",
+                  data: { removedByExtendedTable: true },
+                  children: [{ type: "text", value: "should be removed" }],
+                },
+                { type: "tableCell", children: [{ type: "text", value: "B" }] },
+              ],
+            },
+          ],
+        },
+        ctx,
+      );
+      expect(ctx.data.join("")).toBe(
+        `#figure(table(columns: 3, align: (center + horizon, center + horizon, center + horizon, ),
+table.cell()[#"H1"], table.cell()[#"H2"], table.cell()[#"H3"], 
+table.cell(colspan: 2, )[#"A"], table.cell()[#"B"], 
+))
+`,
+      );
+    });
+    test("Cell with rowspan merges vertically", () => {
+      const ctx = initContext();
+      handlers.table(
+        {
+          type: "table",
+          align: ["left", "right"],
+          children: [
+            {
+              type: "tableRow",
+              children: [
+                {
+                  type: "tableCell",
+                  children: [{ type: "text", value: "H1" }],
+                },
+                {
+                  type: "tableCell",
+                  children: [{ type: "text", value: "H2" }],
+                },
+              ],
+            },
+            {
+              type: "tableRow",
+              children: [
+                {
+                  type: "tableCell",
+                  data: { rowspan: 2 },
+                  children: [{ type: "text", value: "X" }],
+                },
+                { type: "tableCell", children: [{ type: "text", value: "Y" }] },
+              ],
+            },
+            {
+              type: "tableRow",
+              children: [
+                {
+                  type: "tableCell",
+                  data: { removedByExtendedTable: true },
+                  children: [],
+                },
+                { type: "tableCell", children: [{ type: "text", value: "Z" }] },
+              ],
+            },
+          ],
+        },
+        ctx,
+      );
+      expect(ctx.data.join("")).toBe(
+        `#figure(table(columns: 2, align: (left + horizon, right + horizon, ),
+table.cell()[#"H1"], table.cell()[#"H2"], 
+table.cell(rowspan: 2, )[#"X"], table.cell()[#"Y"], 
+table.cell()[#"Z"], 
+))
+`,
+      );
     });
     test("Row Handler Error", () => {
       expect(() => handlers.tableRow()).toThrowError(
