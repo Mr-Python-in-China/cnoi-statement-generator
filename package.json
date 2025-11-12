@@ -10,7 +10,7 @@
   },
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b tsconfig.app.json && vite build",
+    "build": "tsc -b && vite build",
     "lint": "eslint .",
     "format": "prettier -w .",
     "preview": "vite preview",

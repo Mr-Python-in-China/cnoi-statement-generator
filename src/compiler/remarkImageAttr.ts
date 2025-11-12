@@ -1,5 +1,5 @@
 import { type Plugin } from "unified";
-import type * as mdast from "mdast";
+import type mdast from "mdast";
 import { visit } from "unist-util-visit";
 
 declare module "mdast" {
@@ -123,8 +123,6 @@ export function parseAttr(
 
 const remarkImageAttr: Plugin<[], mdast.Root, mdast.Root> = () => {
   return (tree) => {
-    if (tree.type !== "root")
-      throw new TypeError(`Expected root node, got ${tree.type}`);
     visit(tree, (node) => {
       if (!("children" in node)) return;
       for (let i = 1; i < node.children.length; ++i) {
