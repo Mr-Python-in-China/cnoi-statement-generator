@@ -5,6 +5,7 @@ import remarkMath from "remark-math";
 import remarkParse from "remark-parse";
 import remarkTypst from "./remarkTypst";
 import remarkImageAttr from "./remarkImageAttr";
+import remarkExtendedTable from "./remarkExtendedTable";
 
 const processor = unified()
   .use(remarkParse)
@@ -12,6 +13,7 @@ const processor = unified()
   .use(remarkGfm)
   .use(remarkImageAttr)
   .use(remarkDirective)
+  .use(remarkExtendedTable)
   .use(remarkTypst)
   .freeze();
 
