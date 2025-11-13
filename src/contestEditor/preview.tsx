@@ -49,7 +49,9 @@ const Preview = memo<{ data: ContestData<{ withMarkdown: true }> }>(
         if (preventScroll) preventScroll = false;
         else scrollRatio = container.scrollTop / container.scrollWidth;
       };
-      containerRef.current.addEventListener("scroll", handleScroll);
+      containerRef.current.addEventListener("scroll", handleScroll, {
+        passive: true,
+      });
       const handleResize = () => {
         const scrollTop = scrollRatio * container.scrollWidth;
         // If scroll to the bottom, we need to update scrollRatio, else prevent it
@@ -63,7 +65,7 @@ const Preview = memo<{ data: ContestData<{ withMarkdown: true }> }>(
         container.removeEventListener("scroll", handleScroll);
         ro.disconnect();
       };
-    });
+    }, []);
     const s =
       typeof svg === "string" &&
       svg

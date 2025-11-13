@@ -20,6 +20,7 @@
 .contest-editor-preview-container {
   overflow: auto;
   height: 100%;
+  transform: translateZ(0);
   > svg {
     width: 100%;
     height: auto;
