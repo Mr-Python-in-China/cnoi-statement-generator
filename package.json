@@ -17,7 +17,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
-    "compile-typst-examples": "jiti scripts/compile-typst-examples.ts"
+    "compile-typst-examples": "jiti scripts/compile-typst-examples.ts",
+    "quality": "prettier -c . && eslint . && tsc -b && npm run test"
   },
   "dependencies": {
     "@ant-design/v5-patch-for-react-19": "^1.0.3",
