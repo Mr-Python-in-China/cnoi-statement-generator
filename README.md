@@ -1,8 +1,7 @@
 # CNOI Statement Generator
 
 ![Gitea Stars](https://img.shields.io/github/stars/Mr-Python-in-China/cnoi-statement-generator) ![GitHub last commit](https://img.shields.io/github/last-commit/Mr-Python-in-China/cnoi-statement-generator)
- [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/Mr-Python-in-China/cnoi-statement-generator) 
-
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/Mr-Python-in-China/cnoi-statement-generator)
 
 <https://cnoi.mrpython.top>
 

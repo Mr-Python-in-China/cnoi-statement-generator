@@ -98,10 +98,7 @@ const TypstInitStatusProvider: FC<{
               >
                 清空缓存
               </Button>
-              <Button
-                onClick={() => window.location.reload()}
-                type="primary"
-              >
+              <Button onClick={() => window.location.reload()} type="primary">
                 刷新
               </Button>
             </Space>
