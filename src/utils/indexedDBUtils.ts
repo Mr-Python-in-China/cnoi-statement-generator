@@ -5,7 +5,7 @@ import type {
 } from "@/types/contestData";
 import configSchema from "../../typst-template/config-schema.json";
 import Ajv from "ajv";
-import Dexie, { type EntityTable } from "dexie";
+import Dexie from "dexie";
 
 const ajv = new Ajv({ allErrors: true });
 const validateSchema = ajv.compile(configSchema);
@@ -13,19 +13,15 @@ const validateSchema = ajv.compile(configSchema);
 /**
  * Dexie database schema
  */
-interface ConfigStore {
-  key: string;
-  value: StoredContestData;
-}
-
 class CnoiDatabase extends Dexie {
-  config!: EntityTable<ConfigStore, "key">;
-  images!: EntityTable<EditorImageData, "uuid">;
+  // Using Table instead of EntityTable to support non-inlined keys
+  config!: Dexie.Table<StoredContestData, string>;
+  images!: Dexie.Table<EditorImageData, string>;
 
   constructor() {
     super("cnoi-statement-generator");
     this.version(1).stores({
-      config: "key",
+      config: "", // Empty string means the key is not part of the object (out-of-line key)
       images: "uuid",
     });
   }
@@ -48,10 +44,7 @@ export async function saveConfigToDB(
     })),
   };
 
-  await db.config.put({
-    key: "current",
-    value: storedData,
-  });
+  await db.config.put(storedData, "current");
 }
 
 /**
@@ -61,13 +54,11 @@ export async function loadConfigFromDB(): Promise<{
   data: StoredContestData;
   images: Map<string, Blob>; // uuid -> Blob
 } | null> {
-  const configRecord = await db.config.get("current");
+  const storedData = await db.config.get("current");
 
-  if (!configRecord) {
+  if (!storedData) {
     return null;
   }
-
-  const storedData = configRecord.value;
 
   // Load all images
   const imageMap = new Map<string, Blob>();
