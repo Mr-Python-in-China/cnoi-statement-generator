@@ -40,6 +40,19 @@
 
 如果你想要提交 PR，建议先开 issue 沟通相关细节后再进行。
 
+## 开发与部署
+
+项目是使用 Vite + React 构建的单页应用。题目数据先通过 unified 生态工具链将 markdown 转换为 typst 源码，再通过 [typst.ts](https://github.com/Myriad-Dreamin/typst.ts) 编译为 SVG 并渲染。你可以通过 [deepwiki](https://deepwiki.com/Mr-Python-in-China/cnoi-statement-generator) 让 AI 为你讲解详细内容。
+
+要想编译此项目，你需要 Node.js 22+ ~~低版本可能能用，没试过~~。使用以下命令构建页面：
+
+```shell
+npm install
+npm run build
+```
+
+产物将输出到 `./dist` 目录下。使用任意静态服务器对外公开该目录即可。
+
 ## 许可证
 
 本项目参考了 [tuack](https://gitee.com/mulab/oi_tools) 中的模板文件，根据 GPL 协议的传染性，以及结合本项目为 web 服务的性质，使用 AGPL 3.0 协议。详细条款请见 [LICENSE](./LICENSE) 文件。
