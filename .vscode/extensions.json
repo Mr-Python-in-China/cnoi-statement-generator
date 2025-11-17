@@ -1,0 +1,9 @@
+{
+  "recommendations": [
+    "esbenp.prettier-vscode",
+    "myriad-dreamin.tinymist",
+    "vitest.explorer",
+    "dbaeumer.vscode-eslint",
+    "firefox-devtools.vscode-firefox-debug"
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "configurations": [
+    {
+      "type": "msedge",
+      "name": "Launch Edge",
+      "request": "launch",
+      "url": "http://localhost:4481"
+    },
+    {
+      "type": "firefox",
+      "name": "Launch Firefox",
+      "request": "launch",
+      "url": "http://localhost:4481"
+    }
+  ]
+}

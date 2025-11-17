@@ -1,0 +1,5 @@
+{
+  "tinymist.systemFonts": false,
+  "tinymist.fontPaths": ["assets/typst/fonts"],
+  "editor.formatOnSave": true
+}
