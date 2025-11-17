@@ -1,8 +1,8 @@
 # CNOI Statement Generator
 
-![Gitea Stars](https://img.shields.io/github/stars/Mr-Python-in-China/cnoi-statement-generator)
-![GitHub Release](https://img.shields.io/github/v/release/Mr-Python-in-China/cnoi-statement-generator)
-![GitHub last commit](https://img.shields.io/github/last-commit/Mr-Python-in-China/cnoi-statement-generator)
+[![Gitea Stars](https://img.shields.io/github/stars/Mr-Python-in-China/cnoi-statement-generator)](https://github.com/Mr-Python-in-China/cnoi-statement-generator)
+[![GitHub Release](https://img.shields.io/github/v/release/Mr-Python-in-China/cnoi-statement-generator)](https://github.com/Mr-Python-in-China/cnoi-statement-generator/releases/tag/0.4.3)
+[![GitHub last commit (dev branch)](https://img.shields.io/github/last-commit/Mr-Python-in-China/cnoi-statement-generator/dev)](https://github.com/Mr-Python-in-China/cnoi-statement-generator/commits/dev/)
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/Mr-Python-in-China/cnoi-statement-generator)
 
 <https://cnoi.mrpython.top>
