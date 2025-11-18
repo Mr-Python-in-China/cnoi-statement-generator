@@ -39,7 +39,7 @@
     "async-mutex": "^0.5.0",
     "axios": "^1.12.2",
     "browser-update": "^3.3.63",
-    "dayjs": "^1.11.18",
+    "dayjs": "^1.11.19",
     "dexie": "^4.2.1",
     "lodash": "^4.17.21",
     "lodash.debounce": "^4.0.8",
