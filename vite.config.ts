@@ -1,6 +1,7 @@
 import { resolve } from "node:path";
-import { defineConfig, type PluginOption } from "vite";
+import { defineConfig, type PluginOption, type UserConfig } from "vite";
 import react from "@vitejs/plugin-react";
+import { exec } from "node:child_process";
 
 const TypstFontUrlEntriesPlugin = (): PluginOption => {
   const name = "typst-font-url-entries-plugin";
@@ -60,42 +61,60 @@ const TypstFontUrlEntriesPlugin = (): PluginOption => {
 };
 
 // https://vite.dev/config/
-export default defineConfig({
-  base: "./",
-  plugins: [
-    TypstFontUrlEntriesPlugin(),
-    react({
-      babel: {
-        plugins: [["babel-plugin-react-compiler"]],
-      },
+export default defineConfig(async (): Promise<UserConfig> => {
+  const gitCommitHash = await new Promise<undefined | string>((resolve) =>
+    exec("git rev-parse --short HEAD", (err, stdout) => {
+      if (err) resolve(undefined);
+      else resolve(stdout.trim());
     }),
-  ],
-  resolve: {
-    alias: [
-      { find: "@", replacement: resolve("src") },
-      { find: "typst-template", replacement: resolve("typst-template") },
-      { find: "assets", replacement: resolve("assets") },
-    ],
-  },
-  server: {
-    port: 4481,
-  },
-  worker: {
-    format: "es",
-  },
-  test: {
-    coverage: {
-      include: ["src/**/*.{ts,tsx}"],
-    },
-    projects: [
-      {
-        extends: true,
-        test: {
-          name: "node",
-          environment: "node",
-          include: ["tests/**/*.test.ts", "tests/**/*.node.test.ts"],
+  );
+  const isDirty = await new Promise<boolean>((resolve) =>
+    exec("git diff-index --quiet HEAD", (err) => resolve(Boolean(err))),
+  );
+  return {
+    base: "./",
+    plugins: [
+      TypstFontUrlEntriesPlugin(),
+      react({
+        babel: {
+          plugins: [["babel-plugin-react-compiler"]],
         },
-      },
+      }),
     ],
-  },
+    resolve: {
+      alias: [
+        { find: "@", replacement: resolve("src") },
+        { find: "typst-template", replacement: resolve("typst-template") },
+        { find: "assets", replacement: resolve("assets") },
+      ],
+    },
+    define: {
+      GIT_COMMIT_INFO: JSON.stringify(
+        gitCommitHash === undefined
+          ? "unknown"
+          : gitCommitHash + (isDirty ? "-dirty" : ""),
+      ),
+    },
+    server: {
+      port: 4481,
+    },
+    worker: {
+      format: "es",
+    },
+    test: {
+      coverage: {
+        include: ["src/**/*.{ts,tsx}"],
+      },
+      projects: [
+        {
+          extends: true,
+          test: {
+            name: "node",
+            environment: "node",
+            include: ["tests/**/*.test.ts", "tests/**/*.node.test.ts"],
+          },
+        },
+      ],
+    },
+  };
 });

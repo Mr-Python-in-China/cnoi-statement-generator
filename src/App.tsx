@@ -21,7 +21,8 @@ const App: FC = () => {
             <FontAwesomeIcon icon={faGithub} />
             {appName}
           </a>{" "}
-          v{appVersion}
+          <span>v{appVersion}</span>{" "}
+          <span>({GIT_COMMIT_INFO + (import.meta.env.DEV ? "-dev" : "")})</span>
         </div>
         <div>Developed by MrPython</div>
       </footer>
