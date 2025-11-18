@@ -375,7 +375,7 @@ const ContestEditor: FC = () => {
     if (!stored)
       return {
         ContestData: toImmerContestData({
-          ...exampleStatements["SupportedGrammer"],
+          ...exampleStatements["SupportedGrammar"],
           images: [],
         }),
       };
