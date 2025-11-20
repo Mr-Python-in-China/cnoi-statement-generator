@@ -118,6 +118,16 @@ test("Collect Definitions", () => {
           identifier: "fn2",
           children: [],
         },
+        {
+          type: "definition",
+          identifier: "def3",
+          url: "https://example.com/def3-repeated",
+        },
+        {
+          type: "footnoteDefinition",
+          identifier: "fn2",
+          children: [{ type: "html", value: "Repeated" }],
+        },
       ],
     },
     ctx,
@@ -132,6 +142,7 @@ test("Collect Definitions", () => {
   for (let i = 0; i < 2; ++i) {
     const dat = ctx.footnoteById.get(`fn${i + 1}`)!;
     expect(dat.node.identifier).toBe(`fn${i + 1}`);
+    expect(dat.node.children.length).toBe(0);
     expect(dat.visited).toBe(false);
   }
 });
@@ -1259,7 +1270,7 @@ table.cell()[#"Z"],
   });
   describe("Image Reference", () => {
     describe("Defined Reference", () => {
-      test.for(["full", "collapsed", "shortcut"])(
+      test.for(["full", "collapsed", "shortcut"] as const)(
         `Reference Type: %s`,
         (referenceType) => {
           const ctx = initContext();
@@ -1277,7 +1288,7 @@ table.cell()[#"Z"],
             {
               type: "imageReference",
               identifier: "ref1 \\",
-              referenceType: referenceType as never,
+              referenceType: referenceType,
               alt: "img \\",
             },
             ctx,
@@ -1295,8 +1306,44 @@ table.cell()[#"Z"],
         },
       );
     });
+    describe("Defined Reference without alt", () => {
+      test.for(["full", "collapsed", "shortcut"] as const)(
+        `Reference Type: %s`,
+        (referenceType) => {
+          const ctx = initContext();
+          ctx.definitionById.set("ref1 \\", {
+            type: "definition",
+            identifier: "ref1 \\",
+            url: "https://example.com/ref1.png",
+          });
+          ctx.definitionById.set("ref2 \\", {
+            type: "definition",
+            identifier: "ref2 \\",
+            url: "https://example.com/ref2.jpg",
+          });
+          handlers.imageReference(
+            {
+              type: "imageReference",
+              identifier: "ref1 \\",
+              referenceType: referenceType,
+            },
+            ctx,
+          );
+          const result = ctx.data.join("");
+          const imageId = result.match(
+            /^#box\(image\("(img-[0-9a-f]{16})"\)\)$/,
+          )?.[1];
+          expect(imageId).toBe("img-" + hash("https://example.com/ref1.png"));
+          expect(ctx.assets.length).toBe(1);
+          expect(ctx.assets[0]).toEqual({
+            assetUrl: "https://example.com/ref1.png",
+            filename: imageId!,
+          });
+        },
+      );
+    });
     describe("Undefined Reference", () => {
-      test.for(["full", "collapsed", "shortcut"])(
+      test.for(["full", "collapsed", "shortcut"] as const)(
         `Reference Type: %s`,
         (referenceType) => {
           const ctx = initContext();
@@ -1304,7 +1351,7 @@ table.cell()[#"Z"],
             {
               type: "imageReference",
               identifier: "undefined-ref \\",
-              referenceType: referenceType as never,
+              referenceType: referenceType,
               alt: "img \\",
             },
             ctx,
@@ -1322,7 +1369,7 @@ table.cell()[#"Z"],
       );
     });
     describe("Undefined Reference with no alt", () => {
-      test.for(["full", "collapsed", "shortcut"])(
+      test.for(["full", "collapsed", "shortcut"] as const)(
         `Reference Type: %s`,
         (referenceType) => {
           const ctx = initContext();
@@ -1330,7 +1377,7 @@ table.cell()[#"Z"],
             {
               type: "imageReference",
               identifier: "undefined-ref \\",
-              referenceType: referenceType as never,
+              referenceType: referenceType,
             },
             ctx,
           );
