@@ -1,4 +1,4 @@
-import { memo, useEffect, useRef, useState } from "react";
+import { memo, useEffect, useImperativeHandle, useRef, useState } from "react";
 import type { ContestData } from "@/types/contestData";
 import { compileToSvgDebounced } from "@/compiler";
 import { Alert } from "antd";
@@ -12,13 +12,21 @@ import "./preview.css";
 const PreviewContainer = memo<{
   svg: string;
   ref?: React.Ref<HTMLDivElement>;
-}>(({ svg, ref }) => (
-  <div
-    className="contest-editor-preview-container"
-    dangerouslySetInnerHTML={{ __html: svg || "" }}
-    ref={ref}
-  />
-));
+}>(({ svg, ref: refParam }) => {
+  const ref = useRef<HTMLDivElement>(null);
+  useImperativeHandle(refParam, () => ref.current!, []);
+  useEffect(() => {
+    const host = ref.current;
+    if (!host || host.shadowRoot) return;
+    host.attachShadow({ mode: "open" });
+  }, []);
+  useEffect(() => {
+    if (!ref.current?.shadowRoot) return;
+    ref.current.shadowRoot.innerHTML =
+      svg + "<style>.typst-doc{width:100%;height:auto;}</style>";
+  }, [svg]);
+  return <div className="contest-editor-preview-container" ref={ref} />;
+});
 
 const Preview = memo<{ data: ContestData<{ withMarkdown: true }> }>(
   ({ data }) => {
@@ -84,14 +92,14 @@ const Preview = memo<{ data: ContestData<{ withMarkdown: true }> }>(
         ro.disconnect();
       };
     }, []);
-    const s =
-      typeof svg === "string" &&
-      svg
-        .replace(
-          /<style type="text\/css">/g,
-          '<style type="text/css">.contest-editor-preview-container{',
-        )
-        .replace(/<\/style>/g, "}</style>");
+    // const s =
+    //   typeof svg === "string" &&
+    //   svg
+    //     .replace(
+    //       /<style type="text\/css">/g,
+    //       '<style type="text/css">.contest-editor-preview-container{',
+    //     )
+    //     .replace(/<\/style>/g, "}</style>");
     return (
       <div className="contest-editor-preview">
         {error && (
@@ -118,7 +126,10 @@ const Preview = memo<{ data: ContestData<{ withMarkdown: true }> }>(
             showIcon
           />
         )}
-        <PreviewContainer svg={s || ""} ref={containerRef} />
+        <PreviewContainer
+          svg={typeof svg === "string" ? svg : ""}
+          ref={containerRef}
+        />
         <img
           src={loadingImg}
           alt="加载预览中"
