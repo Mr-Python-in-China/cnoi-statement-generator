@@ -34,7 +34,6 @@
     "@myriaddreamin/typst-ts-web-compiler": "^0.6.1-rc4",
     "@myriaddreamin/typst.ts": "^0.6.1-rc4",
     "@uiw/react-codemirror": "^4.25.2",
-    "@ungap/random-uuid": "^0.1.0",
     "ajv": "^8.17.1",
     "antd": "^5.27.6",
     "async-mutex": "^0.5.0",
