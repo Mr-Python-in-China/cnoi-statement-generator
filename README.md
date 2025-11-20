@@ -31,10 +31,10 @@
 
 目前已经测试了以下浏览器。如果你的浏览器版本过旧，可能无法正常打开，请及时更新浏览器。
 
-- Firefox 117+
-- Google Chrome 131+
-- Microsoft Edge 131+
-- Opera 116+
+- Firefox 88+
+- Google Chrome 88+
+- Microsoft Edge 88+
+- Opera 75+
 
 ## 贡献
 

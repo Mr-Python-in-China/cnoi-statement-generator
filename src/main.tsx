@@ -36,10 +36,10 @@ createRoot(document.getElementById("root")!).render(
 import("browser-update").then(({ default: browserUpdate }) => {
   browserUpdate({
     required: {
-      f: 117,
-      c: 131,
-      e: 131,
-      o: 116,
+      f: 88,
+      c: 88,
+      e: 88,
+      o: 75,
     },
     unsupported: true,
   });
