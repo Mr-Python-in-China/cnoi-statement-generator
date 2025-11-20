@@ -2,19 +2,18 @@ import axiosInstance from "@/utils/axiosInstance";
 import type { PackageSpec } from "@myriaddreamin/typst.ts/internal.types";
 import { listenMain, send } from "@mr.python/promise-worker-ts";
 import { isAxiosError } from "axios";
-import processor from "./processor";
 import type { ContestData } from "@/types/contestData";
 import {
   type CompileTypstMessage,
   type RenderTypstMessage,
   type InitMessage,
   type FetchAssetMessage,
-} from "./typst.worker";
+} from "./compiler.worker";
 
 import fontUrlEntries from "virtual:typst-font-url-entries";
 import TypstCompilerWasmUrl from "@myriaddreamin/typst-ts-web-compiler/pkg/typst_ts_web_compiler_bg.wasm?url";
 import TypstRendererWasmUrl from "@myriaddreamin/typst-ts-renderer/pkg/typst_ts_renderer_bg.wasm?url";
-import TypstWorker from "./typst.worker?worker";
+import TypstWorker from "./compiler.worker?worker";
 
 const worker = new TypstWorker();
 
@@ -254,35 +253,10 @@ export const typstInitPromise = Promise.all(
     throw new Error("Typst initialization failed.", { cause: err });
   });
 
-function compilerPrepare(
-  data: ContestData<{ withMarkdown: true }>,
-): [ContestData<{ withTypst: true }>, [string, string][]] {
-  const assets = new Map<string, string>();
-  const problemsWithTypst = data.problems.map((problem) => {
-    const res = processor.processSync(problem.statementMarkdown);
-    for (const v of res.data.assets || []) assets.set(v.filename, v.assetUrl);
-    return {
-      ...problem,
-      statementTypst: res.toString(),
-    };
-  });
-  const precautionRes = processor.processSync(data.precautionMarkdown);
-  for (const v of precautionRes.data.assets || [])
-    assets.set(v.filename, v.assetUrl);
-  return [
-    {
-      ...data,
-      problems: problemsWithTypst,
-      precautionTypst: precautionRes.toString(),
-    },
-    Array.from(assets.entries()),
-  ];
-}
-
 export const compileToPdf = (data: ContestData<{ withMarkdown: true }>) =>
-  send<CompileTypstMessage>("compileTypst", worker, compilerPrepare(data));
+  send<CompileTypstMessage>("compileTypst", worker, data);
 export const compileToSvg = (data: ContestData<{ withMarkdown: true }>) =>
-  send<RenderTypstMessage>("renderTypst", worker, compilerPrepare(data));
+  send<RenderTypstMessage>("renderTypst", worker, data);
 
 export const compileToSvgDebounced = (() => {
   type Task = {

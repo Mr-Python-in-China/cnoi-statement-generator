@@ -1,4 +1,5 @@
-import { resolve } from "node:path";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import { defineConfig, type PluginOption, type UserConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import { exec } from "node:child_process";
@@ -86,6 +87,17 @@ export default defineConfig(async (): Promise<UserConfig> => {
         { find: "@", replacement: resolve("src") },
         { find: "typst-template", replacement: resolve("typst-template") },
         { find: "assets", replacement: resolve("assets") },
+        // a dirty workaround because <https://github.com/vitejs/vite/issues/7439>
+        {
+          find: "decode-named-character-reference",
+          // replacement: "decode-named-character-reference/index.js",
+          replacement: resolve(
+            fileURLToPath(
+              dirname(import.meta.resolve("decode-named-character-reference")),
+            ),
+            "index.js",
+          ),
+        },
       ],
     },
     define: {

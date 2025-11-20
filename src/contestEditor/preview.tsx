@@ -9,33 +9,51 @@ import loadingImg from "assets/preview-loading.webp";
 import errorImg from "assets/preview-error.webp";
 import "./preview.css";
 
+const PreviewContainer = memo<{
+  svg: string;
+  ref?: React.Ref<HTMLDivElement>;
+}>(({ svg, ref }) => (
+  <div
+    className="contest-editor-preview-container"
+    dangerouslySetInnerHTML={{ __html: svg || "" }}
+    ref={ref}
+  />
+));
+
 const Preview = memo<{ data: ContestData<{ withMarkdown: true }> }>(
   ({ data }) => {
     const [error, setError] = useState<string>();
     const [svg, setSvg] = useState<string | 0 | 1>(1); // 0: error; 1: loading
     const containerRef = useRef<HTMLDivElement>(null);
+    const lastUpdateTimeRef = useRef<number>(Date.now());
     useEffect(() => {
       let mounted = true;
+      lastUpdateTimeRef.current = Date.now();
       typstInitPromise.catch(() => {
         if (!mounted) return;
         setSvg(0);
       });
-      typstInitPromise.then(() => {
-        if (!mounted) return;
-        compileToSvgDebounced(data)
-          .then((res) => {
-            if (!res || !mounted) return;
-            setSvg(res);
-            setError(undefined);
-          })
-          .catch((e) => {
-            if (!mounted) return;
-            setSvg((x) => (x == 1 ? 0 : x));
-            if (e instanceof Error) setError(e.message);
-            else setError(String(e));
-            console.error("Rendering failed.", e);
-          });
-      });
+      typstInitPromise
+        .then(() => new Promise((resolve) => setTimeout(resolve, 100)))
+        .then(() => {
+          if (!mounted) return;
+          const now = Date.now();
+          if (now - lastUpdateTimeRef.current < 100) return;
+          lastUpdateTimeRef.current = now;
+          compileToSvgDebounced(data)
+            .then((res) => {
+              if (!res || !mounted) return;
+              setSvg(res);
+              setError(undefined);
+            })
+            .catch((e) => {
+              if (!mounted) return;
+              setSvg((x) => (x == 1 ? 0 : x));
+              if (e instanceof Error) setError(e.message);
+              else setError(String(e));
+              console.error("Rendering failed.", e);
+            });
+        });
       return () => {
         mounted = false;
       };
@@ -100,11 +118,7 @@ const Preview = memo<{ data: ContestData<{ withMarkdown: true }> }>(
             showIcon
           />
         )}
-        <div
-          className="contest-editor-preview-container"
-          dangerouslySetInnerHTML={{ __html: s || "" }}
-          ref={containerRef}
-        />
+        <PreviewContainer svg={s || ""} ref={containerRef} />
         <img
           src={loadingImg}
           alt="加载预览中"
