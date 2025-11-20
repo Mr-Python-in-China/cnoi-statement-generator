@@ -2,7 +2,7 @@
 
 [![Gitea Stars](https://img.shields.io/github/stars/Mr-Python-in-China/cnoi-statement-generator)](https://github.com/Mr-Python-in-China/cnoi-statement-generator)
 [![GitHub Release](https://img.shields.io/github/v/release/Mr-Python-in-China/cnoi-statement-generator)](https://github.com/Mr-Python-in-China/cnoi-statement-generator/releases/latest)
-[![GitHub last commit (dev branch)](https://img.shields.io/github/last-commit/Mr-Python-in-China/cnoi-statement-generator/dev?label=last%20commit%20(dev%20branch))](https://github.com/Mr-Python-in-China/cnoi-statement-generator/commits/dev/)
+[![GitHub last commit (dev branch)](<https://img.shields.io/github/last-commit/Mr-Python-in-China/cnoi-statement-generator/dev?label=last%20commit%20(dev%20branch)>)](https://github.com/Mr-Python-in-China/cnoi-statement-generator/commits/dev/)
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/Mr-Python-in-China/cnoi-statement-generator)
 
 <https://cnoi.mrpython.top>
