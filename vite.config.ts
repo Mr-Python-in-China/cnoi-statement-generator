@@ -3,6 +3,7 @@ import { fileURLToPath } from "node:url";
 import { defineConfig, type PluginOption, type UserConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import { exec } from "node:child_process";
+import "vitest/config";
 
 const TypstFontUrlEntriesPlugin = (): PluginOption => {
   const name = "typst-font-url-entries-plugin";
