@@ -32,7 +32,8 @@ const RequiredPreloadPackages: PackageSpec[] = [
 
 const preloadedPackages = new Map<string, ArrayBuffer>();
 
-const browserCache = await window.caches.open("typst-assets");
+const browserCache: Cache | undefined =
+  await window.caches?.open("typst-assets");
 
 async function downloadMultiData(
   urls: string[],
@@ -53,7 +54,7 @@ async function downloadMultiData(
       loaded: 0,
       total: undefined,
       async exec() {
-        const cached = await browserCache.match(url);
+        const cached = await browserCache?.match(url);
         if (cached) return await cached.arrayBuffer();
         const res = await axiosInstance.get<ArrayBuffer>(url, {
           onDownloadProgress: (e) => {
@@ -74,7 +75,7 @@ async function downloadMultiData(
             });
           },
         });
-        browserCache.put(
+        browserCache?.put(
           url,
           new Response(res.data, {
             headers: { "Content-Type": "application/octet-stream" },
@@ -162,7 +163,7 @@ export const typstInitInfo: {
       const unCachedFontUrlEntries: [string, string][] = [];
       await Promise.all(
         fontUrlEntries.map(async ([fontName, fontUrl]) => {
-          const cached = await browserCache.match(fontUrl);
+          const cached = await browserCache?.match(fontUrl);
           if (!cached) unCachedFontUrlEntries.push([fontName, fontUrl]);
           else
             localFontDatas.push({
@@ -187,7 +188,7 @@ export const typstInitInfo: {
                   (v) => v[0] === x.postscriptName,
                 )?.[1];
                 if (fontUrl)
-                  browserCache.put(
+                  browserCache?.put(
                     fontUrl,
                     new Response(blob, {
                       headers: { "Content-Type": "application/octet-stream" },
