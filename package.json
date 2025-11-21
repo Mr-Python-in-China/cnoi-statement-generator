@@ -18,7 +18,8 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "compile-typst-examples": "jiti scripts/compile-typst-examples.ts",
-    "quality": "prettier -c . && eslint . && tsc -b && npm run test"
+    "quality": "prettier -c . && eslint . && tsc -b && npm run test",
+    "prepare": "husky install"
   },
   "dependencies": {
     "@ant-design/v5-patch-for-react-19": "^1.0.3",
@@ -89,6 +90,7 @@
     "typescript": "~5.9.3",
     "typescript-eslint": "^8.45.0",
     "vite": "^7.1.7",
-    "vitest": "^4.0.10"
+    "vitest": "^4.0.10",
+    "husky": "^8.0.0"
   }
 }
