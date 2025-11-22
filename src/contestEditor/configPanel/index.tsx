@@ -22,8 +22,6 @@ import type { DateArr, ImmerContestData } from "@/types/contestData";
 import dayjs from "dayjs";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  faChevronDown,
-  faChevronUp,
   faCircleQuestion,
   faInbox,
   faPenToSquare,
@@ -31,11 +29,11 @@ import {
   faTrashCan,
   faXmark,
 } from "@fortawesome/free-solid-svg-icons";
-import { newProblem, removeProblemCallback } from "@/utils/contestDataUtils";
 import { addImage, deleteImage } from "@/utils/imageManager";
 
-import "./configPanel.css";
+import "./index.css";
 import { faMarkdown } from "@fortawesome/free-brands-svg-icons";
+import ProblemList from "./problemList";
 
 const QuestionMarkToolTip: FC<{ children: string }> = ({ children }) => (
   <sup>
@@ -50,7 +48,7 @@ const ConfigPanel: FC<{
   updateContestData: Updater<ImmerContestData>;
   setPanel: Dispatch<SetStateAction<string>>;
 }> = ({ contestData, updateContestData, setPanel }) => {
-  const { modal, message } = App.useApp();
+  const { message } = App.useApp();
   const formRef = useRef<HTMLFormElement>(null);
   const [width, setWidth] = useState(220);
   const [imageEditModeId, setImageEditModeId] = useState<number | undefined>(
@@ -91,14 +89,6 @@ const ConfigPanel: FC<{
       cb(x.support_languages[index]);
     });
   }
-  function updateProblemData(
-    index: number,
-    cb: (x: ImmerContestData["problems"][number]) => void,
-  ) {
-    updateContestData((x) => {
-      cb(x.problems[index]);
-    });
-  }
   function updateImages(
     index: number,
     cb: (x: ImmerContestData["images"][number]) => void,
@@ -107,19 +97,18 @@ const ConfigPanel: FC<{
       cb(x.images[index]);
     });
   }
-  const removeProblem = removeProblemCallback(
-    modal,
-    setPanel,
-    updateContestData,
-  );
-  function syncAdvancedFields(problem: ImmerContestData["problems"][number]) {
-    if (problem.advancedEditing) return;
-    problem.dir = problem.exec = problem.name;
-    problem.input = problem.name + ".in";
-    problem.output = problem.name + ".out";
-  }
   return (
-    <form className="contest-editor-config" ref={formRef}>
+    <form
+      className={
+        "contest-editor-config" +
+        (width <= 300
+          ? " width-leq-300"
+          : width <= 400
+            ? " width-ge-300-leq-400"
+            : "")
+      }
+      ref={formRef}
+    >
       <label>
         <div>标题</div>
         <Input
@@ -173,12 +162,7 @@ const ConfigPanel: FC<{
           }
         />
       </label>
-      <div
-        className={
-          "contest-editor-config-switches" +
-          (width <= 300 ? " contest-editor-config-switches-narrow" : "")
-        }
-      >
+      <div className="contest-editor-config-switches">
         <label>
           <div>
             NOI 风格
@@ -317,283 +301,14 @@ const ConfigPanel: FC<{
           </Button>
         </div>
       </div>
-      <div className="contest-editor-config-label contest-editor-config-problem">
-        <div>题目信息</div>
-        <div>
-          {contestData.problems.map((problem, index) => (
-            <Card
-              key={problem.key}
-              title={
-                <div className="contest-editor-config-problem-card-title">
-                  <div>第 {index + 1} 题</div>
-                  <div>
-                    <Switch
-                      checked={problem.advancedEditing ?? false}
-                      onChange={(x) =>
-                        updateProblemData(index, (v) => {
-                          v.advancedEditing = x;
-                          syncAdvancedFields(v);
-                        })
-                      }
-                    />
-                    高级编辑
-                  </div>
-                </div>
-              }
-              extra={[
-                <Button
-                  key="move-up"
-                  type="text"
-                  shape="circle"
-                  disabled={index === 0}
-                  icon={<FontAwesomeIcon icon={faChevronUp} />}
-                  onClick={() =>
-                    updateContestData((x) => {
-                      [x.problems[index - 1], x.problems[index]] = [
-                        x.problems[index],
-                        x.problems[index - 1],
-                      ];
-                    })
-                  }
-                />,
-                <Button
-                  key="move-down"
-                  type="text"
-                  shape="circle"
-                  disabled={index === contestData.problems.length - 1}
-                  icon={<FontAwesomeIcon icon={faChevronDown} />}
-                  onClick={() =>
-                    updateContestData((x) => {
-                      [x.problems[index + 1], x.problems[index]] = [
-                        x.problems[index],
-                        x.problems[index + 1],
-                      ];
-                    })
-                  }
-                />,
-                <Button
-                  key="delete"
-                  type="text"
-                  shape="circle"
-                  icon={<FontAwesomeIcon icon={faXmark} />}
-                  onClick={() => removeProblem(problem.key)}
-                />,
-              ]}
-              className={
-                "contest-editor-config-problem" +
-                (width <= 400 ? " contest-editor-config-problem-narrow" : "")
-              }
-            >
-              <div>
-                <label>
-                  <div>题目英文名称</div>
-                  <Input
-                    name={`problem ${index} name`}
-                    value={problem.name}
-                    onChange={(e) =>
-                      updateProblemData(index, (x) => {
-                        x.name = e.target.value;
-                        syncAdvancedFields(x);
-                      })
-                    }
-                  />
-                </label>
-                <label>
-                  <div>题目中文名称</div>
-                  <Input
-                    name={`problem ${index} title`}
-                    value={problem.title}
-                    onChange={(e) =>
-                      updateProblemData(
-                        index,
-                        (x) => (x.title = e.target.value),
-                      )
-                    }
-                  />
-                </label>
-                <label>
-                  <div>题目类型</div>
-                  <Input
-                    name={`problem ${index} type`}
-                    value={problem.type}
-                    onChange={(e) =>
-                      updateProblemData(index, (x) => (x.type = e.target.value))
-                    }
-                  />
-                </label>
-              </div>
-              {problem.advancedEditing && contestData.noi_style && (
-                <div>
-                  <label>
-                    <div>目录</div>
-                    <Input
-                      name={`problem ${index} directory`}
-                      value={problem.dir}
-                      onChange={(e) =>
-                        updateProblemData(
-                          index,
-                          (x) => (x.dir = e.target.value),
-                        )
-                      }
-                      className="contest-editor-config-monoinput"
-                    />
-                  </label>
-                  <label>
-                    <div>可执行文件名</div>
-                    <Input
-                      name={`problem ${index} executable`}
-                      value={problem.exec}
-                      onChange={(e) =>
-                        updateProblemData(
-                          index,
-                          (x) => (x.exec = e.target.value),
-                        )
-                      }
-                      className="contest-editor-config-monoinput"
-                    />
-                  </label>
-                </div>
-              )}
-              {problem.advancedEditing && contestData.file_io && (
-                <div>
-                  <label>
-                    <div>输入文件名</div>
-                    <Input
-                      name={`problem ${index} input file`}
-                      value={problem.input}
-                      onChange={(e) =>
-                        updateProblemData(
-                          index,
-                          (x) => (x.input = e.target.value),
-                        )
-                      }
-                      className="contest-editor-config-monoinput"
-                    />
-                  </label>
-                  <label>
-                    <div>输出文件名</div>
-                    <Input
-                      name={`problem ${index} output file`}
-                      value={problem.output}
-                      onChange={(e) =>
-                        updateProblemData(
-                          index,
-                          (x) => (x.output = e.target.value),
-                        )
-                      }
-                      className="contest-editor-config-monoinput"
-                    />
-                  </label>
-                </div>
-              )}
-              <div>
-                <label>
-                  <div>时间限制</div>
-                  <Input
-                    name={`problem ${index} time limit`}
-                    value={problem.time_limit}
-                    onChange={(e) =>
-                      updateProblemData(
-                        index,
-                        (x) => (x.time_limit = e.target.value),
-                      )
-                    }
-                  />
-                </label>
-                <label>
-                  <div>空间限制</div>
-                  <Input
-                    name={`problem ${index} memory limit`}
-                    value={problem.memory_limit}
-                    onChange={(e) =>
-                      updateProblemData(
-                        index,
-                        (x) => (x.memory_limit = e.target.value),
-                      )
-                    }
-                  />
-                </label>
-              </div>
-              <div>
-                <label>
-                  <div>{contestData.noi_style ? "测试点" : "子任务"}数目</div>
-                  <Input
-                    name={`problem ${index} test case count`}
-                    value={problem.testcase}
-                    onChange={(e) =>
-                      updateProblemData(
-                        index,
-                        (x) => (x.testcase = e.target.value),
-                      )
-                    }
-                  />
-                </label>
-                {contestData.noi_style && (
-                  <label>
-                    <div>测试点是否等分</div>
-                    <Input
-                      name={`problem ${index} testcase point equally`}
-                      value={problem.point_equal}
-                      onChange={(e) =>
-                        updateProblemData(
-                          index,
-                          (x) => (x.point_equal = e.target.value),
-                        )
-                      }
-                    />
-                  </label>
-                )}
-                {contestData.use_pretest && (
-                  <label>
-                    <div>预测试点数目</div>
-                    <Input
-                      name={`problem ${index} pre-testcase count`}
-                      value={problem.pretestcase}
-                      onChange={(e) =>
-                        updateProblemData(
-                          index,
-                          (x) => (x.pretestcase = e.target.value),
-                        )
-                      }
-                    />
-                  </label>
-                )}
-              </div>
-              <div className="contest-editor-config-problem-languages">
-                {problem.submit_filename.map((filename, findex) => (
-                  <label key={contestData.support_languages[findex].key}>
-                    <div>
-                      {contestData.support_languages[findex].name} 提交文件名
-                    </div>
-                    <Input
-                      name={`problem ${index} language ${findex} file name`}
-                      value={filename}
-                      onChange={(e) =>
-                        updateProblemData(
-                          index,
-                          (x) => (x.submit_filename[findex] = e.target.value),
-                        )
-                      }
-                      className="contest-editor-config-monoinput"
-                    />
-                  </label>
-                ))}
-              </div>
-            </Card>
-          ))}
-          <Button
-            type="dashed"
-            icon={<FontAwesomeIcon icon={faPlus} />}
-            onClick={() =>
-              updateContestData((x) => {
-                x.problems.push(newProblem(x));
-              })
-            }
-          >
-            添加题目
-          </Button>
-        </div>
-      </div>
+      <ProblemList
+        {...{
+          contestData,
+          updateContestData,
+          setPanel,
+          panelWidth: width,
+        }}
+      />
       <div className="contest-editor-config-label contest-editor-config-image">
         <div>本地图片</div>
         <div>
