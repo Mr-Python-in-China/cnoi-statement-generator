@@ -29,16 +29,16 @@
   }
   > .contest-editor-config-switches {
     display: flex;
-    &.contest-editor-config-switches-narrow {
-      flex-direction: column;
-      gap: 8px;
-      > label {
-        flex: unset;
-      }
-    }
     > label {
       flex: 1;
       max-width: 200px;
+    }
+  }
+  &.width-leq-300 > .contest-editor-config-switches {
+    flex-direction: column;
+    gap: 8px;
+    > label {
+      flex: unset;
     }
   }
   .contest-editor-config-problem-card-title {
@@ -81,13 +81,14 @@
         }
       }
     }
-    .contest-editor-config-problem.contest-editor-config-problem-narrow {
-      .ant-card-body {
-        > *:not(.contest-editor-config-problem-languages) {
-          flex-direction: column;
-          > * {
-            flex: unset;
-          }
+  }
+  &.width-leq-300 .contest-editor-config-problem,
+  &.width-ge-300-leq-400 .contest-editor-config-problem {
+    .ant-card-body {
+      > *:not(.contest-editor-config-problem-languages) {
+        flex-direction: column;
+        > * {
+          flex: unset;
         }
       }
     }
