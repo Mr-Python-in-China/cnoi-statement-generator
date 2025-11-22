@@ -59,10 +59,7 @@ const ProblemItem: FC<{
   const { listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({
       id: problem.key,
-      animateLayoutChanges: (args) => (
-        console.debug(structuredClone(args)),
-        !args.wasDragging
-      ),
+      animateLayoutChanges: (args) => !args.wasDragging,
     });
   const dragBarStyle = {
     transform: CSS.Transform.toString(transform),
@@ -316,7 +313,7 @@ const Remeasure: FC<{ items: unknown[] }> = ({ items }) => {
       ...contextRef.current.droppableContainers.keys(),
     ]);
   }, [items]);
-  return undefined;
+  return null;
 };
 
 const ProblemList: FC<{
@@ -339,7 +336,6 @@ const ProblemList: FC<{
     setPanel,
     updateContestData,
   );
-  console.debug(contestData.problems.map((x) => x.key));
   return (
     <div className="contest-editor-config-label contest-editor-config-problem">
       <div>题目信息</div>
