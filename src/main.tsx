@@ -40,6 +40,7 @@ import("browser-update").then(({ default: browserUpdate }) => {
       c: 88,
       e: 88,
       o: 75,
+      s: 16,
     },
     unsupported: true,
   });

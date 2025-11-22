@@ -35,6 +35,7 @@
 - Google Chrome 88+
 - Microsoft Edge 88+
 - Opera 75+
+- Safari 16+
 
 ## 贡献
 
