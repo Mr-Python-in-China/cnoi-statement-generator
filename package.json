@@ -87,7 +87,7 @@
     "globals": "^16.4.0",
     "husky": "^8.0.0",
     "jiti": "^2.6.1",
-    "mdast-util-to-hast": "^13.2.0",
+    "mdast-util-to-hast": "^13.2.1",
     "pdf-to-img": "^5.0.0",
     "pngjs": "^7.0.0",
     "postcss-load-config": "^6.0.1",
