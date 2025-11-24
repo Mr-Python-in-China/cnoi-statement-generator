@@ -41,7 +41,7 @@
     "@reactuses/core": "^6.1.6",
     "@uiw/react-codemirror": "^4.25.2",
     "ajv": "^8.17.1",
-    "antd": "^5.27.6",
+    "antd": "^6.0.0",
     "async-mutex": "^0.5.0",
     "axios": "^1.12.2",
     "browser-update": "^3.3.63",
