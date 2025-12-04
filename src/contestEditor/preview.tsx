@@ -2,7 +2,7 @@ import { memo, useEffect, useImperativeHandle, useRef, useState } from "react";
 import type { ContestData } from "@/types/contestData";
 import { compileToSvgDebounced } from "@/compiler";
 import { Alert } from "antd";
-import { isEqual } from "lodash";
+import { isEqual } from "lodash-es";
 import { typstInitPromise } from "@/compiler";
 
 import loadingImg from "assets/preview-loading.webp";

@@ -16,7 +16,7 @@ import {
   faFileExport,
   faChevronDown,
 } from "@fortawesome/free-solid-svg-icons";
-import { debounce } from "lodash";
+import { debounce } from "lodash-es";
 import { compileToPdf, typstInitPromise, registerAssetUrls } from "@/compiler";
 import {
   saveConfigToDB,
