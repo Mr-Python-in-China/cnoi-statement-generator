@@ -62,7 +62,7 @@
     "xxhashjs": "^0.2.2"
   },
   "devDependencies": {
-    "@eslint/js": "^9.36.0",
+    "@eslint/js": "^9.39.1",
     "@types/browser-update": "^3.3.3",
     "@types/fontkit": "^2.0.8",
     "@types/lodash-es": "^4.17.12",
