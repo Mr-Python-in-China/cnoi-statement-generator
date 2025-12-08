@@ -19,7 +19,7 @@
     "test:coverage": "vitest run --coverage",
     "compile-typst-examples": "jiti scripts/compile-typst-examples.ts",
     "quality": "prettier -c . && eslint . && tsc -b && npm run test",
-    "prepare": "husky install"
+    "prepare": "husky"
   },
   "dependencies": {
     "@codemirror/lang-markdown": "^6.5.0",
