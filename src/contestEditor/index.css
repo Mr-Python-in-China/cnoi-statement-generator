@@ -8,3 +8,7 @@
   color: #7f7f7f;
   text-shadow: none;
 }
+.contest-editor-autosave-indicator {
+  color: var(--ant-color-text-description);
+  margin-right: 1em;
+}
