@@ -111,7 +111,7 @@ export const handlers = {
   },
   break: (_node, ctx) => {
     const { data } = ctx;
-    data.push("\\n");
+    data.push(`#"\\n"`);
   },
   emphasis: (node, ctx) => {
     const { data } = ctx;

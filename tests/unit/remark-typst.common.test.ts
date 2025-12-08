@@ -203,7 +203,7 @@ describe("Handlers", () => {
   test("Line Break", () => {
     const ctx = initContext();
     handlers.break({ type: "break" }, ctx);
-    expect(ctx.data.join("")).toBe("\\n");
+    expect(ctx.data.join("")).toBe(`#"\\n"`);
   });
   test("Emphasis", () => {
     const ctx = initContext();
