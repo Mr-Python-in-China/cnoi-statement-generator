@@ -225,7 +225,7 @@ const ContestEditorImpl: FC<{
                           message.success("配置导入成功");
                         } catch (error) {
                           notification.error({
-                            message: "导入失败",
+                            title: "导入失败",
                             placement: "bottomRight",
                             description:
                               error instanceof Error
@@ -238,7 +238,7 @@ const ContestEditorImpl: FC<{
                       reader.readAsText(file);
                     } catch (error) {
                       notification.error({
-                        message: "导入失败",
+                        title: "导入失败",
                         placement: "bottomRight",
                         description:
                           error instanceof Error
@@ -272,7 +272,7 @@ const ContestEditorImpl: FC<{
                     message.success("配置导出成功");
                   } catch (error) {
                     notification.error({
-                      message: "导出失败",
+                      title: "导出失败",
                       placement: "bottomRight",
                       description:
                         error instanceof Error ? error.message : String(error),
@@ -310,7 +310,7 @@ const ContestEditorImpl: FC<{
                   } catch (e) {
                     console.error("Error when exporting PDF.", e);
                     notification.error({
-                      message: "导出失败",
+                      title: "导出失败",
                       placement: "bottomRight",
                       description: (
                         <>

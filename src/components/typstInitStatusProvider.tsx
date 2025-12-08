@@ -74,19 +74,19 @@ const TypstInitStatusProvider: FC<{
           notification.info({
             key: initProgressKey,
             placement: "bottomRight",
-            message: "Typst 正在初始化",
+            title: "Typst 正在初始化",
             description: progressBars,
             closable: false,
-            duration: 0,
+            duration: false,
           });
       } else if (typstInitStatus === "rejected")
         notification.error({
           key: initProgressKey,
           placement: "bottomRight",
-          message: "Typst 初始化失败",
+          title: "Typst 初始化失败",
           description: <>{progressBars}请前往控制台查看错误。</>,
           closable: false,
-          duration: null,
+          duration: false,
           actions: (
             <Space>
               <Button
@@ -109,7 +109,7 @@ const TypstInitStatusProvider: FC<{
           notification.success({
             key: initProgressKey,
             placement: "bottomRight",
-            message: "Typst 初始化完成",
+            title: "Typst 初始化完成",
             description: progressBars,
             duration: 3,
           });
@@ -117,11 +117,11 @@ const TypstInitStatusProvider: FC<{
         notification.info({
           key: fontAccessRequestKey,
           placement: "bottomRight",
-          message: "请求访问本机字体",
+          title: "请求访问本机字体",
           description:
             "Typst 需要加载字体。允许访问本机字体后，已有的字体将直接从本地加载，减少资源下载。",
           closable: false,
-          duration: null,
+          duration: false,
           actions: [
             <Button
               key="confirm"
