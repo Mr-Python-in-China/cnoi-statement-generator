@@ -1,11 +1,8 @@
 import { type FC, type ReactNode, useEffect, useState } from "react";
 import { App, Button, Progress, Space } from "antd";
-import {
-  typstInitInfo,
-  typstInitStatus,
-  fontAccessConfirmResolve,
-} from "@/compiler";
+import { fontAccessConfirmResolve } from "@/compiler";
 import { TypstInitStatusContext } from "./typstInitStatusContext";
+import useTemplateManager from "./templateManagerContext";
 
 const LoadedTextHelper: FC<{
   loaded: number;
@@ -40,7 +37,9 @@ const ProgressBarHelper: FC<{
 const TypstInitStatusProvider: FC<{
   children: ReactNode;
 }> = ({ children }) => {
-  const [status, setStatus] = useState(typstInitStatus);
+  const { compiler } = useTemplateManager();
+
+  const [status, setStatus] = useState(compiler.typstInitStatus);
 
   const { notification } = App.useApp();
 
@@ -50,6 +49,7 @@ const TypstInitStatusProvider: FC<{
     const mountTime = performance.now();
     let rafId: number | undefined = undefined;
     const loop = () => {
+      const { typstInitStatus, typstInitInfo } = compiler;
       setStatus(typstInitStatus);
       const elapsed = performance.now() - mountTime;
       const progressBars = (
@@ -140,7 +140,7 @@ const TypstInitStatusProvider: FC<{
       notification.destroy(initProgressKey);
       notification.destroy(fontAccessRequestKey);
     };
-  }, [notification]);
+  }, [compiler, notification]);
 
   return (
     <TypstInitStatusContext.Provider value={status}>

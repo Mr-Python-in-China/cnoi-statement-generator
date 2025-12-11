@@ -1,9 +1,8 @@
 import { memo, useEffect, useImperativeHandle, useRef, useState } from "react";
 import type { ContestData } from "@/types/contestData";
-import { compileToSvgDebounced } from "@/compiler";
 import { Alert } from "antd";
 import { isEqual } from "lodash-es";
-import { typstInitPromise } from "@/compiler";
+import useTemplateManager from "@/components/templateManagerContext";
 
 import loadingImg from "assets/preview-loading.webp";
 import errorImg from "assets/preview-error.webp";
@@ -30,6 +29,7 @@ const PreviewContainer = memo<{
 
 const Preview = memo<{ data: ContestData<{ withMarkdown: true }> }>(
   ({ data }) => {
+    const { compiler } = useTemplateManager();
     const [error, setError] = useState<string>();
     const [svg, setSvg] = useState<string | 0 | 1>(1); // 0: error; 1: loading
     const containerRef = useRef<HTMLDivElement>(null);
@@ -37,18 +37,19 @@ const Preview = memo<{ data: ContestData<{ withMarkdown: true }> }>(
     useEffect(() => {
       let mounted = true;
       lastUpdateTimeRef.current = Date.now();
-      typstInitPromise.catch(() => {
+      compiler.typstInitPromise.catch(() => {
         if (!mounted) return;
         setSvg(0);
       });
-      typstInitPromise
+      compiler.typstInitPromise
         .then(() => new Promise((resolve) => setTimeout(resolve, 100)))
         .then(() => {
           if (!mounted) return;
           const now = Date.now();
           if (now - lastUpdateTimeRef.current < 100) return;
           lastUpdateTimeRef.current = now;
-          compileToSvgDebounced(data)
+          compiler
+            .compileToSvgDebounced(data)
             .then((res) => {
               if (!res || !mounted) return;
               setSvg(res);
@@ -65,7 +66,7 @@ const Preview = memo<{ data: ContestData<{ withMarkdown: true }> }>(
       return () => {
         mounted = false;
       };
-    }, [data]);
+    }, [compiler, data]);
     useEffect(() => {
       if (!containerRef.current) return;
       const container = containerRef.current;

@@ -3,7 +3,9 @@ import path from "path";
 import { type ContestData } from "../src/types/contestData";
 import { exec } from "child_process";
 import axiosInstance from "../src/utils/axiosInstance";
-import processor from "../src/compiler/processor";
+import getProcessor from "../src/compiler/getProcessor";
+
+const processor = getProcessor([]);
 
 const TYPST_CMD = process.env.TYPST_CMD || "typst";
 

@@ -1,9 +1,12 @@
 import React from "react";
-import { typstInitStatus } from "@/compiler";
+import CompilerInstance from "@/compiler";
 
-export const TypstInitStatusContext =
-  React.createContext<typeof typstInitStatus>(typstInitStatus);
+export const TypstInitStatusContext = React.createContext<
+  CompilerInstance["typstInitStatus"] | null
+>(null);
 
 export default function useTypstInitStatus() {
-  return React.useContext(TypstInitStatusContext);
+  const res = React.useContext(TypstInitStatusContext);
+  if (res === null) throw new Error("TypstInitStatusContext is null");
+  return res;
 }

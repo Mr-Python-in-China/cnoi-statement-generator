@@ -15,7 +15,7 @@ import {
 import { listen, sendToMain } from "@mr.python/promise-worker-ts";
 import { Mutex } from "async-mutex";
 import type { ContestData } from "@/types/contestData";
-import processor from "./processor";
+import getProcessor from "./getProcessor";
 
 import TypstDocMain from "typst-template/main.typ?raw";
 import TypstDocUtils from "typst-template/utils.typ?raw";
@@ -29,6 +29,12 @@ class PreloadedPackageRegistry extends FetchPackageRegistry {
 }
 const typstAccessModel = new MemoryAccessModel();
 const typstPackageRegistry = new PreloadedPackageRegistry(typstAccessModel);
+
+let processor: ReturnType<typeof getProcessor>;
+
+const TemplateUnifiedPlugins = import.meta.glob<
+  import("unified").PluggableList
+>("/templates/*/unifiedPlugins.ts", { import: "default" });
 
 listen<InitMessage>("init", async (data) => {
   preloadedPackages = data.preloadedPackages;
@@ -47,6 +53,13 @@ listen<InitMessage>("init", async (data) => {
     renderer.init({
       getModule: () => data.typstRendererWasm,
     }),
+    (async () => {
+      const pluginListCb =
+        TemplateUnifiedPlugins[`/templates/${data.template}/unifiedPlugins.ts`];
+      if (!pluginListCb)
+        throw new Error("Template not found: " + data.template);
+      processor = getProcessor(await pluginListCb());
+    })(),
   ]);
   $typst.setCompiler(compiler);
   $typst.setRenderer(renderer);
@@ -149,6 +162,7 @@ export type InitMessage = PromiseWorkerTagged<
     typstRendererWasm: ArrayBuffer;
     fontBuffers: ArrayBuffer[];
     preloadedPackages: Map<string, ArrayBuffer>;
+    template: string;
   },
   void
 >;

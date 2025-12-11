@@ -15,8 +15,6 @@ import TypstCompilerWasmUrl from "@myriaddreamin/typst-ts-web-compiler/pkg/typst
 import TypstRendererWasmUrl from "@myriaddreamin/typst-ts-renderer/pkg/typst_ts_renderer_bg.wasm?url";
 import TypstWorker from "./compiler.worker?worker";
 
-const worker = new TypstWorker();
-
 const RequiredPreloadPackages: PackageSpec[] = [
   {
     namespace: "preview",
@@ -29,8 +27,6 @@ const RequiredPreloadPackages: PackageSpec[] = [
     version: "0.2.5",
   },
 ];
-
-const preloadedPackages = new Map<string, ArrayBuffer>();
 
 const browserCache: Cache | undefined =
   await window.caches?.open("typst-assets");
@@ -119,9 +115,6 @@ export class TypstInitTask {
   }
 }
 
-let typstCompilerWasm: ArrayBuffer, typstRendererWasm: ArrayBuffer;
-let fontBuffers: ArrayBuffer[];
-
 export let fontAccessConfirmResolve: (() => void) | undefined = undefined;
 function requestFontAccessConfirm() {
   if (fontAccessConfirmResolve)
@@ -134,217 +127,232 @@ function requestFontAccessConfirm() {
   });
 }
 
-export const typstInitInfo: {
-  [K in "compiler" | "font" | "package"]: TypstInitTask;
-} = {
-  compiler: new TypstInitTask(
-    downloadMultiData([TypstCompilerWasmUrl, TypstRendererWasmUrl], (x) =>
-      typstInitInfo.compiler.updateProgress(x),
-    ).then(
-      (res) => {
-        typstCompilerWasm = res[0];
-        typstRendererWasm = res[1];
-        typstInitInfo.compiler.status = "fulfilled";
-      },
-      (e) => {
-        typstInitInfo.compiler.status = "rejected";
-        throw e;
-      },
-    ),
-  ),
-  font: new TypstInitTask(
-    (async () => {
-      const localFontPromises: Promise<ArrayBuffer>[] = [];
-      const remoteFontUrls: string[] = [];
-      const localFontDatas: {
-        postscriptName: string;
-        blob: () => Promise<Blob>;
-      }[] = [];
-      const unCachedFontUrlEntries: [string, string][] = [];
-      await Promise.all(
-        fontUrlEntries.map(async ([fontName, fontUrl]) => {
-          const cached = await browserCache?.match(fontUrl);
-          if (!cached) unCachedFontUrlEntries.push([fontName, fontUrl]);
-          else
-            localFontDatas.push({
-              postscriptName: fontName,
-              blob: () => cached.blob(),
-            });
-        }),
-      );
-      if (unCachedFontUrlEntries.length && window.queryLocalFonts) {
-        await requestFontAccessConfirm();
-        try {
-          localFontDatas.push(
-            ...(
-              await window.queryLocalFonts({
-                postscriptNames: unCachedFontUrlEntries.map((x) => x[0]),
-              })
-            ).map((x) => ({
-              postscriptName: x.postscriptName,
-              blob: async () => {
-                const blob = await x.blob();
-                const fontUrl = unCachedFontUrlEntries.find(
-                  (v) => v[0] === x.postscriptName,
-                )?.[1];
-                if (fontUrl)
-                  browserCache?.put(
-                    fontUrl,
-                    new Response(blob, {
-                      headers: { "Content-Type": "application/octet-stream" },
-                    }),
-                  );
-                return blob;
-              },
-            })),
-          );
-        } catch {
-          // ignore
-        }
-      }
-      for (const [fontName, fontUrl] of fontUrlEntries) {
-        const fontData = localFontDatas.find(
-          (x) => x.postscriptName === fontName,
-        );
-        if (fontData)
-          localFontPromises.push(
-            fontData.blob().then(async (b) => await b.arrayBuffer()),
-          );
-        else remoteFontUrls.push(fontUrl);
-      }
-      fontBuffers = (
-        await Promise.all([
-          ...localFontPromises,
-          downloadMultiData(remoteFontUrls, (x) =>
-            typstInitInfo.font.updateProgress(x),
-          ),
-        ])
-      ).flat();
-    })(),
-  ),
-  package: new TypstInitTask(
-    (async () => {
-      const urls = RequiredPreloadPackages.map(
-        (pkg) =>
-          `https://packages.typst.org/preview/${pkg.name}-${pkg.version}.tar.gz`,
-      );
-      const datas = await downloadMultiData(urls, (x) =>
-        typstInitInfo.package.updateProgress(x),
-      );
-      for (let i = 0; i < urls.length; ++i)
-        preloadedPackages.set(urls[i], datas[i]);
-    })(),
-  ),
-};
-export let typstInitStatus: PromiseStatus = "pending";
-export const typstInitPromise = Promise.all(
-  Object.values(typstInitInfo).map((x) => x.promise),
-)
-  .then(async () => {
-    await send<InitMessage>("init", worker, {
-      typstCompilerWasm,
-      typstRendererWasm,
-      fontBuffers,
-      preloadedPackages,
-    });
-    typstInitStatus = "fulfilled";
-  })
-  .catch((err) => {
-    typstInitStatus = "rejected";
-    throw new Error("Typst initialization failed.", { cause: err });
-  });
-
-export const compileToPdf = (data: ContestData<{ withMarkdown: true }>) =>
-  send<CompileTypstMessage>("compileTypst", worker, data);
-export const compileToSvg = (data: ContestData<{ withMarkdown: true }>) =>
-  send<RenderTypstMessage>("renderTypst", worker, data);
-
-export const compileToSvgDebounced = (() => {
-  type Task = {
-    args: ContestData<{ withMarkdown: true }>;
-    promise: Promise<string | undefined>;
-    resolve: (v: string | undefined) => void;
-    reject: (e: unknown) => void;
+export default class CompilerInstance {
+  private worker: Worker;
+  private preloadedPackages = new Map<string, ArrayBuffer>();
+  private assetUrlMapping = new Map<string, string>();
+  public typstInitInfo: {
+    [K in "compiler" | "font" | "package"]: TypstInitTask;
   };
-  let currentTask: Task | undefined = undefined;
-  let waitingTask: Task | undefined = undefined;
+  public typstInitStatus: PromiseStatus = "pending";
+  public typstInitPromise: Promise<void>;
 
-  const run = () => {
-    if (currentTask) return;
-    if (waitingTask) {
-      currentTask = waitingTask;
-      waitingTask = undefined;
-    } else return;
-    const task = currentTask;
-    compileToSvg(task.args)
-      .then(task.resolve, task.reject)
-      .then(() => {
-        currentTask = undefined;
-        run();
-      });
-  };
-  return (args: ContestData<{ withMarkdown: true }>) => {
-    let resolve: (v: string | undefined) => void, reject: (e: unknown) => void;
-    const promise = new Promise<string | undefined>((res, rej) => {
-      resolve = res;
-      reject = rej;
-    });
-    const newTask: Task = {
-      args,
-      promise,
-      resolve: resolve!,
-      reject: reject!,
+  constructor(template: string) {
+    this.worker = new TypstWorker();
+    let typstCompilerWasm: ArrayBuffer,
+      typstRendererWasm: ArrayBuffer,
+      fontBuffers: ArrayBuffer[];
+
+    this.typstInitInfo = {
+      compiler: new TypstInitTask(
+        downloadMultiData([TypstCompilerWasmUrl, TypstRendererWasmUrl], (x) =>
+          this.typstInitInfo.compiler.updateProgress(x),
+        ).then(
+          (res) => {
+            typstCompilerWasm = res[0];
+            typstRendererWasm = res[1];
+            this.typstInitInfo.compiler.status = "fulfilled";
+          },
+          (e) => {
+            this.typstInitInfo.compiler.status = "rejected";
+            throw e;
+          },
+        ),
+      ),
+      font: new TypstInitTask(
+        (async () => {
+          const localFontPromises: Promise<ArrayBuffer>[] = [];
+          const remoteFontUrls: string[] = [];
+          const localFontDatas: {
+            postscriptName: string;
+            blob: () => Promise<Blob>;
+          }[] = [];
+          const unCachedFontUrlEntries: [string, string][] = [];
+          await Promise.all(
+            fontUrlEntries.map(async ([fontName, fontUrl]) => {
+              const cached = await browserCache?.match(fontUrl);
+              if (!cached) unCachedFontUrlEntries.push([fontName, fontUrl]);
+              else
+                localFontDatas.push({
+                  postscriptName: fontName,
+                  blob: () => cached.blob(),
+                });
+            }),
+          );
+          if (unCachedFontUrlEntries.length && window.queryLocalFonts) {
+            await requestFontAccessConfirm();
+            try {
+              localFontDatas.push(
+                ...(
+                  await window.queryLocalFonts({
+                    postscriptNames: unCachedFontUrlEntries.map((x) => x[0]),
+                  })
+                ).map((x) => ({
+                  postscriptName: x.postscriptName,
+                  blob: async () => {
+                    const blob = await x.blob();
+                    const fontUrl = unCachedFontUrlEntries.find(
+                      (v) => v[0] === x.postscriptName,
+                    )?.[1];
+                    if (fontUrl)
+                      browserCache?.put(
+                        fontUrl,
+                        new Response(blob, {
+                          headers: {
+                            "Content-Type": "application/octet-stream",
+                          },
+                        }),
+                      );
+                    return blob;
+                  },
+                })),
+              );
+            } catch {
+              // ignore
+            }
+          }
+          for (const [fontName, fontUrl] of fontUrlEntries) {
+            const fontData = localFontDatas.find(
+              (x) => x.postscriptName === fontName,
+            );
+            if (fontData)
+              localFontPromises.push(
+                fontData.blob().then(async (b) => await b.arrayBuffer()),
+              );
+            else remoteFontUrls.push(fontUrl);
+          }
+          fontBuffers = (
+            await Promise.all([
+              ...localFontPromises,
+              downloadMultiData(remoteFontUrls, (x) =>
+                this.typstInitInfo.font.updateProgress(x),
+              ),
+            ])
+          ).flat();
+        })(),
+      ),
+      package: new TypstInitTask(
+        (async () => {
+          const urls = RequiredPreloadPackages.map(
+            (pkg) =>
+              `https://packages.typst.org/preview/${pkg.name}-${pkg.version}.tar.gz`,
+          );
+          const datas = await downloadMultiData(urls, (x) =>
+            this.typstInitInfo.package.updateProgress(x),
+          );
+          for (let i = 0; i < urls.length; ++i) {
+            this.preloadedPackages.set(urls[i], datas[i]);
+          }
+        })(),
+      ),
     };
-    if (waitingTask) waitingTask.reject("Aborted");
-    waitingTask = newTask;
-    run();
-    return promise;
-  };
-})();
 
-// Global mapping for asset:// protocol - maps UUID to blob URL
-let assetUrlMapping = new Map<string, string>();
+    this.typstInitPromise = Promise.all(
+      Object.values(this.typstInitInfo).map((x) => x.promise),
+    )
+      .then(async () => {
+        await send<InitMessage>("init", this.worker, {
+          template,
+          typstCompilerWasm,
+          typstRendererWasm,
+          fontBuffers,
+          preloadedPackages: this.preloadedPackages,
+        });
+        this.typstInitStatus = "fulfilled";
+      })
+      .catch((err) => {
+        this.typstInitStatus = "rejected";
+        throw new Error("Typst initialization failed.", { cause: err });
+      });
 
-/**
- * Register image blob URLs for asset:// protocol resolution
- * Called from ContestEditor when images are loaded/updated
- */
-export function registerAssetUrls(uuidToUrlMap: Map<string, string>): void {
-  assetUrlMapping = new Map(uuidToUrlMap);
-}
-
-/**
- * Fetch asset with support for asset:// protocol
- * asset://uuid -> map to blob URL and fetch via axios
- * other URLs -> fetch via axios
- */
-async function fetchAsset(url: string): Promise<ArrayBuffer> {
-  // Handle asset:// protocol
-  if (url.startsWith("asset://")) {
-    const uuid = url.substring(8); // Remove "asset://" prefix
-    const blobUrl = assetUrlMapping.get(uuid);
-
-    if (!blobUrl) {
-      throw new Error(`Asset not found: ${uuid}`);
-    }
-
-    // Fetch the blob URL using axios
-    url = blobUrl;
+    listenMain<FetchAssetMessage>("fetchAsset", this.worker, (url) =>
+      this.fetchAsset(url),
+    );
   }
 
-  // Handle regular URLs (including mapped blob URLs)
-  try {
-    const response = await axiosInstance.get<ArrayBuffer>(url);
-    return response.data;
-  } catch (e) {
-    if (isAxiosError(e)) {
-      console.error("Failed to download assets.", e);
-      throw new Error(
-        "下载资源失败。这或许是因为浏览器的跨域限制。你可以尝试手动上传图片。",
-      );
+  public compileToPdf(data: ContestData<{ withMarkdown: true }>) {
+    return send<CompileTypstMessage>("compileTypst", this.worker, data);
+  }
+
+  public compileToSvg(data: ContestData<{ withMarkdown: true }>) {
+    return send<RenderTypstMessage>("renderTypst", this.worker, data);
+  }
+
+  public readonly compileToSvgDebounced = (() => {
+    type Task = {
+      args: ContestData<{ withMarkdown: true }>;
+      promise: Promise<string | undefined>;
+      resolve: (v: string | undefined) => void;
+      reject: (e: unknown) => void;
+    };
+    let currentTask: Task | undefined = undefined;
+    let waitingTask: Task | undefined = undefined;
+
+    const run = () => {
+      if (currentTask) return;
+      if (waitingTask) {
+        currentTask = waitingTask;
+        waitingTask = undefined;
+      } else return;
+      const task = currentTask;
+      this.compileToSvg(task!.args)
+        .then(task!.resolve, task!.reject)
+        .then(() => {
+          currentTask = undefined;
+          run();
+        });
+    };
+    return (args: ContestData<{ withMarkdown: true }>) => {
+      let resolve: (v: string | undefined) => void;
+      let reject: (e: unknown) => void;
+      const promise = new Promise<string | undefined>((res, rej) => {
+        resolve = res;
+        reject = rej;
+      });
+      const newTask: Task = {
+        args,
+        promise,
+        resolve: resolve!,
+        reject: reject!,
+      };
+      if (waitingTask) waitingTask.reject("Aborted");
+      waitingTask = newTask;
+      run();
+      return promise;
+    };
+  })();
+
+  public registerAssetUrls(uuidToUrlMap: Map<string, string>): void {
+    this.assetUrlMapping = new Map(uuidToUrlMap);
+  }
+
+  private async fetchAsset(url: string): Promise<ArrayBuffer> {
+    if (url.startsWith("asset://")) {
+      const uuid = url.substring(8);
+      const blobUrl = this.assetUrlMapping.get(uuid);
+
+      if (!blobUrl) {
+        throw new Error(`Asset not found: ${uuid}`);
+      }
+
+      url = blobUrl;
     }
-    throw e;
+
+    try {
+      const response = await axiosInstance.get<ArrayBuffer>(url);
+      return response.data;
+    } catch (e) {
+      if (isAxiosError(e)) {
+        console.error("Failed to download assets.", e);
+        throw new Error(
+          "下载资源失败。这或许是因为浏览器的跨域限制。你可以尝试手动上传图片。",
+        );
+      }
+      throw e;
+    }
+  }
+
+  public dispose() {
+    this.worker.terminate();
   }
 }
-
-listenMain<FetchAssetMessage>("fetchAsset", worker, fetchAsset);

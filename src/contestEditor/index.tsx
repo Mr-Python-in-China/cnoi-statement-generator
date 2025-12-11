@@ -24,7 +24,7 @@ import {
   faCircleInfo,
 } from "@fortawesome/free-solid-svg-icons";
 import { debounce } from "lodash-es";
-import { compileToPdf, typstInitPromise, registerAssetUrls } from "@/compiler";
+import useTemplateManager from "@/components/templateManagerContext";
 import {
   saveConfigToDB,
   loadConfigFromDB,
@@ -43,6 +43,8 @@ interface InitialData {
 const ContestEditorImpl: FC<{
   initialData: InitialData;
 }> = ({ initialData }) => {
+  const { compiler } = useTemplateManager();
+
   const [contestData, updateContestData] = useImmer<ImmerContestData>(
     initialData.ContestData,
   );
@@ -52,8 +54,8 @@ const ContestEditorImpl: FC<{
     const mapping = new Map(
       contestData.images.map((img) => [img.uuid, img.url]),
     );
-    registerAssetUrls(mapping);
-  }, [contestData.images]);
+    compiler.registerAssetUrls(mapping);
+  }, [compiler, contestData.images]);
 
   const [panel, setPanel] = useState("config");
   const [exportDisabled, setExportDisabled] = useState(true);
@@ -103,13 +105,13 @@ const ContestEditorImpl: FC<{
   ];
   useEffect(() => {
     let mounted = true;
-    typstInitPromise.then(() => {
+    compiler.typstInitPromise.then(() => {
       if (mounted) setExportDisabled(false);
     });
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [compiler]);
   const removeProblem = removeProblemCallback(
     modal,
     setPanel,
@@ -119,7 +121,7 @@ const ContestEditorImpl: FC<{
     if (exportDisabled) return;
     setExportDisabled(true);
     try {
-      const data = await compileToPdf(contestData);
+      const data = await compiler.compileToPdf(contestData);
       if (!data) throw new Error("编译器未返回任何数据");
       const blob = new Blob([data.slice().buffer], {
         type: "application/pdf",
@@ -158,7 +160,7 @@ const ContestEditorImpl: FC<{
       });
     }
     setExportDisabled(false);
-  }, [contestData, exportDisabled, notification]);
+  }, [compiler, contestData, exportDisabled, notification]);
   const onClickImportConfig = useCallback(() => {
     const input = document.createElement("input");
     input.type = "file";
