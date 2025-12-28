@@ -351,7 +351,7 @@
   align: center + horizon,
 )
 
-#include "precaution.typ"
+#include "extra-precaution.typ"
 
 #let current-problem-idx = counter("current-problem-idx")
 

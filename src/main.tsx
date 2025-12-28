@@ -3,7 +3,6 @@ import { createRoot } from "react-dom/client";
 import { ConfigProvider, App as AntApp } from "antd";
 import zhCN from "antd/locale/zh_CN";
 import App from "./App.tsx";
-import TypstInitStatusProvider from "./components/typstInitStatusProvider.tsx";
 
 // Polyfill for crypto.randomUUID in insecure contexts
 if (!("randomUUID" in crypto))
@@ -24,9 +23,7 @@ createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <ConfigProvider locale={zhCN}>
       <AntApp>
-        <TypstInitStatusProvider>
-          <App />
-        </TypstInitStatusProvider>
+        <App />
       </AntApp>
     </ConfigProvider>
   </StrictMode>,

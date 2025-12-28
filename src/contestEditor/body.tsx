@@ -1,4 +1,4 @@
-import type { ImmerContestData } from "@/types/contestData";
+import type { ImmerContent } from "@/types/document";
 import {
   useEffect,
   useRef,
@@ -6,23 +6,25 @@ import {
   type FC,
   type Dispatch,
   type SetStateAction,
+  use,
 } from "react";
 import { type Updater } from "use-immer";
 import Preview from "./preview";
 import { Splitter } from "antd";
-import ConfigPanel from "./configPanel";
 
 import "./body.css";
 import MarkdownPanel from "./markdownPanel";
+import useTemplateManager from "@/components/templateManagerContext";
 
 const Body: FC<{
-  contestData: ImmerContestData;
-  updateContestData: Updater<ImmerContestData>;
+  content: ImmerContent;
+  updateContent: Updater<ImmerContent>;
   panel: string;
   setPanel: Dispatch<SetStateAction<string>>;
-}> = ({ panel, contestData, updateContestData, setPanel }) => {
+}> = ({ panel, content, updateContent, setPanel }) => {
   const divRef = useRef<HTMLDivElement>(null);
   const [sizes, setSizes] = useState<number[] | undefined>(undefined);
+  const { ConfigPanelFC } = use(useTemplateManager().uiMetadataPromise);
 
   useEffect(() => {
     if (!divRef.current) return;
@@ -58,38 +60,38 @@ const Body: FC<{
           size={sizes === undefined ? "50%" : sizes[0]}
         >
           {panel === "config" ? (
-            <ConfigPanel
+            <ConfigPanelFC
               {...{
-                contestData,
-                updateContestData,
+                content,
+                updateContent,
                 setPanel,
               }}
             />
           ) : (
             <MarkdownPanel
-              {...(panel === "precaution"
+              {...(panel.startsWith("extra-")
                 ? {
-                    code: contestData.precautionMarkdown,
+                    code: content.extraContents[panel.slice(6)].markdown,
                     setCode: (v) =>
-                      updateContestData((x) => {
-                        x.precautionMarkdown =
-                          typeof v === "function" ? v(x.precautionMarkdown) : v;
+                      updateContent((x) => {
+                        x.extraContents[panel.slice(6)].markdown =
+                          typeof v === "function"
+                            ? v(x.extraContents[panel.slice(6)].markdown)
+                            : v;
                       }),
                   }
                 : {
                     code: (() => {
-                      const p = contestData.problems.find(
-                        (y) => y.key === panel,
-                      );
+                      const p = content.problems.find((y) => y.uuid === panel);
                       if (!p) throw new Error("Target panel not found");
-                      return p.statementMarkdown;
+                      return p.markdown;
                     })(),
                     setCode: (v) =>
-                      updateContestData((x) => {
-                        const p = x.problems.find((y) => y.key === panel);
+                      updateContent((x) => {
+                        const p = x.problems.find((y) => y.uuid === panel);
                         if (!p) throw new Error("Target panel not found");
-                        p.statementMarkdown =
-                          typeof v === "function" ? v(p.statementMarkdown) : v;
+                        p.markdown =
+                          typeof v === "function" ? v(p.markdown) : v;
                       }),
                   })}
             />
@@ -100,7 +102,7 @@ const Body: FC<{
           size={sizes === undefined ? "50%" : sizes[1]}
           collapsible
         >
-          {(!sizes || sizes[1] > 0) && <Preview data={contestData} />}
+          {(!sizes || sizes[1] > 0) && <Preview data={content} />}
         </Splitter.Panel>
       </Splitter>
     </div>

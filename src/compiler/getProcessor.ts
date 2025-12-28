@@ -1,5 +1,5 @@
-import remarkDirective from "remark-directive";
 import { unified, type PluggableList } from "unified";
+import remarkDirective from "remark-directive";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import remarkParse from "remark-parse";

@@ -2,7 +2,6 @@ import axiosInstance from "@/utils/axiosInstance";
 import type { PackageSpec } from "@myriaddreamin/typst.ts/internal.types";
 import { listenMain, send } from "@mr.python/promise-worker-ts";
 import { isAxiosError } from "axios";
-import type { ContestData } from "@/types/contestData";
 import {
   type CompileTypstMessage,
   type RenderTypstMessage,
@@ -14,6 +13,7 @@ import fontUrlEntries from "virtual:typst-font-url-entries";
 import TypstCompilerWasmUrl from "@myriaddreamin/typst-ts-web-compiler/pkg/typst_ts_web_compiler_bg.wasm?url";
 import TypstRendererWasmUrl from "@myriaddreamin/typst-ts-renderer/pkg/typst_ts_renderer_bg.wasm?url";
 import TypstWorker from "./compiler.worker?worker";
+import type { ContentBase, PrecompileContent } from "@/types/document";
 
 const RequiredPreloadPackages: PackageSpec[] = [
   {
@@ -127,6 +127,19 @@ function requestFontAccessConfirm() {
   });
 }
 
+function removeImageBlob(content: ContentBase): PrecompileContent {
+  return {
+    ...content,
+    images: content.images.map(
+      ({
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        blob, // Remove blob field
+        ...rest
+      }) => rest,
+    ),
+  };
+}
+
 export default class CompilerInstance {
   private worker: Worker;
   private preloadedPackages = new Map<string, ArrayBuffer>();
@@ -138,6 +151,7 @@ export default class CompilerInstance {
   public typstInitPromise: Promise<void>;
 
   constructor(template: string) {
+    console.log("new worker");
     this.worker = new TypstWorker();
     let typstCompilerWasm: ArrayBuffer,
       typstRendererWasm: ArrayBuffer,
@@ -270,17 +284,25 @@ export default class CompilerInstance {
     );
   }
 
-  public compileToPdf(data: ContestData<{ withMarkdown: true }>) {
-    return send<CompileTypstMessage>("compileTypst", this.worker, data);
+  public compileToPdf(data: ContentBase) {
+    return send<CompileTypstMessage>(
+      "compileTypst",
+      this.worker,
+      removeImageBlob(data),
+    );
   }
 
-  public compileToSvg(data: ContestData<{ withMarkdown: true }>) {
-    return send<RenderTypstMessage>("renderTypst", this.worker, data);
+  public compileToSvg(data: ContentBase) {
+    return send<RenderTypstMessage>(
+      "renderTypst",
+      this.worker,
+      removeImageBlob(data),
+    );
   }
 
   public readonly compileToSvgDebounced = (() => {
     type Task = {
-      args: ContestData<{ withMarkdown: true }>;
+      args: ContentBase;
       promise: Promise<string | undefined>;
       resolve: (v: string | undefined) => void;
       reject: (e: unknown) => void;
@@ -302,7 +324,7 @@ export default class CompilerInstance {
           run();
         });
     };
-    return (args: ContestData<{ withMarkdown: true }>) => {
+    return (args: ContentBase) => {
       let resolve: (v: string | undefined) => void;
       let reject: (e: unknown) => void;
       const promise = new Promise<string | undefined>((res, rej) => {

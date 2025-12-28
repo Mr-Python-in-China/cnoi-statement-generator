@@ -9,16 +9,7 @@ import {
   Upload,
   Image,
 } from "antd";
-import {
-  useEffect,
-  useRef,
-  useState,
-  type FC,
-  type Dispatch,
-  type SetStateAction,
-} from "react";
-import { type Updater } from "use-immer";
-import type { DateArr, ImmerContestData } from "@/types/contestData";
+import { useEffect, useRef, useState, type FC } from "react";
 import dayjs from "dayjs";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -29,11 +20,13 @@ import {
   faTrashCan,
   faXmark,
 } from "@fortawesome/free-solid-svg-icons";
-import { addImage, deleteImage } from "@/utils/imageManager";
+import { pushBackImage, eraseImageByIndex } from "@/utils/imageUpdater";
 
 import "./index.css";
 import { faMarkdown } from "@fortawesome/free-brands-svg-icons";
 import ProblemList from "./problemList";
+import type { Content, DateArr } from "../types";
+import type { ConfigPanelFC } from "@/types/templates";
 
 const QuestionMarkToolTip: FC<{ children: string }> = ({ children }) => (
   <sup>
@@ -43,11 +36,11 @@ const QuestionMarkToolTip: FC<{ children: string }> = ({ children }) => (
   </sup>
 );
 
-const ConfigPanel: FC<{
-  contestData: ImmerContestData;
-  updateContestData: Updater<ImmerContestData>;
-  setPanel: Dispatch<SetStateAction<string>>;
-}> = ({ contestData, updateContestData, setPanel }) => {
+const ConfigPanel: ConfigPanelFC<Content> = ({
+  content,
+  updateContent,
+  setPanel,
+}) => {
   const { message } = App.useApp();
   const formRef = useRef<HTMLFormElement>(null);
   const [width, setWidth] = useState(220);
@@ -83,17 +76,17 @@ const ConfigPanel: FC<{
   }
   function updateLang(
     index: number,
-    cb: (x: ImmerContestData["support_languages"][number]) => void,
+    cb: (x: Content["support_languages"][number]) => void,
   ) {
-    updateContestData((x) => {
+    updateContent((x) => {
       cb(x.support_languages[index]);
     });
   }
   function updateImages(
     index: number,
-    cb: (x: ImmerContestData["images"][number]) => void,
+    cb: (x: Content["images"][number]) => void,
   ) {
-    updateContestData((x) => {
+    updateContent((x) => {
       cb(x.images[index]);
     });
   }
@@ -113,9 +106,9 @@ const ConfigPanel: FC<{
         <div>标题</div>
         <Input
           name="title"
-          value={contestData.title}
+          value={content.title}
           onChange={(x) =>
-            updateContestData((v) => {
+            updateContent((v) => {
               v.title = x.target.value;
             })
           }
@@ -125,9 +118,9 @@ const ConfigPanel: FC<{
         <div>副标题</div>
         <Input
           name="subtitle"
-          value={contestData.subtitle}
+          value={content.subtitle}
           onChange={(e) =>
-            updateContestData((x) => {
+            updateContent((x) => {
               x.subtitle = e.target.value;
             })
           }
@@ -137,9 +130,9 @@ const ConfigPanel: FC<{
         <div>场次</div>
         <Input
           name="dayname"
-          value={contestData.dayname}
+          value={content.dayname}
           onChange={(e) =>
-            updateContestData((x) => {
+            updateContent((x) => {
               x.dayname = e.target.value;
             })
           }
@@ -151,11 +144,11 @@ const ConfigPanel: FC<{
           showTime
           name="date"
           value={[
-            dateArrToDayJs(contestData.date.start),
-            dateArrToDayJs(contestData.date.end),
+            dateArrToDayJs(content.date.start),
+            dateArrToDayJs(content.date.end),
           ]}
           onChange={(e) =>
-            updateContestData((x) => {
+            updateContent((x) => {
               if (e?.[0]) x.date.start = dayJsToDateArr(e[0]);
               if (e?.[1]) x.date.end = dayJsToDateArr(e[1]);
             })
@@ -172,9 +165,9 @@ const ConfigPanel: FC<{
           </div>
           <div>
             <Switch
-              value={contestData.noi_style}
+              value={content.noi_style}
               onChange={(v) =>
-                updateContestData((x) => {
+                updateContent((x) => {
                   x.noi_style = v;
                 })
               }
@@ -190,9 +183,9 @@ const ConfigPanel: FC<{
           </div>
           <div>
             <Switch
-              value={contestData.file_io}
+              value={content.file_io}
               onChange={(v) =>
-                updateContestData((x) => {
+                updateContent((x) => {
                   x.file_io = v;
                 })
               }
@@ -203,9 +196,9 @@ const ConfigPanel: FC<{
           <div>启用 Pretest</div>
           <div>
             <Switch
-              value={contestData.use_pretest}
+              value={content.use_pretest}
               onChange={(v) =>
-                updateContestData((x) => {
+                updateContent((x) => {
                   x.use_pretest = v;
                 })
               }
@@ -216,8 +209,8 @@ const ConfigPanel: FC<{
       <div className="contest-editor-config-languages contest-editor-config-label">
         <div>编程语言</div>
         <div>
-          {contestData.support_languages.map((lang, index) => (
-            <div key={lang.key}>
+          {content.support_languages.map((lang, index) => (
+            <div key={lang.uuid}>
               <label>
                 <div>名称</div>
                 <Input
@@ -243,7 +236,7 @@ const ConfigPanel: FC<{
                   }
                 />
               </label>
-              {contestData.support_languages.length > 1 && (
+              {content.support_languages.length > 1 && (
                 <div className="contest-editor-config-label">
                   <div
                     style={{
@@ -260,9 +253,9 @@ const ConfigPanel: FC<{
                     shape="circle"
                     icon={<FontAwesomeIcon icon={faXmark} />}
                     onClick={() =>
-                      updateContestData((x) => {
+                      updateContent((x) => {
                         const i = x.support_languages.findIndex(
-                          (v) => v.key === lang.key,
+                          (v) => v.uuid === lang.uuid,
                         );
                         if (i === -1)
                           throw new Error("Target language not found");
@@ -279,9 +272,9 @@ const ConfigPanel: FC<{
           <Button
             type="dashed"
             onClick={() =>
-              updateContestData((x) => {
-                const newLang = {
-                  key: crypto.randomUUID(),
+              updateContent((x) => {
+                const newLang: Content["support_languages"][number] = {
+                  uuid: crypto.randomUUID(),
                   name: `Lang${x.support_languages.length + 1}`,
                   compile_options: `Lang ${
                     x.support_languages.length + 1
@@ -303,8 +296,8 @@ const ConfigPanel: FC<{
       </div>
       <ProblemList
         {...{
-          contestData,
-          updateContestData,
+          content,
+          updateContent,
           setPanel,
           panelWidth: width,
         }}
@@ -312,7 +305,7 @@ const ConfigPanel: FC<{
       <div className="contest-editor-config-label contest-editor-config-image">
         <div>本地图片</div>
         <div>
-          {contestData.images.map((img, index) => {
+          {content.images.map((img, index) => {
             return (
               <Card
                 key={img.uuid}
@@ -366,11 +359,7 @@ const ConfigPanel: FC<{
                     type="text"
                     icon={<FontAwesomeIcon icon={faTrashCan} />}
                     onClick={async () => {
-                      const imageToDelete = contestData.images[index];
-                      await deleteImage({
-                        uuid: imageToDelete.uuid,
-                        updateContestData,
-                      });
+                      eraseImageByIndex(index, updateContent);
                     }}
                   />
                 </div>
@@ -396,11 +385,10 @@ const ConfigPanel: FC<{
             customRequest={async (options) => {
               const file = options.file;
               if (!(file instanceof File)) throw new Error("Invalid file");
-
-              await addImage({
-                file,
-                updateContestData,
-              });
+              pushBackImage(
+                { name: file.name, uuid: crypto.randomUUID(), blob: file },
+                updateContent,
+              );
             }}
             showUploadList={false}
             accept=".png,.jpeg,.gif,.svg,image/png,image/jpeg,image/gif,image/svg+xml"

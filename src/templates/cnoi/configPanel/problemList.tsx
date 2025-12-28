@@ -6,9 +6,7 @@ import {
   type SetStateAction,
 } from "react";
 import { useDeepCompareEffect } from "@reactuses/core";
-import type { ImmerContestData } from "@/types/contestData";
 import type { Updater } from "use-immer";
-import { newProblem, removeProblemCallback } from "@/utils/contestDataUtils";
 import {
   faChevronUp,
   faChevronDown,
@@ -28,20 +26,25 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
+import type { Content } from "../types";
+import createNewProblem from "../createNewProblem";
+import { removeProblemCallback } from "@/utils/contestDataUtils";
+
+type ImmerContent = import("@/types/document").ImmerContent<Content>;
 
 const ProblemItem: FC<{
-  problemData: ImmerContestData["problems"][number];
+  problemData: ImmerContent["problems"][number];
   index: number;
   problemCount: number;
   noiStyle: boolean;
   fileIO: boolean;
   usePretest: boolean;
-  supportLanguages: ImmerContestData["support_languages"];
+  supportLanguages: ImmerContent["support_languages"];
   onClickMoveUp: () => void;
   onClickMoveDown: () => void;
   onClickDelete: () => void;
   updateProblemData: (
-    cb: (x: ImmerContestData["problems"][number]) => void,
+    cb: (x: ImmerContent["problems"][number]) => void,
   ) => void;
 }> = ({
   problemData: problem,
@@ -58,7 +61,7 @@ const ProblemItem: FC<{
 }) => {
   const { listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({
-      id: problem.key,
+      id: problem.uuid,
       animateLayoutChanges: (args) => !args.wasDragging,
     });
   const dragBarStyle = {
@@ -67,7 +70,7 @@ const ProblemItem: FC<{
     zIndex: isDragging ? 154 : undefined,
     opacity: isDragging ? 0.8 : 1,
   };
-  function syncAdvancedFields(problem: ImmerContestData["problems"][number]) {
+  function syncAdvancedFields(problem: ImmerContent["problems"][number]) {
     if (problem.advancedEditing) return;
     problem.dir = problem.exec = problem.name;
     problem.input = problem.name + ".in";
@@ -282,7 +285,7 @@ const ProblemItem: FC<{
       </div>
       <div className="contest-editor-config-problem-languages">
         {problem.submit_filename.map((filename, findex) => (
-          <label key={supportLanguages[findex].key}>
+          <label key={supportLanguages[findex].uuid}>
             <div>{supportLanguages[findex].name} 提交文件名</div>
             <Input
               name={`problem ${index} language ${findex} file name`}
@@ -317,24 +320,24 @@ const Remeasure: FC<{ items: unknown[] }> = ({ items }) => {
 };
 
 const ProblemList: FC<{
-  contestData: ImmerContestData;
-  updateContestData: Updater<ImmerContestData>;
+  content: ImmerContent;
+  updateContent: Updater<ImmerContent>;
   setPanel: Dispatch<SetStateAction<string>>;
-}> = ({ contestData, updateContestData, setPanel }) => {
+}> = ({ content, updateContent, setPanel }) => {
   const { modal } = App.useApp();
   function updateProblemData(
     index: number,
-    cb: (x: ImmerContestData["problems"][number]) => void,
+    cb: (x: ImmerContent["problems"][number]) => void,
   ) {
-    updateContestData((x) => {
+    updateContent((x) => {
       cb(x.problems[index]);
     });
   }
-  const problemKeyList = contestData.problems.map((x) => x.key);
-  const removeProblem = removeProblemCallback(
+  const problemKeyList = content.problems.map((x) => x.uuid);
+  const removeProblem = removeProblemCallback<Content>(
     modal,
     setPanel,
-    updateContestData,
+    updateContent,
   );
   return (
     <div className="contest-editor-config-label contest-editor-config-problem">
@@ -345,13 +348,13 @@ const ProblemList: FC<{
             const { active, over } = e;
             if (!over) return;
             if (active.id !== over.id) {
-              const oldIndex = contestData.problems.findIndex(
-                  (x) => x.key === active.id,
+              const oldIndex = content.problems.findIndex(
+                  (x) => x.uuid === active.id,
                 ),
-                newIndex = contestData.problems.findIndex(
-                  (x) => x.key === over.id,
+                newIndex = content.problems.findIndex(
+                  (x) => x.uuid === over.id,
                 );
-              updateContestData((x) => {
+              updateContent((x) => {
                 x.problems = arrayMove(x.problems, oldIndex, newIndex);
               });
             }
@@ -364,27 +367,27 @@ const ProblemList: FC<{
             items={problemKeyList}
             strategy={verticalListSortingStrategy}
           >
-            {contestData.problems.map((problem, index) => (
+            {content.problems.map((problem, index) => (
               <ProblemItem
-                key={problem.key}
+                key={problem.uuid}
                 problemData={problem}
                 index={index}
-                problemCount={contestData.problems.length}
-                noiStyle={contestData.noi_style}
-                fileIO={contestData.file_io}
-                usePretest={contestData.use_pretest}
-                supportLanguages={contestData.support_languages}
+                problemCount={content.problems.length}
+                noiStyle={content.noi_style}
+                fileIO={content.file_io}
+                usePretest={content.use_pretest}
+                supportLanguages={content.support_languages}
                 onClickMoveUp={() =>
-                  updateContestData((x) => {
+                  updateContent((x) => {
                     x.problems = arraySwap(x.problems, index, index - 1);
                   })
                 }
                 onClickMoveDown={() =>
-                  updateContestData((x) => {
+                  updateContent((x) => {
                     x.problems = arraySwap(x.problems, index, index + 1);
                   })
                 }
-                onClickDelete={() => removeProblem(problem.key)}
+                onClickDelete={() => removeProblem(problem.uuid)}
                 updateProblemData={(cb) => updateProblemData(index, cb)}
               />
             ))}
@@ -394,8 +397,8 @@ const ProblemList: FC<{
           type="dashed"
           icon={<FontAwesomeIcon icon={faPlus} />}
           onClick={() =>
-            updateContestData((x) => {
-              x.problems.push(newProblem(x));
+            updateContent((x) => {
+              x.problems.push(createNewProblem(x));
             })
           }
         >

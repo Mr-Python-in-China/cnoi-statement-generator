@@ -2,6 +2,13 @@ import type * as mdast from "mdast";
 import { visit } from "unist-util-visit";
 import { h64 } from "xxhashjs";
 
+import type {} from "remark-directive";
+import type {} from "remark-gfm";
+import type {} from "remark-math";
+import type {} from "remark-parse";
+import type {} from "../remarkImageAttr";
+import type {} from "../remarkExtendedTable";
+
 const hash = (s: string) => h64(s, 147154220).toString(16).padStart(16, "0");
 
 export interface AssetInfo {
@@ -357,6 +364,8 @@ export const handlers = {
     ctx: CompilerContext,
   ) => void;
 };
+
+true satisfies "math" extends keyof mdast.RootContentMap ? true : false;
 
 function parseContent(node: mdast.RootContent, ctx: CompilerContext): void {
   handlers[node.type](node as never, ctx);

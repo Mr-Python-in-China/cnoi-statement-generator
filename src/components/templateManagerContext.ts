@@ -2,7 +2,7 @@ import TemplateManager from "@/templateManager";
 import { createContext, useContext } from "react";
 
 export const TemplateManagerContext = createContext<TemplateManager | null>(
-  new TemplateManager("cnoi"),
+  null,
 );
 
 export default function useTemplateManager() {

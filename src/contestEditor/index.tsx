@@ -7,16 +7,15 @@ import {
   Suspense,
   useCallback,
 } from "react";
-import { useImmer } from "use-immer";
-import type { ImmerContestData } from "@/types/contestData";
-import exampleStatements from "./exampleStatements";
+import { useImmer, type Updater } from "use-immer";
+import type {
+  ContentBase,
+  DocumentBase,
+  ImmerContent,
+  ImmerDocument,
+} from "@/types/document";
 import { App, Button, Tabs, type TabsProps, Space, Dropdown } from "antd";
 import Body from "./body";
-import {
-  newProblem,
-  removeProblemCallback,
-  toImmerContestData,
-} from "@/utils/contestDataUtils";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faFileArrowDown,
@@ -24,76 +23,111 @@ import {
   faCircleInfo,
 } from "@fortawesome/free-solid-svg-icons";
 import { debounce } from "lodash-es";
-import useTemplateManager from "@/components/templateManagerContext";
-import {
-  saveConfigToDB,
-  loadConfigFromDB,
-  exportConfig,
-  importConfig,
-  saveImageToDB,
-  clearDB,
-} from "@/utils/indexedDBUtils";
+import useTemplateManager, {
+  TemplateManagerContext,
+} from "@/components/templateManagerContext";
 
 import "./index.css";
+import {
+  getFirstDocumentUUID,
+  loadDocumentFromDB,
+  saveContentToDB,
+} from "@/utils/indexedDBUtils";
+import TemplateManager from "@/templateManager";
+import { removeProblemCallback } from "@/utils/contestDataUtils";
+import TypstInitStatusProvider from "@/components/typstInitStatusProvider";
 
-interface InitialData {
-  ContestData: ImmerContestData;
+function toImmerContent(content: ContentBase): ImmerContent {
+  return {
+    ...content,
+    images: content.images.map((img) => ({
+      ...img,
+      url: URL.createObjectURL(img.blob),
+    })),
+  };
 }
 
-const ContestEditorImpl: FC<{
-  initialData: InitialData;
-}> = ({ initialData }) => {
-  const { compiler } = useTemplateManager();
+function toImmerDocument(doc: DocumentBase): ImmerDocument {
+  return {
+    ...doc,
+    content: toImmerContent(doc.content),
+  };
+}
 
-  const [contestData, updateContestData] = useImmer<ImmerContestData>(
-    initialData.ContestData,
-  );
+const ContestEditorImpl: FC<{ initialDoc: DocumentBase }> = ({
+  initialDoc,
+}) => {
+  const templateManager = useTemplateManager();
+  const compiler = templateManager.compiler;
+  const uiMeta = use(templateManager.uiMetadataPromise);
+
+  const [doc, updateDoc] = useImmer<ImmerDocument>(toImmerDocument(initialDoc));
+  const content = doc.content;
+  const updateContent =
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    useCallback(
+      ((updater) => {
+        if (typeof updater === "function")
+          updateDoc((d) => {
+            const x = updater(d.content);
+            if (x !== undefined)
+              return {
+                ...d,
+                content: x,
+              };
+          });
+        else
+          updateDoc((d) => {
+            d.content = updater;
+          });
+      }) satisfies Updater<ImmerContent>,
+      [updateDoc],
+    );
 
   // Register asset blob URLs with compiler whenever images change
   useEffect(() => {
-    const mapping = new Map(
-      contestData.images.map((img) => [img.uuid, img.url]),
-    );
+    const mapping = new Map(content.images.map((img) => [img.uuid, img.url]));
     compiler.registerAssetUrls(mapping);
-  }, [compiler, contestData.images]);
+  }, [compiler, content.images]);
 
+  // "config" | "extra-{name}" | "{problem-uuid}"
   const [panel, setPanel] = useState("config");
   const [exportDisabled, setExportDisabled] = useState(true);
 
   // Create a debounced save function (saves at most once per 500ms)
   const debouncedSave = useMemo(
     () =>
-      debounce(async (data: ImmerContestData) => {
+      debounce(async (data: ImmerContent) => {
         try {
-          await saveConfigToDB(data);
+          await saveContentToDB(doc.uuid, data);
         } catch (error) {
           console.error("Failed to auto-save:", error);
         }
       }, 500),
-    [],
+    [doc.uuid],
   );
 
-  // Auto-save to IndexedDB whenever contestData changes (debounced)
+  // Auto-save to IndexedDB whenever content changes (debounced)
   useEffect(() => {
-    debouncedSave(contestData);
-  }, [contestData, debouncedSave]);
+    debouncedSave(content);
+  }, [content, debouncedSave]);
 
   const { modal, notification, message } = App.useApp();
   const items: TabsProps["items"] = [
     {
       key: "config",
-      label: "比赛配置",
+      label: "基础信息",
       closable: false,
       destroyOnHidden: true,
     },
-    {
-      key: "precaution",
-      label: "注意事项",
-      closable: false,
+    ...Object.entries(uiMeta.extraContents).map(([extraName, meta]) => ({
+      key: `extra-${extraName}`,
+      label: meta.displayName,
+      closeable: false,
       destroyOnHidden: true,
-    },
-    ...contestData.problems.map((x, i) => ({
-      key: x.key,
+    })),
+    ...content.problems.map((x, i) => ({
+      key: x.uuid,
       label: (
         <>
           {x.title}
@@ -112,16 +146,12 @@ const ContestEditorImpl: FC<{
       mounted = false;
     };
   }, [compiler]);
-  const removeProblem = removeProblemCallback(
-    modal,
-    setPanel,
-    updateContestData,
-  );
+  const removeProblem = removeProblemCallback(modal, setPanel, updateContent);
   const onClickExportPDF = useCallback(async () => {
     if (exportDisabled) return;
     setExportDisabled(true);
     try {
-      const data = await compiler.compileToPdf(contestData);
+      const data = await compiler.compileToPdf(content);
       if (!data) throw new Error("编译器未返回任何数据");
       const blob = new Blob([data.slice().buffer], {
         type: "application/pdf",
@@ -129,9 +159,7 @@ const ContestEditorImpl: FC<{
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `${contestData.title || "statement"}${
-        contestData.dayname ? `-${contestData.dayname}` : ""
-      }.pdf`;
+      a.download = `${doc.name}.pdf`;
       a.click();
       URL.revokeObjectURL(url);
     } catch (e) {
@@ -160,7 +188,7 @@ const ContestEditorImpl: FC<{
       });
     }
     setExportDisabled(false);
-  }, [compiler, contestData, exportDisabled, notification]);
+  }, [doc.name, compiler, content, exportDisabled, notification]);
   const onClickImportConfig = useCallback(() => {
     const input = document.createElement("input");
     input.type = "file";
@@ -173,47 +201,21 @@ const ContestEditorImpl: FC<{
         reader.onload = async (event) => {
           try {
             const json = event.target?.result as string;
-            const { data, images } = await importConfig(json);
+            const data = await import("@/utils/jsonDocument").then((mod) =>
+              mod.importDocument(json),
+            );
 
             // Clear old images
-            contestData.images.forEach((img) => URL.revokeObjectURL(img.url));
+            content.images.forEach((img) => URL.revokeObjectURL(img.url));
 
-            // Create blob URLs and save to IndexedDB
-            const imageList: typeof contestData.images = [];
-            for (const [uuid, blob] of images.entries()) {
-              const url = URL.createObjectURL(blob);
-
-              // Find image name
-              const imgData = (
-                data.images as Array<{
-                  uuid: string;
-                  name: string;
-                }>
-              )?.find((i) => i.uuid === uuid);
-              imageList.push({
-                uuid,
-                name: imgData?.name || "image",
-                url,
-              });
-
-              // Save to IndexedDB
-              await saveImageToDB(uuid, blob);
-            }
-
-            const dataWithUrls = {
-              ...data,
-              images: imageList,
-            };
-
-            updateContestData(() => toImmerContestData(dataWithUrls));
+            updateContent(() => toImmerContent(data.content));
             setPanel("config");
-            message.success("配置导入成功");
+            message.success("文档导入成功");
           } catch (error) {
             notification.error({
               title: "导入失败",
               placement: "bottomRight",
-              description:
-                error instanceof Error ? error.message : String(error),
+              description: "无法解析此文档。",
               duration: 5,
             });
             console.error("Error when importing config.", error);
@@ -224,62 +226,41 @@ const ContestEditorImpl: FC<{
         notification.error({
           title: "导入失败",
           placement: "bottomRight",
-          description: error instanceof Error ? error.message : String(error),
+          description: "无法解析此文档。",
           duration: 5,
         });
         console.error("Error when importing config.", error);
       }
     };
     input.click();
-  }, [contestData, message, notification, updateContestData]);
+  }, [content, message, notification, updateContent]);
   const onClickExportConfig = useCallback(async () => {
     try {
-      const json = await exportConfig(contestData);
+      const json = await import("@/utils/jsonDocument").then((mod) =>
+        mod.exportDocument(doc),
+      );
       const blob = new Blob([json], {
         type: "application/json",
       });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `${contestData.title || "contest"}-${Date.now()}-config.json`;
+      a.download = `${doc.name}-${Date.now()}.json`;
       a.click();
       URL.revokeObjectURL(url);
-      message.success("配置导出成功");
+      message.success("文档导出成功");
     } catch (error) {
       notification.error({
         title: "导出失败",
         placement: "bottomRight",
-        description: error instanceof Error ? error.message : String(error),
+        description: "出现神秘错误。查看控制台了解详情。",
         duration: 5,
         showProgress: true,
         pauseOnHover: true,
       });
       console.error("Error when exporting config.", error);
     }
-  }, [contestData, message, notification]);
-  const onClickLoadExampleConfig = useCallback(
-    async ({ key }: { key: string }) => {
-      const r = await modal.confirm({
-        title: "载入示例配置",
-        content: "载入示例配置将会覆盖当前的所有配置，是否继续？",
-        okText: "继续",
-        cancelText: "取消",
-      });
-      if (!r) return;
-      for (const i of contestData.images) URL.revokeObjectURL(i.url);
-      const example = exampleStatements[key];
-      setPanel("config");
-      const conf = toImmerContestData({
-        ...example,
-        images: [],
-      });
-      updateContestData(() => conf);
-      await clearDB();
-      await saveConfigToDB(conf);
-      message.success("示例配置已经载入");
-    },
-    [contestData.images, message, modal, updateContestData],
-  );
+  }, [message, notification, doc]);
   return (
     <div className="contest-editor">
       <Tabs
@@ -292,9 +273,9 @@ const ContestEditorImpl: FC<{
         onEdit={async (e, action) => {
           if (action === "remove") removeProblem(e as string);
           else {
-            const v = newProblem(contestData);
-            setPanel(v.key);
-            updateContestData((draft) => {
+            const v = uiMeta.createNewProblem(content);
+            setPanel(v.uuid);
+            updateContent((draft) => {
               draft.problems.push(v);
             });
           }
@@ -320,22 +301,13 @@ const ContestEditorImpl: FC<{
                   items: [
                     {
                       key: "import config",
-                      label: "导入配置",
+                      label: "导入文档",
                       onClick: onClickImportConfig,
                     },
                     {
                       key: "export config",
-                      label: "导出配置",
+                      label: "导出文档",
                       onClick: onClickExportConfig,
-                    },
-                    {
-                      key: "load example config",
-                      label: "加载示例配置",
-                      children: Object.keys(exampleStatements).map((x) => ({
-                        key: x,
-                        label: x,
-                      })),
-                      onClick: onClickLoadExampleConfig,
                     },
                   ],
                 }}
@@ -351,8 +323,8 @@ const ContestEditorImpl: FC<{
       />
       <Body
         {...{
-          contestData,
-          updateContestData,
+          content,
+          updateContent,
           panel,
           setPanel,
         }}
@@ -362,51 +334,31 @@ const ContestEditorImpl: FC<{
 };
 
 const ContestEditorWithInitalPromise: FC<{
-  initialPromise: Promise<InitialData>;
+  initialPromise: Promise<{
+    doc: DocumentBase;
+    templateManager: TemplateManager;
+  }>;
 }> = ({ initialPromise }) => {
-  const initialData = use(initialPromise);
-  return <ContestEditorImpl initialData={initialData} />;
+  const { doc, templateManager } = use(initialPromise);
+  return (
+    <TemplateManagerContext.Provider value={templateManager}>
+      <TypstInitStatusProvider>
+        <ContestEditorImpl initialDoc={doc} />
+      </TypstInitStatusProvider>
+    </TemplateManagerContext.Provider>
+  );
 };
 
 const ContestEditor: FC = () => {
+  console.log("ContestEditor rendered");
   const initialPromise = (async () => {
-    const stored = await loadConfigFromDB().catch((e) => {
-      console.warn(
-        "Error when loading config from DB. Will use default config.",
-        e,
-      );
-      return undefined;
-    });
-
-    if (!stored)
-      return {
-        ContestData: toImmerContestData({
-          ...exampleStatements["SupportedGrammar"],
-          images: [],
-        }),
-      };
-
-    // Create blob URLs for images and add them to images array
-    const images = stored.data.images || [];
-    const imageList = [];
-
-    for (const img of images) {
-      const blob = stored.images.get(img.uuid);
-      if (blob) {
-        const url = URL.createObjectURL(blob);
-        imageList.push({
-          uuid: img.uuid,
-          name: img.name,
-          url,
-        });
-      }
-    }
-
+    const uuid = await getFirstDocumentUUID();
+    if (!uuid) throw new Error("didn't impl");
+    const document = await loadDocumentFromDB(uuid);
+    if (!document) throw new Error("Document not found in DB");
     return {
-      ContestData: toImmerContestData({
-        ...stored.data,
-        images: imageList,
-      }),
+      doc: document,
+      templateManager: new TemplateManager(document.templateId),
     };
   })();
   return (

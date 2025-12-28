@@ -14,7 +14,6 @@ import {
 } from "@myriaddreamin/typst.ts/options.init";
 import { listen, sendToMain } from "@mr.python/promise-worker-ts";
 import { Mutex } from "async-mutex";
-import type { ContestData } from "@/types/contestData";
 import getProcessor from "./getProcessor";
 
 import TypstDocMain from "typst-template/main.typ?raw";
@@ -31,10 +30,6 @@ const typstAccessModel = new MemoryAccessModel();
 const typstPackageRegistry = new PreloadedPackageRegistry(typstAccessModel);
 
 let processor: ReturnType<typeof getProcessor>;
-
-const TemplateUnifiedPlugins = import.meta.glob<
-  import("unified").PluggableList
->("/templates/*/unifiedPlugins.ts", { import: "default" });
 
 listen<InitMessage>("init", async (data) => {
   preloadedPackages = data.preloadedPackages;
@@ -54,11 +49,7 @@ listen<InitMessage>("init", async (data) => {
       getModule: () => data.typstRendererWasm,
     }),
     (async () => {
-      const pluginListCb =
-        TemplateUnifiedPlugins[`/templates/${data.template}/unifiedPlugins.ts`];
-      if (!pluginListCb)
-        throw new Error("Template not found: " + data.template);
-      processor = getProcessor(await pluginListCb());
+      processor = getProcessor(await importUnifiedPlugins(data.template));
     })(),
   ]);
   $typst.setCompiler(compiler);
@@ -70,33 +61,44 @@ listen<InitMessage>("init", async (data) => {
 const SHADOW_CACHE_AGE = 1000 * 30;
 const shadowCacheTime = new Map<string, number>();
 let lastProblemCount = 0;
+let lastExtraContents = new Set<string>();
 function compilerPrepare(
-  data: ContestData<{ withMarkdown: true }>,
-): [ContestData<{ withTypst: true }>, [string, string][]] {
+  data: PrecompileContent,
+): [CompiledContent, [string, string][]] {
   const assets = new Map<string, string>();
-  const problemsWithTypst = data.problems.map((problem) => {
-    const res = processor.processSync(problem.statementMarkdown);
+  const compiledProblems = data.problems.map((problem) => {
+    const res = processor.processSync(problem.markdown);
     for (const v of res.data.assets || []) assets.set(v.filename, v.assetUrl);
     return {
       ...problem,
-      statementTypst: res.toString(),
+      typst: res.toString(),
     };
   });
-  const precautionRes = processor.processSync(data.precautionMarkdown);
-  for (const v of precautionRes.data.assets || [])
-    assets.set(v.filename, v.assetUrl);
+  const compiledExtraContents = Object.fromEntries(
+    Object.entries(data.extraContents).map(([key, content]) => {
+      const res = processor.processSync(content.markdown);
+      for (const v of res.data.assets || []) assets.set(v.filename, v.assetUrl);
+      return [
+        key,
+        {
+          ...content,
+          typst: res.toString(),
+        },
+      ] as const;
+    }),
+  );
   return [
     {
       ...data,
-      problems: problemsWithTypst,
-      precautionTypst: precautionRes.toString(),
+      problems: compiledProblems,
+      extraContents: compiledExtraContents,
     },
     Array.from(assets.entries()),
   ];
 }
 
 async function typstPrepare(
-  data: ContestData<{ withMarkdown: true }>,
+  content: PrecompileContent,
   assets: [string, string][],
 ) {
   const now = Date.now();
@@ -119,17 +121,22 @@ async function typstPrepare(
       shadowCacheTime.set(filename, -1);
     }),
   );
-  const [dataWithTypst] = compilerPrepare(data);
-  $typst.addSource("/data.json", JSON.stringify(dataWithTypst));
-  $typst.addSource("/precaution.typ", dataWithTypst.precautionTypst);
-  for (let i = 0; i < dataWithTypst.problems.length; ++i)
-    $typst.addSource(
-      `/problem-${i}.typ`,
-      dataWithTypst.problems[i].statementTypst,
-    );
-  for (let i = dataWithTypst.problems.length; i < lastProblemCount; ++i)
+  const [compiledContent] = compilerPrepare(content);
+  $typst.addSource("/data.json", JSON.stringify(compiledContent));
+  for (const filename of lastExtraContents)
+    $typst.unmapShadow(`/${filename}.typ`);
+  lastExtraContents = new Set<string>();
+  for (const [filename, content] of Object.entries(
+    compiledContent.extraContents,
+  )) {
+    lastExtraContents.add(filename);
+    $typst.addSource(`/extra-${filename}.typ`, content.typst);
+  }
+  for (let i = 0; i < compiledContent.problems.length; ++i)
+    $typst.addSource(`/problem-${i}.typ`, compiledContent.problems[i].typst);
+  for (let i = compiledContent.problems.length; i < lastProblemCount; ++i)
     $typst.unmapShadow(`/problem-${i}.typ`);
-  lastProblemCount = data.problems.length;
+  lastProblemCount = content.problems.length;
 }
 
 const mutex = new Mutex();
@@ -155,6 +162,8 @@ listen<RenderTypstMessage>("renderTypst", async (data) =>
 );
 
 import type { PromiseWorkerTagged } from "@mr.python/promise-worker-ts";
+import type { CompiledContent, PrecompileContent } from "@/types/document";
+import { importUnifiedPlugins } from "@/utils/importTemplate";
 export type InitMessage = PromiseWorkerTagged<
   "init",
   {
@@ -168,12 +177,12 @@ export type InitMessage = PromiseWorkerTagged<
 >;
 export type CompileTypstMessage = PromiseWorkerTagged<
   "compileTypst",
-  ContestData<{ withMarkdown: true }>,
+  PrecompileContent,
   Uint8Array | undefined
 >;
 export type RenderTypstMessage = PromiseWorkerTagged<
   "renderTypst",
-  ContestData<{ withMarkdown: true }>,
+  PrecompileContent,
   string | undefined
 >;
 export type FetchAssetMessage = PromiseWorkerTagged<
