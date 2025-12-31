@@ -1,6 +1,11 @@
 import type { HookAPI as ModalHookAPI } from "antd/es/modal/useModal";
 import type { Updater } from "use-immer";
-import type { ContentBase, ImmerContent } from "@/types/document";
+import type {
+  ContentBase,
+  DocumentBase,
+  ImmerContent,
+  ImmerDocument,
+} from "@/types/document";
 
 export function removeProblemCallback<Content extends ContentBase>(
   modal: ModalHookAPI,
@@ -32,5 +37,22 @@ export function removeProblemCallback<Content extends ContentBase>(
       setPanel((panel) => (panel === uuid ? targetKey : panel));
       problemsDraft.splice(index, 1);
     });
+  };
+}
+
+export function toImmerContent(content: ContentBase): ImmerContent {
+  return {
+    ...content,
+    images: content.images.map((img) => ({
+      ...img,
+      url: URL.createObjectURL(img.blob),
+    })),
+  };
+}
+
+export function toImmerDocument(doc: DocumentBase): ImmerDocument {
+  return {
+    ...doc,
+    content: toImmerContent(doc.content),
   };
 }

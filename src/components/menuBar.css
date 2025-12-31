@@ -1,0 +1,99 @@
+.menu-bar {
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
+  user-select: none;
+  height: 32px;
+}
+
+.menu-root {
+  position: relative;
+}
+
+.menu-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 16px;
+  border: none;
+  background: transparent;
+  color: var(--ant-color-text);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.menu-root.active > .menu-trigger,
+.menu-trigger:hover {
+  background: var(--ant-color-fill-secondary);
+}
+
+.menu-trigger-shortcut {
+  color: var(--ant-color-text-tertiary);
+  font-size: 12px;
+}
+
+.menu-list {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  list-style: none;
+  margin: 0;
+  padding: 4px 4px 4px 4px;
+  min-width: 200px;
+  background: var(--ant-color-bg-elevated);
+  border: 1px solid var(--ant-color-border-secondary);
+  border-radius: var(--ant-border-radius);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+  z-index: 20;
+}
+
+.menu-item > .menu-list {
+  top: 0;
+  left: 100%;
+  margin-left: 4px;
+}
+
+.menu-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 12px;
+  border-radius: var(--ant-border-radius);
+  color: var(--ant-color-text);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.menu-item.active,
+.menu-item:hover {
+  background: var(--ant-color-fill-secondary);
+}
+
+.menu-item.disabled {
+  color: var(--ant-color-text-tertiary);
+  cursor: not-allowed;
+}
+
+.menu-item.disabled:hover {
+  background: transparent;
+}
+
+.menu-item-main {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  justify-content: space-between;
+}
+
+.menu-item-shortcut {
+  color: var(--ant-color-text-tertiary);
+  font-size: 12px;
+}
+
+.menu-item-arrow {
+  color: var(--ant-color-text-tertiary);
+  font-size: 12px;
+}

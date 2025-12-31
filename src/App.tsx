@@ -9,9 +9,7 @@ import "./App.css";
 const App: FC = () => {
   return (
     <div className="app">
-      <main>
-        <ContestEditor />
-      </main>
+      <ContestEditor />
       <footer>
         <div>
           <a

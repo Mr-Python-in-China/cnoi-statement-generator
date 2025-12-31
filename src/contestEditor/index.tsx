@@ -9,19 +9,12 @@ import {
 } from "react";
 import { useImmer, type Updater } from "use-immer";
 import type {
-  ContentBase,
   DocumentBase,
   ImmerContent,
   ImmerDocument,
 } from "@/types/document";
-import { App, Button, Tabs, type TabsProps, Space, Dropdown } from "antd";
+import { App, Tabs, type TabsProps } from "antd";
 import Body from "./body";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faFileArrowDown,
-  faEllipsisVertical,
-  faCircleInfo,
-} from "@fortawesome/free-solid-svg-icons";
 import { debounce } from "lodash-es";
 import useTemplateManager, {
   TemplateManagerContext,
@@ -31,28 +24,15 @@ import "./index.css";
 import {
   getFirstDocumentUUID,
   loadDocumentFromDB,
-  saveContentToDB,
+  saveDocumentToDB,
 } from "@/utils/indexedDBUtils";
 import TemplateManager from "@/templateManager";
-import { removeProblemCallback } from "@/utils/contestDataUtils";
+import {
+  removeProblemCallback,
+  toImmerDocument,
+} from "@/utils/contestDataUtils";
 import TypstInitStatusProvider from "@/components/typstInitStatusProvider";
-
-function toImmerContent(content: ContentBase): ImmerContent {
-  return {
-    ...content,
-    images: content.images.map((img) => ({
-      ...img,
-      url: URL.createObjectURL(img.blob),
-    })),
-  };
-}
-
-function toImmerDocument(doc: DocumentBase): ImmerDocument {
-  return {
-    ...doc,
-    content: toImmerContent(doc.content),
-  };
-}
+import ContestEditorHeader from "./header";
 
 const ContestEditorImpl: FC<{ initialDoc: DocumentBase }> = ({
   initialDoc,
@@ -92,14 +72,16 @@ const ContestEditorImpl: FC<{ initialDoc: DocumentBase }> = ({
 
   // "config" | "extra-{name}" | "{problem-uuid}"
   const [panel, setPanel] = useState("config");
-  const [exportDisabled, setExportDisabled] = useState(true);
 
   // Create a debounced save function (saves at most once per 500ms)
   const debouncedSave = useMemo(
     () =>
-      debounce(async (data: ImmerContent) => {
+      debounce(async (data: ImmerDocument) => {
         try {
-          await saveContentToDB(doc.uuid, data);
+          await saveDocumentToDB(doc.uuid, {
+            ...data,
+            modifiedAt: new Date().toISOString(),
+          });
         } catch (error) {
           console.error("Failed to auto-save:", error);
         }
@@ -109,10 +91,10 @@ const ContestEditorImpl: FC<{ initialDoc: DocumentBase }> = ({
 
   // Auto-save to IndexedDB whenever content changes (debounced)
   useEffect(() => {
-    debouncedSave(content);
-  }, [content, debouncedSave]);
+    debouncedSave(doc);
+  }, [doc, debouncedSave]);
 
-  const { modal, notification, message } = App.useApp();
+  const { modal } = App.useApp();
   const items: TabsProps["items"] = [
     {
       key: "config",
@@ -137,199 +119,43 @@ const ContestEditorImpl: FC<{ initialDoc: DocumentBase }> = ({
       destroyOnHidden: true,
     })),
   ];
-  useEffect(() => {
-    let mounted = true;
-    compiler.typstInitPromise.then(() => {
-      if (mounted) setExportDisabled(false);
-    });
-    return () => {
-      mounted = false;
-    };
-  }, [compiler]);
   const removeProblem = removeProblemCallback(modal, setPanel, updateContent);
-  const onClickExportPDF = useCallback(async () => {
-    if (exportDisabled) return;
-    setExportDisabled(true);
-    try {
-      const data = await compiler.compileToPdf(content);
-      if (!data) throw new Error("编译器未返回任何数据");
-      const blob = new Blob([data.slice().buffer], {
-        type: "application/pdf",
-      });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `${doc.name}.pdf`;
-      a.click();
-      URL.revokeObjectURL(url);
-    } catch (e) {
-      console.error("Error when exporting PDF.", e);
-      notification.error({
-        title: "导出失败",
-        placement: "bottomRight",
-        description: (
-          <>
-            <div>{e instanceof Error ? e.message : String(e)}</div>
-            <div>
-              如果你认为这是网站的错误，请{" "}
-              <a
-                href="https://github.com/Mr-Python-in-China/cnoi-statement-generator/issues"
-                target="_blank"
-              >
-                提交 issue
-              </a>
-              。
-            </div>
-          </>
-        ),
-        duration: 5,
-        showProgress: true,
-        pauseOnHover: true,
-      });
-    }
-    setExportDisabled(false);
-  }, [doc.name, compiler, content, exportDisabled, notification]);
-  const onClickImportConfig = useCallback(() => {
-    const input = document.createElement("input");
-    input.type = "file";
-    input.accept = "application/json,.json";
-    input.onchange = async (e) => {
-      const file = (e.target as HTMLInputElement).files?.[0];
-      if (!file) return;
-      try {
-        const reader = new FileReader();
-        reader.onload = async (event) => {
-          try {
-            const json = event.target?.result as string;
-            const data = await import("@/utils/jsonDocument").then((mod) =>
-              mod.importDocument(json),
-            );
-
-            // Clear old images
-            content.images.forEach((img) => URL.revokeObjectURL(img.url));
-
-            updateContent(() => toImmerContent(data.content));
-            setPanel("config");
-            message.success("文档导入成功");
-          } catch (error) {
-            notification.error({
-              title: "导入失败",
-              placement: "bottomRight",
-              description: "无法解析此文档。",
-              duration: 5,
-            });
-            console.error("Error when importing config.", error);
-          }
-        };
-        reader.readAsText(file);
-      } catch (error) {
-        notification.error({
-          title: "导入失败",
-          placement: "bottomRight",
-          description: "无法解析此文档。",
-          duration: 5,
-        });
-        console.error("Error when importing config.", error);
-      }
-    };
-    input.click();
-  }, [content, message, notification, updateContent]);
-  const onClickExportConfig = useCallback(async () => {
-    try {
-      const json = await import("@/utils/jsonDocument").then((mod) =>
-        mod.exportDocument(doc),
-      );
-      const blob = new Blob([json], {
-        type: "application/json",
-      });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `${doc.name}-${Date.now()}.json`;
-      a.click();
-      URL.revokeObjectURL(url);
-      message.success("文档导出成功");
-    } catch (error) {
-      notification.error({
-        title: "导出失败",
-        placement: "bottomRight",
-        description: "出现神秘错误。查看控制台了解详情。",
-        duration: 5,
-        showProgress: true,
-        pauseOnHover: true,
-      });
-      console.error("Error when exporting config.", error);
-    }
-  }, [message, notification, doc]);
   return (
-    <div className="contest-editor">
-      <Tabs
-        type="editable-card"
-        items={items}
-        activeKey={panel}
-        onChange={(x) => {
-          setPanel(x);
-        }}
-        onEdit={async (e, action) => {
-          if (action === "remove") removeProblem(e as string);
-          else {
-            const v = uiMeta.createNewProblem(content);
-            setPanel(v.uuid);
-            updateContent((draft) => {
-              draft.problems.push(v);
-            });
-          }
-        }}
-        tabBarExtraContent={{
-          right: (
-            <Space>
-              <div className="contest-editor-autosave-indicator">
-                <FontAwesomeIcon icon={faCircleInfo} /> 你的修改将自动保存
-              </div>
-              <Button
-                type="primary"
-                icon={<FontAwesomeIcon icon={faFileArrowDown} />}
-                disabled={exportDisabled}
-                onClick={onClickExportPDF}
-              >
-                导出 PDF
-              </Button>
-              <Dropdown
-                placement="bottomRight"
-                trigger={["click"]}
-                menu={{
-                  items: [
-                    {
-                      key: "import config",
-                      label: "导入文档",
-                      onClick: onClickImportConfig,
-                    },
-                    {
-                      key: "export config",
-                      label: "导出文档",
-                      onClick: onClickExportConfig,
-                    },
-                  ],
-                }}
-              >
-                <Button
-                  title="更多操作"
-                  icon={<FontAwesomeIcon icon={faEllipsisVertical} />}
-                />
-              </Dropdown>
-            </Space>
-          ),
-        }}
+    <>
+      <ContestEditorHeader
+        doc={doc}
+        updateDoc={updateDoc}
+        setPanel={setPanel}
       />
-      <Body
-        {...{
-          content,
-          updateContent,
-          panel,
-          setPanel,
-        }}
-      />
-    </div>
+      <main>
+        <Tabs
+          type="editable-card"
+          items={items}
+          activeKey={panel}
+          onChange={(x) => {
+            setPanel(x);
+          }}
+          onEdit={async (e, action) => {
+            if (action === "remove") removeProblem(e as string);
+            else {
+              const v = uiMeta.createNewProblem(content);
+              setPanel(v.uuid);
+              updateContent((draft) => {
+                draft.problems.push(v);
+              });
+            }
+          }}
+        />
+        <Body
+          {...{
+            content,
+            updateContent,
+            panel,
+            setPanel,
+          }}
+        />
+      </main>
+    </>
   );
 };
 

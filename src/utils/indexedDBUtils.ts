@@ -1,4 +1,8 @@
-import type { ContentBase, DocumentBase, ImmerContent } from "@/types/document";
+import type {
+  ContentBase,
+  DocumentBase,
+  ImmerDocument,
+} from "@/types/document";
 import Dexie from "dexie";
 
 /**
@@ -86,28 +90,26 @@ class CnoiDatabase extends Dexie {
 
 const db = new CnoiDatabase();
 
-/**
- * Save config to IndexedDB
- */
-export async function saveContentToDB(
+export async function saveDocumentToDB(
   docUUID: string,
-  data: ImmerContent,
+  doc: ImmerDocument,
 ): Promise<void> {
-  const storedData = {
-    ...data,
-    images: data.images.map(
-      ({
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        url, // Remove url field
-        ...rest
-      }) => rest,
-    ),
+  const storedDoc = {
+    ...doc,
+    content: {
+      ...doc.content,
+      images: doc.content.images.map(
+        ({
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          url, // Remove url field
+          ...rest
+        }) => rest,
+      ),
+    },
   };
-  const old = await db.documents.get(docUUID);
-  if (!old) throw new Error("No existing config to update");
   await db.documents.put({
-    ...old,
-    content: storedData,
+    ...storedDoc,
+    content: storedDoc.content,
     modifiedAt: new Date().toISOString(),
   });
 }

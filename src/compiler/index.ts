@@ -84,7 +84,7 @@ async function downloadMultiData(
   return await Promise.all(tasks.map((x) => x.exec()));
 }
 
-type PromiseStatus = "pending" | "fulfilled" | "rejected";
+export type PromiseStatus = "pending" | "fulfilled" | "rejected";
 
 export class TypstInitTask {
   status: PromiseStatus = "pending";
