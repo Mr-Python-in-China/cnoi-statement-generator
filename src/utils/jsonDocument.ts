@@ -63,13 +63,13 @@ const zOldContent = z.object({
   ),
 });
 
-export async function exportDocument(doc: DocumentBase) {
+export async function documentToJson(doc: DocumentBase) {
   return JSON.stringify(
     await getZDocument(await importContentZod(doc.templateId)).encodeAsync(doc),
   );
 }
 
-export async function importDocument(str: string): Promise<DocumentBase> {
+export async function jsonToDocument(str: string): Promise<DocumentBase> {
   const obj = JSON.parse(str);
   try {
     const docBase = await getZDocument(z.any()).parseAsync(obj);

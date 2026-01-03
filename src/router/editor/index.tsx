@@ -22,14 +22,14 @@ import useTemplateManager, {
 
 import "./index.css";
 import {
-  getFirstDocumentUUID,
+  getFirstDocumentUuidFromDB,
   loadDocumentFromDB,
   saveDocumentToDB,
 } from "@/utils/indexedDBUtils";
 import TemplateManager from "@/templateManager";
 import {
   removeProblemCallback,
-  toImmerDocument,
+  toImmerContent,
 } from "@/utils/contestDataUtils";
 import TypstInitStatusProvider from "@/components/typstInitStatusProvider";
 import ContestEditorHeader from "./header";
@@ -41,7 +41,11 @@ const ContestEditorImpl: FC<{ initialDoc: DocumentBase }> = ({
   const compiler = templateManager.compiler;
   const uiMeta = use(templateManager.uiMetadataPromise);
 
-  const [doc, updateDoc] = useImmer<ImmerDocument>(toImmerDocument(initialDoc));
+  const [doc, updateDoc] = useImmer<ImmerDocument>({
+    ...initialDoc,
+    content: toImmerContent(initialDoc.content),
+    previewImage: undefined,
+  });
   const content = doc.content;
   const updateContent =
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -78,7 +82,7 @@ const ContestEditorImpl: FC<{ initialDoc: DocumentBase }> = ({
     () =>
       debounce(async (data: ImmerDocument) => {
         try {
-          await saveDocumentToDB(doc.uuid, {
+          await saveDocumentToDB({
             ...data,
             modifiedAt: new Date().toISOString(),
           });
@@ -86,7 +90,7 @@ const ContestEditorImpl: FC<{ initialDoc: DocumentBase }> = ({
           console.error("Failed to auto-save:", error);
         }
       }, 500),
-    [doc.uuid],
+    [],
   );
 
   // Auto-save to IndexedDB whenever content changes (debounced)
@@ -176,12 +180,10 @@ const ContestEditorWithInitalPromise: FC<{
 };
 
 const ContestEditor: FC = () => {
-  console.log("ContestEditor rendered");
   const initialPromise = (async () => {
-    const uuid = await getFirstDocumentUUID();
+    const uuid = await getFirstDocumentUuidFromDB();
     if (!uuid) throw new Error("didn't impl");
     const document = await loadDocumentFromDB(uuid);
-    if (!document) throw new Error("Document not found in DB");
     return {
       doc: document,
       templateManager: new TemplateManager(document.templateId),

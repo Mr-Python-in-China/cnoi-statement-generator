@@ -1,16 +1,20 @@
 import type {
   ContentBase,
   DocumentBase,
+  DocumentContentOnly,
+  DocumentMeta,
   ImmerDocument,
 } from "@/types/document";
 import Dexie from "dexie";
+import { toImmerContent } from "./contestDataUtils";
 
 /**
  * Dexie database schema
  */
 class CnoiDatabase extends Dexie {
   // Using Table instead of EntityTable to support non-inlined keys
-  documents!: Dexie.Table<DocumentBase, string>;
+  documents_content!: Dexie.Table<DocumentContentOnly, string>;
+  documents_meta!: Dexie.Table<DocumentMeta, string>;
 
   constructor() {
     super("cnoi-statement-generator");
@@ -85,42 +89,147 @@ class CnoiDatabase extends Dexie {
           await tx.table("documents").put(doc);
         }
       });
+
+    this.version(3)
+      .stores({
+        documents: null,
+        documents_content: "uuid",
+        documents_meta: "uuid",
+      })
+      .upgrade(async (tx) => {
+        await tx
+          .table("documents")
+          .toArray()
+          .then((docs) =>
+            docs.map((doc) => ({ uuid: doc.uuid, content: doc.content })),
+          )
+          .then((docs) => tx.table("documents_content").bulkPut(docs));
+        const docs = await tx.table("documents").toArray();
+        const metas: DocumentMeta[] = docs.map((doc) => ({
+          uuid: doc.uuid,
+          name: doc.name,
+          templateId: doc.templateId,
+          modifiedAt: doc.modifiedAt,
+          previewImage: undefined,
+        }));
+        await tx.table("documents_meta").bulkPut(metas);
+      });
   }
 }
 
 const db = new CnoiDatabase();
 
 export async function saveDocumentToDB(
-  docUUID: string,
-  doc: ImmerDocument,
+  doc: ImmerDocument | DocumentBase,
+  doNotOverrideModifiedAt = false,
 ): Promise<void> {
-  const storedDoc = {
-    ...doc,
-    content: {
-      ...doc.content,
-      images: doc.content.images.map(
-        ({
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          url, // Remove url field
-          ...rest
-        }) => rest,
-      ),
+  const targetDoc =
+    "previewImage" in doc
+      ? {
+          ...doc,
+          content: {
+            ...doc.content,
+            images: doc.content.images.map(
+              ({
+                // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                url, // Remove url field
+                ...rest
+              }) => rest,
+            ),
+          },
+        }
+      : {
+          ...doc,
+          previewImage: undefined,
+        };
+
+  await db.transaction(
+    "rw",
+    db.documents_content,
+    db.documents_meta,
+    async () => {
+      await db.documents_content.put({
+        uuid: targetDoc.uuid,
+        content: targetDoc.content,
+      });
+
+      await db.documents_meta.put({
+        ...targetDoc,
+        modifiedAt: doNotOverrideModifiedAt
+          ? targetDoc.modifiedAt
+          : new Date().toISOString(),
+      });
     },
+  );
+}
+
+export async function loadDocumentFromDB(uuid: string): Promise<ImmerDocument> {
+  const [contentEntry, metaEntry] = await Promise.all([
+    db.documents_content.get(uuid),
+    db.documents_meta.get(uuid),
+  ]);
+  if (!contentEntry || !metaEntry) throw new Error("Document not found");
+  return {
+    ...contentEntry,
+    content: toImmerContent(contentEntry.content),
+    ...metaEntry,
   };
-  await db.documents.put({
-    ...storedDoc,
-    content: storedDoc.content,
+}
+
+export async function loadDocumentMetasFromDB(): Promise<DocumentMeta[]> {
+  return db.documents_meta.toArray();
+}
+
+export async function getFirstDocumentUuidFromDB() {
+  return (await db.documents_meta.toCollection().first())?.uuid;
+}
+
+export async function cloneDocumentToDB(uuid: string, newName: string) {
+  const contentEntry = await db.documents_content.get(uuid);
+  const metaEntry = await db.documents_meta.get(uuid);
+  if (!contentEntry || !metaEntry) throw new Error("Document not found");
+
+  const newUUID = crypto.randomUUID();
+  const newMeta = {
+    uuid: newUUID,
+    name: newName,
+    templateId: metaEntry.templateId,
     modifiedAt: new Date().toISOString(),
-  });
-}
+    previewImage: metaEntry.previewImage,
+  };
+  await db.transaction(
+    "rw",
+    db.documents_content,
+    db.documents_meta,
+    async () => {
+      await db.documents_content.put({
+        uuid: newUUID,
+        content: contentEntry.content,
+      });
 
-export async function loadDocumentFromDB(
-  uuid: string,
-): Promise<DocumentBase | undefined> {
-  return (await db.documents.get(uuid)) || undefined;
+      await db.documents_meta.put(newMeta);
+    },
+  );
+  return newMeta;
 }
-await db.documents.toCollection().first();
-
-export async function getFirstDocumentUUID() {
-  return (await db.documents.toCollection().first())?.uuid;
+export async function renameDocumentToDB(uuid: string, newName: string) {
+  const metaEntry = await db.documents_meta.get(uuid);
+  if (!metaEntry) throw new Error("Document not found");
+  const newMeta = {
+    ...metaEntry,
+    name: newName,
+    modifiedAt: new Date().toISOString(),
+  };
+  await db.documents_meta.put(newMeta);
+}
+export async function deleteDocumentFromDB(uuid: string) {
+  await db.transaction(
+    "rw",
+    db.documents_content,
+    db.documents_meta,
+    async () => {
+      await db.documents_content.delete(uuid);
+      await db.documents_meta.delete(uuid);
+    },
+  );
 }

@@ -50,9 +50,50 @@ export function toImmerContent(content: ContentBase): ImmerContent {
   };
 }
 
-export function toImmerDocument(doc: DocumentBase): ImmerDocument {
-  return {
-    ...doc,
-    content: toImmerContent(doc.content),
-  };
+export async function exportDocument(doc: ImmerDocument) {
+  const json = await import("@/utils/jsonDocument").then((mod) =>
+    mod.documentToJson(doc),
+  );
+  const blob = new Blob([json], {
+    type: "application/json",
+  });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `${doc.name}-${Date.now()}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+export function importDocument() {
+  return new Promise<DocumentBase | undefined>((resolve, reject) => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "application/json,.json";
+    input.onchange = async (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (!file) {
+        resolve(undefined);
+        return;
+      }
+      try {
+        const reader = new FileReader();
+        reader.onload = async (event) => {
+          try {
+            const json = event.target?.result as string;
+            const data = await import("@/utils/jsonDocument").then((mod) =>
+              mod.jsonToDocument(json),
+            );
+            resolve(data);
+          } catch (error) {
+            reject(error);
+          }
+        };
+        reader.readAsText(file);
+      } catch (error) {
+        reject(error);
+      }
+    };
+    input.click();
+  });
 }

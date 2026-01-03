@@ -1,0 +1,48 @@
+@font-face {
+  font-family: "Jellee-Roman";
+  src: url("assets/Jellee-Roman.woff2") format("woff2");
+}
+.app {
+  padding: 8px;
+}
+.root-header {
+  > a {
+    margin: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    color: #000;
+    transition: none;
+    :hover {
+      color: #000;
+    }
+    :active {
+      color: #000;
+    }
+    .favicon {
+      height: 32px;
+      width: 32px;
+    }
+    .app-title {
+      margin: 0;
+      font-family: "Jellee-Roman";
+      font-size: 24px;
+    }
+  }
+}
+.root-button-group {
+  display: flex;
+  > div {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 8px;
+  }
+  > :nth-child(1) {
+    flex: 1;
+  }
+  .root-button-group-sortby {
+    width: 120px;
+  }
+}

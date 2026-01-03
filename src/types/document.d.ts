@@ -44,8 +44,18 @@ export type ImmerDocument<Document extends DocumentBase = DocumentBase> = Omit<
   "content"
 > & {
   content: ImmerContent<Document["content"]>;
+  previewImage: Blob | undefined;
 };
 
 export type DocumentBase = z.infer<
   ReturnType<typeof getZDocument<typeof zContentBase>>
 >;
+
+export type DocumentMeta = Pick<
+  DocumentBase,
+  "uuid" | "name" | "templateId" | "modifiedAt"
+> & {
+  previewImage: Blob | undefined;
+};
+
+export type DocumentContentOnly = Pick<DocumentBase, "uuid" | "content">;

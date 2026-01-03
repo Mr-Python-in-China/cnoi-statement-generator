@@ -151,7 +151,6 @@ export default class CompilerInstance {
   public typstInitPromise: Promise<void>;
 
   constructor(template: string) {
-    console.log("new worker");
     this.worker = new TypstWorker();
     let typstCompilerWasm: ArrayBuffer,
       typstRendererWasm: ArrayBuffer,
