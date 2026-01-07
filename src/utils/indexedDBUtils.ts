@@ -8,6 +8,12 @@ import type {
 import Dexie from "dexie";
 import { toImmerContent } from "./contestDataUtils";
 
+export class DocumnetNotFoundError extends Error {
+  constructor() {
+    super("Document not found in IndexedDB");
+  }
+}
+
 /**
  * Dexie database schema
  */
@@ -168,7 +174,7 @@ export async function loadDocumentFromDB(uuid: string): Promise<ImmerDocument> {
     db.documents_content.get(uuid),
     db.documents_meta.get(uuid),
   ]);
-  if (!contentEntry || !metaEntry) throw new Error("Document not found");
+  if (!contentEntry || !metaEntry) throw new DocumnetNotFoundError();
   return {
     ...contentEntry,
     content: toImmerContent(contentEntry.content),
@@ -180,14 +186,10 @@ export async function loadDocumentMetasFromDB(): Promise<DocumentMeta[]> {
   return db.documents_meta.toArray();
 }
 
-export async function getFirstDocumentUuidFromDB() {
-  return (await db.documents_meta.toCollection().first())?.uuid;
-}
-
 export async function cloneDocumentToDB(uuid: string, newName: string) {
   const contentEntry = await db.documents_content.get(uuid);
   const metaEntry = await db.documents_meta.get(uuid);
-  if (!contentEntry || !metaEntry) throw new Error("Document not found");
+  if (!contentEntry || !metaEntry) throw new DocumnetNotFoundError();
 
   const newUUID = crypto.randomUUID();
   const newMeta = {
@@ -214,7 +216,7 @@ export async function cloneDocumentToDB(uuid: string, newName: string) {
 }
 export async function renameDocumentToDB(uuid: string, newName: string) {
   const metaEntry = await db.documents_meta.get(uuid);
-  if (!metaEntry) throw new Error("Document not found");
+  if (!metaEntry) throw new DocumnetNotFoundError();
   const newMeta = {
     ...metaEntry,
     name: newName,

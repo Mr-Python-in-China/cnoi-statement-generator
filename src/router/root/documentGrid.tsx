@@ -21,6 +21,7 @@ import {
   saveDocumentToDB,
 } from "@/utils/indexedDBUtils";
 import { exportDocument } from "@/utils/contestDataUtils";
+import { Link } from "react-router";
 
 const DocumentGrid: FC<{
   documentMetas: DocumentMeta[];
@@ -34,7 +35,7 @@ const DocumentGrid: FC<{
     <div className="root-document-grid">
       {documentMetas.map((meta) => (
         <div key={meta.uuid}>
-          <a href={new URL("./document/" + meta.uuid, import.meta.url).href}>
+          <Link to={`/editor/${meta.uuid}`}>
             {meta.previewImage ? (
               <BlobImage
                 blob={meta.previewImage}
@@ -159,7 +160,7 @@ const DocumentGrid: FC<{
                 />
               </Tooltip>
             </Dropdown>
-          </a>
+          </Link>
           <Typography.Text
             editable={{
               triggerType: ["text"],

@@ -1,10 +1,10 @@
-import { type FC, useEffect, useRef, useState } from "react";
+import { type FC, type ReactNode, useEffect, useRef, useState } from "react";
 
 import "./menuBar.css";
 
 export type MenuItem = {
   key: string;
-  label: string;
+  label: ReactNode;
   onSelect?: () => void;
   children?: MenuItem[];
   disabled?: boolean;
@@ -12,8 +12,9 @@ export type MenuItem = {
 
 export type MenuGroup = {
   key: string;
-  label: string;
-  items: MenuItem[];
+  label: ReactNode;
+  items?: MenuItem[];
+  onSelect?: () => void;
 };
 
 type MenuListProps = {
@@ -97,21 +98,29 @@ const MenuBar: FC<{ menuGroup: MenuGroup[] }> = ({ menuGroup }) => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const handleRootClick = (key: string) => {
+  const handleRootClick = (group: MenuGroup) => {
+    // If the root has no submenu, trigger its action directly.
+    if (!group.items?.length) {
+      group.onSelect?.();
+      setOpenRoot(null);
+      setOpenPath([]);
+      return;
+    }
+
     setOpenRoot((current) => {
-      if (current === key) {
+      if (current === group.key) {
         setOpenPath([]);
         return null;
       }
-      setOpenPath([key]);
-      return key;
+      setOpenPath([group.key]);
+      return group.key;
     });
   };
 
-  const handleRootEnter = (key: string) => {
-    if (!openRoot) return;
-    setOpenRoot(key);
-    setOpenPath([key]);
+  const handleRootEnter = (group: MenuGroup) => {
+    if (!openRoot || !group.items?.length) return;
+    setOpenRoot(group.key);
+    setOpenPath([group.key]);
   };
 
   const handleItemEnter = (path: string[]) => {
@@ -135,18 +144,18 @@ const MenuBar: FC<{ menuGroup: MenuGroup[] }> = ({ menuGroup }) => {
         <div
           key={group.key}
           className={`menu-root${openRoot === group.key ? " active" : ""}`}
-          onMouseEnter={() => handleRootEnter(group.key)}
+          onMouseEnter={() => handleRootEnter(group)}
         >
           <button
             type="button"
             className="menu-trigger"
-            onClick={() => handleRootClick(group.key)}
+            onClick={() => handleRootClick(group)}
             aria-haspopup
             aria-expanded={openRoot === group.key}
           >
             <span>{group.label}</span>
           </button>
-          {openRoot === group.key ? (
+          {openRoot === group.key && group.items ? (
             <MenuList
               items={group.items}
               path={[group.key]}

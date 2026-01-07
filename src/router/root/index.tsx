@@ -13,6 +13,7 @@ import { faPlus, faUpload } from "@fortawesome/free-solid-svg-icons";
 import { useImmer } from "use-immer";
 import DocumentGrid from "./documentGrid";
 import { importDocument } from "@/utils/contestDataUtils";
+import { Link } from "react-router";
 
 const RootImpl: FC<{
   initialDocumentMetasPromise: Promise<DocumentMeta[]>;
@@ -27,10 +28,10 @@ const RootImpl: FC<{
   return (
     <>
       <header className="root-header">
-        <a href="/">
+        <Link to="/">
           <img src={favicon} alt="Favicon" className="favicon" />
           <h1 className="app-title">CNOI Statement Generator</h1>
-        </a>
+        </Link>
       </header>
       <div className="root-button-group">
         <div>

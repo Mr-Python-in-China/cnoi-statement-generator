@@ -15,6 +15,9 @@ import useTemplateManager from "@/components/templateManagerContext";
 import useTypstInitStatus from "@/components/typstInitStatusContext";
 import { documentToJson } from "@/utils/jsonDocument";
 import { importDocument, toImmerContent } from "@/utils/contestDataUtils";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faAngleLeft } from "@fortawesome/free-solid-svg-icons";
+import { useNavigate } from "react-router";
 
 const ContestEditorHeader: FC<{
   doc: ImmerDocument;
@@ -23,6 +26,7 @@ const ContestEditorHeader: FC<{
 }> = ({ doc, updateDoc: updateDoc, setPanel }) => {
   const { notification, message } = App.useApp();
   const { compiler } = useTemplateManager();
+  const navigate = useNavigate();
 
   const typstInitStatus = useTypstInitStatus();
 
@@ -104,6 +108,16 @@ const ContestEditorHeader: FC<{
   }, [message, doc]);
   const menuGroup = useMemo(
     (): MenuGroup[] => [
+      {
+        key: "home",
+        label: (
+          <>
+            <FontAwesomeIcon icon={faAngleLeft} />
+            主页
+          </>
+        ),
+        onSelect: () => navigate("/"),
+      },
       {
         key: "file",
         label: "文件",

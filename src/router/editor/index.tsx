@@ -22,7 +22,7 @@ import useTemplateManager, {
 
 import "./index.css";
 import {
-  getFirstDocumentUuidFromDB,
+  DocumnetNotFoundError,
   loadDocumentFromDB,
   saveDocumentToDB,
 } from "@/utils/indexedDBUtils";
@@ -33,6 +33,9 @@ import {
 } from "@/utils/contestDataUtils";
 import TypstInitStatusProvider from "@/components/typstInitStatusProvider";
 import ContestEditorHeader from "./header";
+import { useParams } from "react-router";
+
+import ErrorPage from "../errorPage";
 
 const ContestEditorImpl: FC<{ initialDoc: DocumentBase }> = ({
   initialDoc,
@@ -164,33 +167,42 @@ const ContestEditorImpl: FC<{ initialDoc: DocumentBase }> = ({
 };
 
 const ContestEditorWithInitalPromise: FC<{
-  initialPromise: Promise<{
-    doc: DocumentBase;
-    templateManager: TemplateManager;
-  }>;
+  initialPromise: Promise<
+    | {
+        doc: DocumentBase;
+        templateManager: TemplateManager;
+      }
+    | undefined
+  >;
 }> = ({ initialPromise }) => {
-  const { doc, templateManager } = use(initialPromise);
-  return (
-    <TemplateManagerContext.Provider value={templateManager}>
+  const initial = use(initialPromise);
+  return !initial ? (
+    <ErrorPage>该文档不存在</ErrorPage>
+  ) : (
+    <TemplateManagerContext.Provider value={initial.templateManager}>
       <TypstInitStatusProvider>
-        <ContestEditorImpl initialDoc={doc} />
+        <ContestEditorImpl initialDoc={initial.doc} />
       </TypstInitStatusProvider>
     </TemplateManagerContext.Provider>
   );
 };
 
 const ContestEditor: FC = () => {
+  const { documentId } = useParams();
   const initialPromise = (async () => {
-    const uuid = await getFirstDocumentUuidFromDB();
-    if (!uuid) throw new Error("didn't impl");
-    const document = await loadDocumentFromDB(uuid);
-    return {
-      doc: document,
-      templateManager: new TemplateManager(document.templateId),
-    };
+    try {
+      const document = await loadDocumentFromDB(documentId!);
+      return {
+        doc: document,
+        templateManager: new TemplateManager(document.templateId),
+      };
+    } catch (e) {
+      if (e instanceof DocumnetNotFoundError) return undefined;
+      throw e;
+    }
   })();
   return (
-    <Suspense fallback={<div className="contest-editor" />}>
+    <Suspense>
       <ContestEditorWithInitalPromise initialPromise={initialPromise} />
     </Suspense>
   );
