@@ -8,12 +8,12 @@ import {
   type InitMessage,
   type FetchAssetMessage,
 } from "./compiler.worker";
+import type { ContentBase, PrecompileContent } from "@/types/document";
 
-import fontUrlEntries from "virtual:typst-font-url-entries";
 import TypstCompilerWasmUrl from "@myriaddreamin/typst-ts-web-compiler/pkg/typst_ts_web_compiler_bg.wasm?url";
 import TypstRendererWasmUrl from "@myriaddreamin/typst-ts-renderer/pkg/typst_ts_renderer_bg.wasm?url";
 import TypstWorker from "./compiler.worker?worker";
-import type { ContentBase, PrecompileContent } from "@/types/document";
+import { importFontUrlEnteries } from "@/utils/importTemplate";
 
 const RequiredPreloadPackages: PackageSpec[] = [
   {
@@ -174,6 +174,7 @@ export default class CompilerInstance {
       ),
       font: new TypstInitTask(
         (async () => {
+          const fontUrlEntries = await importFontUrlEnteries(template);
           const localFontPromises: Promise<ArrayBuffer>[] = [];
           const remoteFontUrls: string[] = [];
           const localFontDatas: {

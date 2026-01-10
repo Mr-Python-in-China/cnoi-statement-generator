@@ -29,3 +29,9 @@ export async function importTypstContents(template: string) {
     x[1],
   ]);
 }
+export async function importFontUrlEnteries(template: string) {
+  return (await getTemplateModule(template).fonts()).map((font) => [
+    font.postscriptName,
+    font.url,
+  ]);
+}

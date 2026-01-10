@@ -23,4 +23,5 @@ export default interface TemplateExport<Content extends ContentBase> {
   unifiedPlugins: () => Promise<import("unified").PluggableList>;
   uiMeta: () => Promise<TemplateUiMetadata<Content>>;
   typst: () => Promise<Record<string, string>>; // import.meta.glob -> content
+  fonts: () => Promise<FontMetaImportResult[]>;
 }
