@@ -16,9 +16,6 @@ import { listen, sendToMain } from "@mr.python/promise-worker-ts";
 import { Mutex } from "async-mutex";
 import getProcessor from "./getProcessor";
 
-import TypstDocMain from "typst-template/main.typ?raw";
-import TypstDocUtils from "typst-template/utils.typ?raw";
-
 let preloadedPackages: Map<string, ArrayBuffer>;
 class PreloadedPackageRegistry extends FetchPackageRegistry {
   override pullPackageData(path: PackageSpec) {
@@ -54,8 +51,8 @@ listen<InitMessage>("init", async (data) => {
   ]);
   $typst.setCompiler(compiler);
   $typst.setRenderer(renderer);
-  $typst.addSource("/main.typ", TypstDocMain);
-  $typst.addSource("/utils.typ", TypstDocUtils);
+  for (const [filename, content] of await importTypstContents(data.template))
+    $typst.addSource(filename, content);
 });
 
 const SHADOW_CACHE_AGE = 1000 * 30;
@@ -163,7 +160,10 @@ listen<RenderTypstMessage>("renderTypst", async (data) =>
 
 import type { PromiseWorkerTagged } from "@mr.python/promise-worker-ts";
 import type { CompiledContent, PrecompileContent } from "@/types/document";
-import { importUnifiedPlugins } from "@/utils/importTemplate";
+import {
+  importTypstContents,
+  importUnifiedPlugins,
+} from "@/utils/importTemplate";
 export type InitMessage = PromiseWorkerTagged<
   "init",
   {

@@ -2,9 +2,9 @@ import type { ContentBase } from "@/types/document";
 import type TemplateExport from "@/types/templates";
 
 const templates = import.meta.glob<TemplateExport<ContentBase>>(
-  "./**/index.ts",
+  "./*/index.ts",
   {
-    base: "../templates",
+    base: "/templates",
     import: "default",
     eager: true,
   },
@@ -22,4 +22,10 @@ export async function importUiMetadata(template: string) {
 }
 export async function importUnifiedPlugins(template: string) {
   return await getTemplateModule(template).unifiedPlugins();
+}
+export async function importTypstContents(template: string) {
+  return Object.entries(await getTemplateModule(template).typst()).map((x) => [
+    x[0].slice(1), // remove relative path leading dot
+    x[1],
+  ]);
 }

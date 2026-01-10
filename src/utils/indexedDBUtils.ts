@@ -86,7 +86,7 @@ class CnoiDatabase extends Dexie {
                 name: img.name,
                 blob: images[img.uuid],
               })),
-            } satisfies import("@/templates/cnoi/types").Content as ContentBase,
+            } satisfies import("templates/cnoi/types").Content as ContentBase,
             uuid: crypto.randomUUID(),
             name: old.title,
             templateId: "cnoi",

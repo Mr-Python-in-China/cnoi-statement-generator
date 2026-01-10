@@ -26,7 +26,7 @@ export interface CompilerContext {
   >;
 }
 
-const TYPST_HEADER = `#import "utils.typ": *\n\n`;
+const TYPST_HEADER = `#import "header.typ": *\n\n`;
 const FOOTNOTE_ID_PREFIX = "user-footnote: ";
 
 export const TYPST_RELATIVE_VALUE_REGEX =

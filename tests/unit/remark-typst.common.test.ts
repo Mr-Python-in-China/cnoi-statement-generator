@@ -1783,7 +1783,7 @@ test("Compiler Integration Test", () => {
       },
     ],
   });
-  const templateStr = String.raw`#import "utils.typ": *
+  const templateStr = String.raw`#import "header.typ": *
 
 #heading(level: 1, [#"Remark-typst"#"[^fn1]"#" Integration Test"#footnote(label("user-footnote: fn2"))#" Document"])
 #par[#"!["#"Undefined Image Reference"#"][img1]"]

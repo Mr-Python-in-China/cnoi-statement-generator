@@ -125,7 +125,7 @@ export async function jsonToDocument(str: string): Promise<DocumentBase> {
           name: img.name,
           blob: new Blob([Uint8Array.from(base64js.toByteArray(img.base64))]),
         })),
-      } satisfies import("@/templates/cnoi/types").Content as ContentBase,
+      } satisfies import("templates/cnoi/types").Content as ContentBase,
     };
   }
 }

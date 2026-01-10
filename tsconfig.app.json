@@ -27,6 +27,8 @@
   },
   "include": [
     "src",
+    "templates",
+    "examples",
     "tests/unit/**/*.common.test.ts",
     "tests/unit/**/*.browser.test.ts"
   ]

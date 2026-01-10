@@ -152,6 +152,7 @@ const ContestEditorHeader: FC<{
       },
     ],
     [
+      navigate,
       onClickExportConfig,
       onClickExportPDF,
       onClickImportConfig,
