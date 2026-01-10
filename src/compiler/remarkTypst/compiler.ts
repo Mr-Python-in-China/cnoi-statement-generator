@@ -9,6 +9,27 @@ import type {} from "remark-parse";
 import type {} from "../remarkImageAttr";
 import type {} from "../remarkExtendedTable";
 
+declare module "mdast" {
+  interface TypstContentNode {
+    type: "typstContent";
+    data: string;
+  }
+  interface TypstNode extends mdast.Node {
+    type: "typst";
+    children: (mdast.PhrasingContent | TypstContentNode)[];
+  }
+  interface PhrasingContentMap {
+    typst: TypstNode;
+  }
+  interface BlockContentMap {
+    typst: TypstNode;
+  }
+  interface RootContentMap {
+    typst: TypstNode;
+    typstContent: TypstContentNode;
+  }
+}
+
 const hash = (s: string) => h64(s, 147154220).toString(16).padStart(16, "0");
 
 export interface AssetInfo {
@@ -26,7 +47,6 @@ export interface CompilerContext {
   >;
 }
 
-const TYPST_HEADER = `#import "header.typ": *\n\n`;
 const FOOTNOTE_ID_PREFIX = "user-footnote: ";
 
 export const TYPST_RELATIVE_VALUE_REGEX =
@@ -95,9 +115,8 @@ function revert(
   data.push(suffix);
 }
 
-function fallbackHandler(node: mdast.RootContent, ctx: CompilerContext) {
-  if ("children" in node)
-    for (const child of node.children) parseContent(child, ctx);
+function fallbackHandler(node: mdast.Parent, ctx: CompilerContext) {
+  for (const child of node.children) parseContent(child, ctx);
 }
 export const handlers = {
   text: (node, ctx) => {
@@ -358,6 +377,13 @@ export const handlers = {
   leafDirective: (node, ctx) => {
     fallbackHandler(node, ctx);
   },
+  typst: (node, ctx) => {
+    fallbackHandler(node, ctx);
+  },
+  typstContent: (node, ctx) => {
+    const { data } = ctx;
+    data.push(node.data);
+  },
 } as const satisfies {
   [K in keyof mdast.RootContentMap]: (
     node: mdast.RootContentMap[K],
@@ -373,7 +399,6 @@ function parseContent(node: mdast.RootContent, ctx: CompilerContext): void {
 
 function parseRoot(node: mdast.Root, ctx: CompilerContext) {
   const { data, footnoteById } = ctx;
-  data.push(TYPST_HEADER);
   for (const child of node.children) parseContent(child, ctx);
   data.push("\n");
   // footnotes
