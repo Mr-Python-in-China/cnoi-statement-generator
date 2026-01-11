@@ -115,8 +115,9 @@ const DocumentGrid: FC<{
                           );
                         });
 
+                        const messageKey = crypto.randomUUID();
                         message.success({
-                          key: "document-deleted",
+                          key: messageKey,
                           content: (
                             <>
                               已删除
@@ -133,7 +134,7 @@ const DocumentGrid: FC<{
                                       previewImage: backup.previewImage,
                                     });
                                   });
-                                  message.destroy("document-deleted");
+                                  message.destroy(messageKey);
                                 }}
                               >
                                 撤销
