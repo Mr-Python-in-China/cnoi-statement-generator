@@ -87,7 +87,7 @@
     "pdf-to-img": "^5.0.0",
     "pngjs": "^7.0.0",
     "postcss-load-config": "^6.0.1",
-    "postcss-preset-env": "^10.6.0",
+    "postcss-preset-env": "^10.6.1",
     "prettier": "^3.7.4",
     "typescript": "~5.9.3",
     "typescript-eslint": "^8.48.1",
