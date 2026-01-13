@@ -119,7 +119,7 @@ async function typstPrepare(
     }),
   );
   const [compiledContent] = compilerPrepare(content);
-  $typst.addSource("/data.json", JSON.stringify(compiledContent));
+  $typst.addSource("/content.json", JSON.stringify(compiledContent));
   for (const filename of lastExtraContents)
     $typst.unmapShadow(`/${filename}.typ`);
   lastExtraContents = new Set<string>();

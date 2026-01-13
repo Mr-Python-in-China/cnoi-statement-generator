@@ -17,9 +17,9 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
-    "compile-typst-examples": "jiti scripts/compile-typst-examples.ts",
     "quality": "prettier -c . && eslint . && tsc -b && npm run test",
-    "prepare": "husky"
+    "compile-examples": "vite-node scripts/compile-examples.ts",
+    "prepare": "husky && npm run compile-examples"
   },
   "dependencies": {
     "@codemirror/lang-markdown": "^6.5.0",
@@ -64,6 +64,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.2",
+    "@myriaddreamin/typst-ts-node-compiler": "^0.6.1-rc5",
     "@types/browser-update": "^3.3.3",
     "@types/fontkit": "^2.0.8",
     "@types/lodash-es": "^4.17.12",
@@ -91,10 +92,12 @@
     "postcss-load-config": "^6.0.1",
     "postcss-preset-env": "^10.4.0",
     "prettier": "^3.7.4",
+    "sharp": "^0.34.5",
     "ts-toolbelt": "^9.6.0",
     "typescript": "~5.9.3",
     "typescript-eslint": "^8.48.1",
     "vite": "^7.3.0",
+    "vite-node": "^5.2.0",
     "vitest": "^4.0.10"
   }
 }

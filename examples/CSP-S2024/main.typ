@@ -1,1 +1,1 @@
-../../typst-template/main.typ
+../../templates/cnoi/typst/main.typ

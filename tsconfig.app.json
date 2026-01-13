@@ -29,6 +29,7 @@
     "src",
     "templates",
     "examples",
+    "import.d.ts",
     "tests/unit/**/*.common.test.ts",
     "tests/unit/**/*.browser.test.ts"
   ]

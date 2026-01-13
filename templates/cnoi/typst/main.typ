@@ -1,4 +1,4 @@
-#let data = json("data.json")
+#let data = json("content.json")
 #let (problems,) = data
 #let time = (
   start: datetime(
