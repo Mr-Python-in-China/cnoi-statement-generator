@@ -27,9 +27,12 @@ temp
 coverage
 
 examples/*/**/*
+!examples/*/*.typ
 !examples/*/content.json
 !examples/*/extra-*.md
+examples/*/extra-*.typ
 !examples/*/problem-*.md
+examples/*/problem-*.typ
 !examples/*/**/*.ts
 
 templates/*/generated_schema.json
