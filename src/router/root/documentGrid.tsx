@@ -150,6 +150,7 @@ const DocumentGrid: FC<{
                     },
                   },
                 ],
+                onClick: (e) => e.domEvent.preventDefault(),
               }}
               trigger={["click"]}
             >

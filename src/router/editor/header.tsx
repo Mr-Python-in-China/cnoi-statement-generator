@@ -13,8 +13,11 @@ import { App } from "antd";
 import "./header.css";
 import useTemplateManager from "@/components/templateManagerContext";
 import useTypstInitStatus from "@/components/typstInitStatusContext";
-import { documentToJson } from "@/utils/jsonDocument";
-import { importDocument, toImmerContent } from "@/utils/contestDataUtils";
+import {
+  exportDocument,
+  importDocument,
+  toImmerContent,
+} from "@/utils/contestDataUtils";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faAngleLeft } from "@fortawesome/free-solid-svg-icons";
 import { useNavigate } from "react-router";
@@ -99,7 +102,7 @@ const ContestEditorHeader: FC<{
   }, [doc.content.images, doc.uuid, message, setPanel, updateDoc]);
   const onClickExportConfig = useCallback(async () => {
     try {
-      await documentToJson(doc);
+      await exportDocument(doc);
       message.success("文档备份成功");
     } catch (error) {
       message.error("文档备份失败");
