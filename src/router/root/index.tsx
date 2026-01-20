@@ -3,7 +3,7 @@ import {
   loadDocumentMetasFromDB,
   saveDocumentToDB,
 } from "@/utils/indexedDBUtils";
-import { Suspense, use, type FC } from "react";
+import { Suspense, use, useState, type FC } from "react";
 
 import "./index.css";
 import favicon from "/favicon.svg";
@@ -14,6 +14,7 @@ import { useImmer } from "use-immer";
 import DocumentGrid from "./documentGrid";
 import { importDocument } from "@/utils/contestDataUtils";
 import { Link } from "react-router";
+import NewDocModal from "./newDocModal";
 
 const RootImpl: FC<{
   initialDocumentMetasPromise: Promise<DocumentMeta[]>;
@@ -22,11 +23,16 @@ const RootImpl: FC<{
   const [documentMetas, updateDocumentMetas] = useImmer(
     use(initialDocumentMetasPromise),
   );
-  const [soryBy, setSortBy] = useImmer<
+  const [sortBy, setSortBy] = useState<
     "name" | "name (reversed)" | "modified at" | "modified at (reversed)"
   >("modified at (reversed)");
+  const [openNewDocModal, setOpenNewDocModal] = useState(false);
   return (
     <>
+      <NewDocModal
+        open={openNewDocModal}
+        onClose={() => setOpenNewDocModal(false)}
+      />
       <header className="root-header">
         <Link to="/">
           <img src={favicon} alt="Favicon" className="favicon" />
@@ -35,7 +41,11 @@ const RootImpl: FC<{
       </header>
       <div className="root-button-group">
         <div>
-          <Button type="primary" icon={<FontAwesomeIcon icon={faPlus} />}>
+          <Button
+            type="primary"
+            icon={<FontAwesomeIcon icon={faPlus} />}
+            onClick={() => setOpenNewDocModal(true)}
+          >
             新建文档
           </Button>
           <Button
@@ -100,11 +110,11 @@ const RootImpl: FC<{
                   label: "修改时间 ↓",
                 },
               ] as const satisfies Array<{
-                value: typeof soryBy;
+                value: typeof sortBy;
                 label: string;
               }>
             }
-            value={soryBy}
+            value={sortBy}
             onChange={(value) => {
               setSortBy(value);
             }}
@@ -114,26 +124,26 @@ const RootImpl: FC<{
       <DocumentGrid
         updateDocumentMetas={updateDocumentMetas}
         documentMetas={Array.from(documentMetas).sort((x, y) => {
-          if (soryBy === "name")
+          if (sortBy === "name")
             return x.name.localeCompare(y.name, "zh-Hans-CN", {
               sensitivity: "accent",
             });
-          else if (soryBy === "name (reversed)")
+          else if (sortBy === "name (reversed)")
             return y.name.localeCompare(x.name, "zh-Hans-CN", {
               sensitivity: "accent",
             });
-          else if (soryBy === "modified at")
+          else if (sortBy === "modified at")
             return (
               new Date(x.modifiedAt).getTime() -
               new Date(y.modifiedAt).getTime()
             );
-          else if (soryBy === "modified at (reversed)")
+          else if (sortBy === "modified at (reversed)")
             return (
               new Date(y.modifiedAt).getTime() -
               new Date(x.modifiedAt).getTime()
             );
           else {
-            soryBy satisfies never;
+            sortBy satisfies never;
             return 0;
           }
         })}
