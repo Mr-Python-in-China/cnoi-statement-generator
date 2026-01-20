@@ -11,14 +11,14 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "lint": "eslint .",
-    "format": "prettier -w .",
+    "lint": "eslint . --cache",
+    "format": "prettier -w . --cache",
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "compile-typst-examples": "jiti scripts/compile-typst-examples.ts",
-    "quality": "prettier -c . && eslint . && tsc -b && npm run test",
+    "quality": "prettier -c . --cache && eslint . --cache && tsc -b && npm run test",
     "prepare": "husky"
   },
   "dependencies": {
