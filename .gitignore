@@ -34,5 +34,6 @@ examples/*/extra-*.typ
 !examples/*/problem-*.md
 examples/*/problem-*.typ
 !examples/*/**/*.ts
+!examples/*/**/*.tsx
 
 templates/*/generated_schema.json
