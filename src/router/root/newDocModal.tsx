@@ -1,6 +1,8 @@
-import { Button, Form, Input, Modal } from "antd";
-import { useId, useState, type FC } from "react";
-import exampleDocuments from "@/utils/exampleDocuments";
+import { App, Button, Input, Modal } from "antd";
+import { useCallback, useState, type FC } from "react";
+import { exampleDocuments, loadExampleContent } from "@/utils/exampleDocuments";
+import { saveDocumentToDB } from "@/utils/indexedDBUtils";
+import { useNavigate } from "react-router";
 
 import "./newDocModal.css";
 
@@ -8,17 +10,51 @@ const NewDocModal: FC<{ open: boolean; onClose: () => void }> = ({
   open,
   onClose,
 }) => {
+  const { message } = App.useApp();
+  const navigate = useNavigate();
   const [selectedExample, setSelectedExample] = useState<string | undefined>(
     undefined,
   );
   const [filename, setFilename] = useState("");
-  const filenameInputId = useId();
+  const [loading, setLoading] = useState(false);
+  const createDocument = useCallback(
+    async (exampleName: string, filename: string) => {
+      setLoading(true);
+      try {
+        const content = await loadExampleContent(exampleName);
+        const uuid = crypto.randomUUID();
+        await saveDocumentToDB({
+          uuid,
+          name: filename,
+          templateId: exampleDocuments[exampleName].meta.template,
+          modifiedAt: new Date().toISOString(),
+          content,
+        });
+        navigate(`/editor/${uuid}`);
+      } catch (e) {
+        message.error("创建文档失败");
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [message, navigate],
+  );
   return (
     <Modal
       open={open}
       closable={{ onClose }}
       footer={
-        <Button type="primary" disabled={!filename || !selectedExample}>
+        <Button
+          type="primary"
+          disabled={!filename || !selectedExample || loading}
+          onClick={() =>
+            selectedExample &&
+            filename &&
+            !loading &&
+            createDocument(selectedExample, filename)
+          }
+        >
           创建
         </Button>
       }
@@ -65,14 +101,13 @@ const NewDocModal: FC<{ open: boolean; onClose: () => void }> = ({
         ) : (
           <div>{/* TODO: 未选择模板时也写点东西 */}</div>
         )}
-        <div>
-          <Form.Item label="文件名" layout="vertical" name={filenameInputId}>
-            <Input
-              value={filename}
-              onChange={(e) => setFilename(e.target.value)}
-            />
-          </Form.Item>
-        </div>
+        <label className="filename-input-label">
+          文件名
+          <Input
+            value={filename}
+            onChange={(e) => setFilename(e.target.value)}
+          />
+        </label>
       </div>
     </Modal>
   );

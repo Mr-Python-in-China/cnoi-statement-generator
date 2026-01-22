@@ -80,6 +80,18 @@ export default defineConfig(async (): Promise<UserConfig> => {
     worker: {
       format: "es",
     },
+    build: {
+      rollupOptions: {
+        output: {
+          manualChunks: (id) => {
+            const reg =
+              /\/examples\/([^/]+)\/(?:(?:problem-(?:[^/]+)\.md)|(?:extra-(?:[^/]+)\.md)|(?:content\.json))\?raw$/;
+            const match = id.match(reg);
+            if (match) return `example-content-${match[1]}`;
+          },
+        },
+      },
+    },
     test: {
       coverage: {
         include: ["src/**/*.{ts,tsx}"],

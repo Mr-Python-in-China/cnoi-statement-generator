@@ -72,7 +72,9 @@
       flex: 1;
     }
     .filename-input-label {
-      font-weight: bold;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
     }
   }
 }

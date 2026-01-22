@@ -4,8 +4,6 @@ import type { Updater } from "use-immer";
 import BlobImage from "@/components/BlobImage";
 import { App, Button, Dropdown, Tooltip, Typography } from "antd";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-
-import "./documentGrid.css";
 import {
   faCopy,
   faDownload,
@@ -22,6 +20,8 @@ import {
 } from "@/utils/indexedDBUtils";
 import { exportDocument } from "@/utils/contestDataUtils";
 import { Link } from "react-router";
+
+import "./documentGrid.css";
 
 const DocumentGrid: FC<{
   documentMetas: DocumentMeta[];
@@ -120,9 +120,8 @@ const DocumentGrid: FC<{
                           key: messageKey,
                           content: (
                             <>
-                              已删除
-                              <Button
-                                type="link"
+                              已删除{" "}
+                              <Typography.Link
                                 onClick={() => {
                                   saveDocumentToDB(backup, true);
                                   updateDocumentMetas((draft) => {
@@ -138,7 +137,7 @@ const DocumentGrid: FC<{
                                 }}
                               >
                                 撤销
-                              </Button>
+                              </Typography.Link>
                             </>
                           ),
                           duration: 10,
