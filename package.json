@@ -11,14 +11,14 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "lint": "eslint . --cache",
+    "lint": "eslint . --cache --cache-location ./node_modules/.cache/.eslintcache",
     "format": "prettier -w . --cache",
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "compile-examples": "vite-node scripts/compile-examples.ts",
-    "quality": "prettier -c . --cache && eslint . --cache && tsc -b && npm run test",
+    "quality": "prettier -c . --cache && npm run lint && tsc -b && npm run test",
     "prepare": "husky && npm run compile-examples"
   },
   "dependencies": {
