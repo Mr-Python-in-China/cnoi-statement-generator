@@ -1,0 +1,89 @@
+{
+  "title": "2024 CCF 非专业级软件能力认证",
+  "subtitle": "CSP-J/S 2024 第二轮认证",
+  "dayname": "提高级",
+  "date": {
+    "start": [2024, 10, 26, 14, 30, 0],
+    "end": [2024, 10, 26, 18, 30, 0]
+  },
+  "use_pretest": false,
+  "noi_style": true,
+  "file_io": true,
+  "support_languages": [
+    {
+      "uuid": "8482d1cd-4408-4e69-af54-ed8743f1a91c",
+      "name": "C++",
+      "compile_options": "‐O2 ‐std=c++14 ‐static"
+    }
+  ],
+  "problems": [
+    {
+      "uuid": "1edd88bd-9a2e-4241-8a33-f681bb59d0ca",
+      "name": "duel",
+      "title": "决斗",
+      "type": "传统型",
+      "dir": "duel",
+      "exec": "duel",
+      "input": "duel.in",
+      "output": "duel.out",
+      "time_limit": "1.0 秒",
+      "memory_limit": "512 MiB",
+      "testcase": "20",
+      "point_equal": "是",
+      "submit_filename": ["duel.cpp"],
+      "pretestcase": ""
+    },
+    {
+      "uuid": "f2b2ea97-3e7e-4ace-bab0-7d3119ae64bc",
+      "name": "detect",
+      "title": "超速检测",
+      "type": "传统型",
+      "dir": "detect",
+      "exec": "detect",
+      "input": "detect.in",
+      "output": "detect.out",
+      "time_limit": "2.0 秒",
+      "memory_limit": "512 MiB",
+      "testcase": "10",
+      "point_equal": "是",
+      "submit_filename": ["detect.cpp"],
+      "pretestcase": ""
+    },
+    {
+      "uuid": "967c4845-492d-44de-815a-4ce95b92da32",
+      "name": "color",
+      "title": "染色",
+      "type": "传统型",
+      "dir": "color",
+      "exec": "color",
+      "input": "color.in",
+      "output": "color.out",
+      "time_limit": "1.0 秒",
+      "memory_limit": "512 MiB",
+      "testcase": "20",
+      "point_equal": "是",
+      "submit_filename": ["color.cpp"],
+      "pretestcase": ""
+    },
+    {
+      "uuid": "b8270836-9e5d-4719-8bd7-8fa7a0c93c26",
+      "name": "arena",
+      "title": "擂台游戏",
+      "type": "传统型",
+      "dir": "arena",
+      "exec": "arena",
+      "input": "arena.in",
+      "output": "arena.out",
+      "time_limit": "1.0 秒",
+      "memory_limit": "512 MiB",
+      "testcase": "25",
+      "point_equal": "是",
+      "submit_filename": ["arena.cpp"],
+      "pretestcase": ""
+    }
+  ],
+  "extraContents": {
+    "precaution": {}
+  },
+  "images": []
+}

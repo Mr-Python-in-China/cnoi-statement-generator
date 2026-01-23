@@ -1,0 +1,14 @@
+main {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+.contest-editor-tab-item-sublabel {
+  margin-left: 0.5em;
+  color: #7f7f7f;
+  text-shadow: none;
+}
+.contest-editor-autosave-indicator {
+  color: var(--ant-color-text-description);
+  margin-right: 1em;
+}

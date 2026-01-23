@@ -8,7 +8,7 @@
     "target": "ES2022",
     "lib": ["ES2022"],
     "module": "ESNext",
-    "types": ["node"],
+    "types": ["node", "vite/client"],
     "skipLibCheck": true,
 
     /* Bundler mode */
@@ -20,13 +20,13 @@
 
     /* Linting */
     "strict": true,
-    "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true
   },
   "include": [
     "vite.config.ts",
     "scripts/**/*.ts",
+    "import.d.ts",
     "tests/unit/**/*.common.test.ts",
     "tests/unit/**/*.node.test.ts"
   ]

@@ -1,0 +1,119 @@
+.root-document-grid {
+  --root-document-grid-card-border-color: var(--ant-color-border);
+  --root-document-grid-card-border-size: 3px;
+  --root-document-grid-card-border-radius: 10px;
+  margin: 16px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, 184px);
+  column-gap: 8px;
+  row-gap: 16px;
+  justify-content: space-between;
+  > div {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    color: unset;
+    :hover {
+      color: unset;
+    }
+    /*preview*/
+    > :nth-child(1) {
+      width: 100%;
+      height: 200px;
+      position: relative;
+      display: flex;
+      justify-content: center;
+      align-items: flex-end;
+      > :nth-child(1) {
+        --doc-preview-card-corner-size: 24px;
+        --doc-preview-card-border-radius: 10px;
+        width: calc(100% - 2 * var(--root-document-grid-card-border-size));
+        height: calc(100% - 2 * var(--root-document-grid-card-border-size));
+        object-fit: contain;
+        border: var(--root-document-grid-card-border-size) solid
+          var(--root-document-grid-card-border-color);
+        border-radius: var(--doc-preview-card-border-radius);
+        transition: filter var(--ant-motion-duration-mid)
+          var(--ant-motion-ease-in-out);
+        user-select: none;
+        clip-path: polygon(
+          0% 0%,
+          0% 100%,
+          100% 100%,
+          100% calc(0% + var(--doc-preview-card-corner-size)),
+          calc(100% - var(--doc-preview-card-corner-size)) 0%
+        );
+        &::after {
+          content: "";
+          position: absolute;
+          top: calc(0px - var(--root-document-grid-card-border-size));
+          right: calc(0px - var(--root-document-grid-card-border-size));
+          height: calc(24px + var(--root-document-grid-card-border-size));
+          width: calc(24px + var(--root-document-grid-card-border-size));
+          background-color: var(--root-document-grid-card-border-color);
+          border-bottom-left-radius: var(--doc-preview-card-border-radius);
+        }
+      }
+      /*unset preview image*/
+      > div:nth-child(1) {
+        height: calc(100% - 2 * var(--root-document-grid-card-border-size));
+        width: unset;
+        aspect-ratio: calc(((sqrt(5) - 1) / 2));
+        background: linear-gradient(
+          to left top,
+          hsl(var(--doc-preview-card-color-hue), 100%, 60%),
+          hsl(var(--doc-preview-card-color-hue), 100%, 80%)
+        );
+        position: relative;
+        overflow: hidden;
+        > * {
+          position: absolute;
+          bottom: 16px;
+          left: 16px;
+          color: #fffb;
+          font-size: 32px;
+          white-space: nowrap;
+          font-weight: bold;
+        }
+      }
+      /*operaticon button*/
+      > :nth-child(2) {
+        position: absolute;
+        top: 0px;
+        right: 0px;
+        opacity: 0;
+        transition: opacity var(--ant-motion-duration-mid)
+          var(--ant-motion-ease-in-out);
+      }
+
+      &:hover {
+        & > :nth-child(1) {
+          filter: brightness(90%);
+        }
+        & > :nth-child(2) {
+          opacity: 1;
+        }
+      }
+      &:focus-visible {
+        outline: var(--ant-line-width-bold) var(--ant-line-type)
+          var(--ant-color-primary);
+        outline-offset: 2px;
+        & > :nth-child(2) {
+          opacity: 1;
+        }
+      }
+    }
+    /*name*/
+    > :nth-child(2) {
+      text-align: center;
+    }
+    > span:nth-child(2) {
+      cursor: pointer;
+      text-overflow: ellipsis;
+      overflow: hidden;
+      white-space: nowrap;
+      width: 100%;
+    }
+  }
+}

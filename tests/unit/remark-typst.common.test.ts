@@ -1638,6 +1638,36 @@ table.cell()[#"Z"],
       expect(ctx.data.join("")).toBe(`#"Text content"`);
     });
   });
+
+  describe("Typst nodes", () => {
+    test("Typst renders its children without wrappers", () => {
+      const ctx = initContext();
+      handlers.typst(
+        {
+          type: "typst",
+          children: [
+            { type: "text", value: "Before " },
+            { type: "typstContent", data: "#strong[inner]" },
+            { type: "text", value: " After" },
+          ],
+        },
+        ctx,
+      );
+      expect(ctx.data.join("")).toBe('#"Before "#strong[inner]#" After"');
+    });
+
+    test("TypstContent injects raw typst code", () => {
+      const ctx = initContext();
+      handlers.typstContent(
+        {
+          type: "typstContent",
+          data: '#rect(fill: rgb("12,34,56"))',
+        },
+        ctx,
+      );
+      expect(ctx.data.join("")).toBe('#rect(fill: rgb("12,34,56"))');
+    });
+  });
 });
 
 test("Compiler Integration Test", () => {
@@ -1783,9 +1813,7 @@ test("Compiler Integration Test", () => {
       },
     ],
   });
-  const templateStr = String.raw`#import "utils.typ": *
-
-#heading(level: 1, [#"Remark-typst"#"[^fn1]"#" Integration Test"#footnote(label("user-footnote: fn2"))#" Document"])
+  const templateStr = String.raw`#heading(level: 1, [#"Remark-typst"#"[^fn1]"#" Integration Test"#footnote(label("user-footnote: fn2"))#" Document"])
 #par[#"!["#"Undefined Image Reference"#"][img1]"]
 #par[#box(image("{{hash}}", alt: "Defined Image Reference"))]
 #par[#"["#"Undefined Link Reference"#"][link1]"]

@@ -26,8 +26,14 @@ dist-ssr
 temp
 coverage
 
-examples/*/*.pdf
-examples/*/*.typ
-!examples/*/main.typ
-!examples/*/utils.typ
-examples/*/img-*
+examples/*/**/*
+!examples/*/*.typ
+!examples/*/content.json
+!examples/*/extra-*.md
+examples/*/extra-*.typ
+!examples/*/problem-*.md
+examples/*/problem-*.typ
+!examples/*/**/*.ts
+!examples/*/**/*.tsx
+
+templates/*/generated_schema.json

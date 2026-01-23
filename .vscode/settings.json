@@ -1,5 +1,6 @@
 {
   "tinymist.systemFonts": false,
   "tinymist.fontPaths": ["assets/typst/fonts"],
+  "typescript.tsdk": "node_modules/typescript/lib",
   "editor.formatOnSave": true
 }
