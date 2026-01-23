@@ -13,8 +13,8 @@ import sharp from "sharp";
 
 for (const exampleName of await fsp.readdir("examples")) {
   console.log(`Compiling example: ${exampleName}`);
-  const meta = (await import(`examples/${exampleName}/meta.ts`).then(
-    (m) => m.default,
+  const meta = (await import(`examples/${exampleName}/meta.ts`).catch(() =>
+    import(`examples/${exampleName}/meta.tsx`).then((m) => m.default),
   )) as ExampleMetaExport;
   const processor = getProcessor(await importUnifiedPlugins(meta.template));
   const contentZod = await importContentZod(meta.template);
