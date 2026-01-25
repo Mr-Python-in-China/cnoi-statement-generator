@@ -1,7 +1,7 @@
-import CompilerInstance from "./compiler";
-import type { ContentBase } from "./types/document";
-import type { TemplateUiMetadata } from "./types/templates";
-import { importUiMetadata } from "./utils/importTemplate";
+import CompilerInstance from "../compiler";
+import type { ContentBase } from "../types/document";
+import type { TemplateUiMetadata } from "../types/templates";
+import { importUiMetadata } from "./importTemplate";
 
 export default class TemplateManager {
   compiler: CompilerInstance;

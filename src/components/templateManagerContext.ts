@@ -1,4 +1,4 @@
-import TemplateManager from "@/templateManager";
+import TemplateManager from "@/utils/templateManager";
 import { createContext, useContext } from "react";
 
 export const TemplateManagerContext = createContext<TemplateManager | null>(

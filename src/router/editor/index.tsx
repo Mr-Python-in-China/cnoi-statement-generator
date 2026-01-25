@@ -26,7 +26,7 @@ import {
   loadDocumentFromDB,
   saveDocumentToDB,
 } from "@/utils/indexedDBUtils";
-import TemplateManager from "@/templateManager";
+import TemplateManager from "@/utils/templateManager";
 import {
   removeProblemCallback,
   toImmerContent,
