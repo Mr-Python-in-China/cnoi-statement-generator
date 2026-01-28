@@ -61,9 +61,6 @@ const TypstInitStatusProvider: FC<{
             下载字体资源（
             <LoadedTextHelper {...typstInitInfo.font} />）
             <ProgressBarHelper {...typstInitInfo.font} />
-            下载第三方包（
-            <LoadedTextHelper {...typstInitInfo.package} />）
-            <ProgressBarHelper {...typstInitInfo.package} />
           </div>
         </>
       );

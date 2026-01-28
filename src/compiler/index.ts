@@ -1,5 +1,4 @@
 import axiosInstance from "@/utils/axiosInstance";
-import type { PackageSpec } from "@myriaddreamin/typst.ts/internal.types";
 import { listenMain, send } from "@mr.python/promise-worker-ts";
 import { isAxiosError } from "axios";
 import {
@@ -14,19 +13,6 @@ import TypstCompilerWasmUrl from "@myriaddreamin/typst-ts-web-compiler/pkg/typst
 import TypstRendererWasmUrl from "@myriaddreamin/typst-ts-renderer/pkg/typst_ts_renderer_bg.wasm?url";
 import TypstWorker from "./compiler.worker?worker";
 import { importFontUrlEnteries } from "@/utils/importTemplate";
-
-const RequiredPreloadPackages: PackageSpec[] = [
-  {
-    namespace: "preview",
-    name: "oxifmt",
-    version: "1.0.0",
-  },
-  {
-    namespace: "preview",
-    name: "mitex",
-    version: "0.2.5",
-  },
-];
 
 const browserCache: Cache | undefined =
   await window.caches?.open("typst-assets");
@@ -142,10 +128,9 @@ function removeImageBlob(content: ContentBase): PrecompileContent {
 
 export default class CompilerInstance {
   private worker: Worker;
-  private preloadedPackages = new Map<string, ArrayBuffer>();
   private assetUrlMapping = new Map<string, string>();
   public typstInitInfo: {
-    [K in "compiler" | "font" | "package"]: TypstInitTask;
+    [K in "compiler" | "font"]: TypstInitTask;
   };
   public typstInitStatus: PromiseStatus = "pending";
   public typstInitPromise: Promise<void>;
@@ -245,20 +230,6 @@ export default class CompilerInstance {
           ).flat();
         })(),
       ),
-      package: new TypstInitTask(
-        (async () => {
-          const urls = RequiredPreloadPackages.map(
-            (pkg) =>
-              `https://packages.typst.org/preview/${pkg.name}-${pkg.version}.tar.gz`,
-          );
-          const datas = await downloadMultiData(urls, (x) =>
-            this.typstInitInfo.package.updateProgress(x),
-          );
-          for (let i = 0; i < urls.length; ++i) {
-            this.preloadedPackages.set(urls[i], datas[i]);
-          }
-        })(),
-      ),
     };
 
     this.typstInitPromise = Promise.all(
@@ -270,7 +241,6 @@ export default class CompilerInstance {
           typstCompilerWasm,
           typstRendererWasm,
           fontBuffers,
-          preloadedPackages: this.preloadedPackages,
         });
         this.typstInitStatus = "fulfilled";
       })

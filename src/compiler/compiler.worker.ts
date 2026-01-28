@@ -6,7 +6,6 @@ import {
   loadFonts,
   MemoryAccessModel,
 } from "@myriaddreamin/typst.ts";
-import type { PackageSpec } from "@myriaddreamin/typst.ts/internal.types";
 import {
   disableDefaultFontAssets,
   withAccessModel,
@@ -16,20 +15,11 @@ import { listen, sendToMain } from "@mr.python/promise-worker-ts";
 import { Mutex } from "async-mutex";
 import getProcessor from "./getProcessor";
 
-let preloadedPackages: Map<string, ArrayBuffer>;
-class PreloadedPackageRegistry extends FetchPackageRegistry {
-  override pullPackageData(path: PackageSpec) {
-    const preloaded = preloadedPackages.get(this.resolvePath(path));
-    return preloaded ? new Uint8Array(preloaded) : undefined;
-  }
-}
 const typstAccessModel = new MemoryAccessModel();
-const typstPackageRegistry = new PreloadedPackageRegistry(typstAccessModel);
 
 let processor: ReturnType<typeof getProcessor>;
 
 listen<InitMessage>("init", async (data) => {
-  preloadedPackages = data.preloadedPackages;
   const compiler = createTypstCompiler(),
     renderer = createTypstRenderer();
   await Promise.all([
@@ -39,7 +29,7 @@ listen<InitMessage>("init", async (data) => {
         disableDefaultFontAssets(),
         loadFonts(data.fontBuffers.map((x) => new Uint8Array(x))),
         withAccessModel(typstAccessModel),
-        withPackageRegistry(typstPackageRegistry),
+        withPackageRegistry(new FetchPackageRegistry(typstAccessModel)),
       ],
     }),
     renderer.init({
@@ -170,7 +160,6 @@ export type InitMessage = PromiseWorkerTagged<
     typstCompilerWasm: ArrayBuffer;
     typstRendererWasm: ArrayBuffer;
     fontBuffers: ArrayBuffer[];
-    preloadedPackages: Map<string, ArrayBuffer>;
     template: string;
   },
   void

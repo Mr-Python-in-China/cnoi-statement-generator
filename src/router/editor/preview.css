@@ -16,9 +16,10 @@
   position: absolute;
   top: 0;
   left: 0;
+  z-index: 154;
 }
 .contest-editor-preview-container {
   overflow: auto;
-  height: 100%;
   transform: translateZ(0);
+  height: 100%;
 }
