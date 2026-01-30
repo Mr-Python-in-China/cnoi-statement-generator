@@ -142,9 +142,11 @@ const ContestEditorImpl: FC<{ initialDoc: DocumentBase }> = ({
           onChange={(x) => {
             setPanel(x);
           }}
+          hideAdd={uiMeta.createNewProblem === undefined}
           onEdit={async (e, action) => {
             if (action === "remove") removeProblem(e as string);
             else {
+              if (!uiMeta.createNewProblem) return;
               const v = uiMeta.createNewProblem(content);
               setPanel(v.uuid);
               updateContent((draft) => {

@@ -4,7 +4,7 @@
   --root-document-grid-card-border-radius: 10px;
   margin: 16px;
   display: grid;
-  grid-template-columns: repeat(auto-fill, 184px);
+  grid-template-columns: repeat(auto-fill, 200px);
   column-gap: 8px;
   row-gap: 16px;
   justify-content: space-between;

@@ -1,0 +1,12 @@
+.contest-editor-config {
+  margin: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  label,
+  .contest-editor-config-label {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+}

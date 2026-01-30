@@ -5,13 +5,10 @@
   margin: 0 auto;
   padding: 16;
   max-width: 1200;
-  > div {
+  .ant-modal-container {
     height: 100%;
-    > .ant-modal-container {
-      height: 100%;
-      display: flex;
-      flex-direction: column;
-    }
+    display: flex;
+    flex-direction: column;
   }
 }
 
@@ -31,7 +28,7 @@
     padding: 16px;
     > div {
       display: grid;
-      grid-template-columns: repeat(auto-fill, 194px);
+      grid-template-columns: repeat(auto-fill, 210px);
       justify-content: space-between;
       /* example item */
       > div {

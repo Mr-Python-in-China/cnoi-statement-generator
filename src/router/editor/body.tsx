@@ -11,10 +11,11 @@ import {
 import { type Updater } from "use-immer";
 import Preview from "./preview";
 import { Splitter } from "antd";
-
-import "./body.css";
 import MarkdownPanel from "./markdownPanel";
 import useTemplateManager from "@/components/templateManagerContext";
+
+import "./body.css";
+import "./config-common.css";
 
 const Body: FC<{
   content: ImmerContent;

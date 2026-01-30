@@ -13,7 +13,8 @@ export type TemplateUiMetadata<Content extends ContentBase> = {
     };
   };
   ConfigPanelFC: ConfigPanelFC<Content>;
-  createNewProblem: (
+  // 为空时将隐藏标签栏新建按钮
+  createNewProblem?: (
     content: ImmerContent<Content>,
   ) => Content["problems"][number];
 };
