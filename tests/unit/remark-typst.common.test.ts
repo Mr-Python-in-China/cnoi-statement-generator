@@ -196,7 +196,7 @@ describe("Handlers", () => {
         ctx,
       );
       expect(ctx.data.join("")).toBe(
-        `#heading(level: ${level}, [#"Heading Level ${level} "#"and some \\"text\\""])\n`,
+        `#heading(depth: ${level}, [#"Heading Level ${level} "#"and some \\"text\\""])\n`,
       );
     });
   });
@@ -1813,7 +1813,7 @@ test("Compiler Integration Test", () => {
       },
     ],
   });
-  const templateStr = String.raw`#heading(level: 1, [#"Remark-typst"#"[^fn1]"#" Integration Test"#footnote(label("user-footnote: fn2"))#" Document"])
+  const templateStr = String.raw`#heading(depth: 1, [#"Remark-typst"#"[^fn1]"#" Integration Test"#footnote(label("user-footnote: fn2"))#" Document"])
 #par[#"!["#"Undefined Image Reference"#"][img1]"]
 #par[#box(image("{{hash}}", alt: "Defined Image Reference"))]
 #par[#"["#"Undefined Link Reference"#"][link1]"]

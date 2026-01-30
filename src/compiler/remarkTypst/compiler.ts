@@ -131,7 +131,7 @@ export const handlers = {
   },
   heading: (node, ctx) => {
     const { data } = ctx;
-    data.push(`#heading(level: ${node.depth}, [`);
+    data.push(`#heading(depth: ${node.depth}, [`);
     for (const child of node.children) parseContent(child, ctx);
     data.push("])\n");
   },
