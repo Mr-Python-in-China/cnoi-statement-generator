@@ -1,6 +1,6 @@
 .root-document-grid {
-  --root-document-grid-card-border-color: var(--ant-color-border);
-  --root-document-grid-card-border-size: 3px;
+  --root-document-grid-card-border-color: #bdbfcc;
+  --root-document-grid-card-border-size: 1px;
   --root-document-grid-card-border-radius: 10px;
   margin: 16px;
   display: grid;
@@ -25,6 +25,7 @@
       display: flex;
       justify-content: center;
       align-items: flex-end;
+      /*preview image*/
       > :nth-child(1) {
         --doc-preview-card-corner-size: 24px;
         --doc-preview-card-border-radius: 10px;
@@ -53,6 +54,7 @@
           width: calc(24px + var(--root-document-grid-card-border-size));
           background-color: var(--root-document-grid-card-border-color);
           border-bottom-left-radius: var(--doc-preview-card-border-radius);
+          filter: drop-shadow(-2px 2px 3px #7777);
         }
       }
       /*unset preview image*/
@@ -77,7 +79,7 @@
           font-weight: bold;
         }
       }
-      /*operaticon button*/
+      /*operation button*/
       > :nth-child(2) {
         position: absolute;
         top: 0px;
