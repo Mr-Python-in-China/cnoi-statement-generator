@@ -57,7 +57,7 @@
     "remark-parse": "^11.0.0",
     "strict-event-emitter": "^0.5.1",
     "unified": "^11.0.5",
-    "unist-util-visit": "^5.0.0",
+    "unist-util-visit": "^5.1.0",
     "use-immer": "^0.11.0",
     "xxhashjs": "^0.2.2",
     "zod": "^4.2.1"
