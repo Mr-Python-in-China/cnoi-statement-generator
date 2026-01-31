@@ -16,6 +16,7 @@ import NewDocModal from "./newDocModal";
 import "./index.css";
 import favicon from "/favicon.svg";
 import changeLogHTML from "/CHANGELOG.md";
+import { faGithub } from "@fortawesome/free-brands-svg-icons";
 
 const RootImpl: FC<{
   initialDocumentMetasPromise: Promise<DocumentMeta[]>;
@@ -38,6 +39,12 @@ const RootImpl: FC<{
         <Link to="/">
           <img src={favicon} alt="Favicon" className="favicon" />
           <h1 className="app-title">CNOI Statement Generator</h1>
+        </Link>
+        <Link
+          to="https://github.com/Mr-Python-in-China/cnoi-statement-generator"
+          target="_blank"
+        >
+          <FontAwesomeIcon icon={faGithub} />
         </Link>
       </header>
       <div className="root-container">

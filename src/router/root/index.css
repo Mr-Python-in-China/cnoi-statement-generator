@@ -6,12 +6,8 @@
   padding: 8px;
 }
 .root-header {
+  display: flex;
   > a {
-    margin: 8px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    text-decoration: none;
     color: #000;
     transition: none;
     :hover {
@@ -20,6 +16,14 @@
     :active {
       color: #000;
     }
+  }
+  > :nth-child(1) {
+    flex: 1;
+    margin: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
     .favicon {
       height: 32px;
       width: 32px;
@@ -29,6 +33,10 @@
       font-family: "Jellee-Roman";
       font-size: 24px;
     }
+  }
+  > :nth-child(2) {
+    align-items: center;
+    font-size: 32px;
   }
 }
 .root-container {
