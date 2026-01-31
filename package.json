@@ -39,7 +39,7 @@
     "@myriaddreamin/typst.ts": "0.7.0-rc2",
     "@reactuses/core": "^6.1.9",
     "@uiw/react-codemirror": "^4.25.4",
-    "antd": "^6.2.1",
+    "antd": "^6.2.2",
     "async-mutex": "^0.5.0",
     "axios": "^1.13.2",
     "base64-js": "^1.5.1",
