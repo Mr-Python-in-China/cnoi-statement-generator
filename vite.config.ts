@@ -98,6 +98,7 @@ export default defineConfig(async (): Promise<UserConfig> => {
           },
         },
       },
+      sourcemap: true,
     },
     test: {
       coverage: {
