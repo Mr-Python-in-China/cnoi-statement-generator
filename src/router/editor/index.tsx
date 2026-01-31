@@ -112,7 +112,7 @@ const ContestEditorImpl: FC<{ initialDoc: DocumentBase }> = ({
     ...Object.entries(uiMeta.extraContents).map(([extraName, meta]) => ({
       key: `extra-${extraName}`,
       label: meta.displayName,
-      closeable: false,
+      closable: false,
       destroyOnHidden: true,
     })),
     ...content.problems.map((x, i) => ({

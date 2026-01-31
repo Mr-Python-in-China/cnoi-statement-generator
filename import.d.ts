@@ -10,7 +10,7 @@ declare module "*?font-meta" {
 
 type ExampleMarkdownModules = Record<string, string>;
 
-declare module "examples/*/virtual:example-md" {
-  const modules: ExampleMarkdownModules;
-  export default modules;
+declare module "*?split" {
+  const urls: string[];
+  export default urls;
 }

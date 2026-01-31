@@ -9,7 +9,7 @@ import {
 } from "./compiler.worker";
 import type { ContentBase, PrecompileContent } from "@/types/document";
 
-import TypstCompilerWasmUrl from "@myriaddreamin/typst-ts-web-compiler/pkg/typst_ts_web_compiler_bg.wasm?url";
+import TypstCompilerWasmUrls from "@myriaddreamin/typst-ts-web-compiler/pkg/typst_ts_web_compiler_bg.wasm?split";
 import TypstRendererWasmUrl from "@myriaddreamin/typst-ts-renderer/pkg/typst_ts_renderer_bg.wasm?url";
 import TypstWorker from "./compiler.worker?worker";
 import { importFontUrlEnteries } from "@/utils/importTemplate";
@@ -143,12 +143,23 @@ export default class CompilerInstance {
 
     this.typstInitInfo = {
       compiler: new TypstInitTask(
-        downloadMultiData([TypstCompilerWasmUrl, TypstRendererWasmUrl], (x) =>
-          this.typstInitInfo.compiler.updateProgress(x),
+        downloadMultiData(
+          [TypstRendererWasmUrl, ...TypstCompilerWasmUrls],
+          (x) => this.typstInitInfo.compiler.updateProgress(x),
         ).then(
-          (res) => {
-            typstCompilerWasm = res[0];
-            typstRendererWasm = res[1];
+          ([RendererBuffer, ...CompilerBuffers]) => {
+            const totalLen = CompilerBuffers.reduce(
+              (prev, cur) => prev + cur.byteLength,
+              0,
+            );
+            const arr = new Uint8Array(totalLen);
+            let offset = 0;
+            for (const buffer of CompilerBuffers) {
+              arr.set(new Uint8Array(buffer), offset);
+              offset += buffer.byteLength;
+            }
+            typstCompilerWasm = arr.buffer;
+            typstRendererWasm = RendererBuffer;
             this.typstInitInfo.compiler.status = "fulfilled";
           },
           (e) => {

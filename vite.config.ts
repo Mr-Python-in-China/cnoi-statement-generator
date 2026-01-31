@@ -4,6 +4,7 @@ import { defineConfig, type PluginOption, type UserConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import { exec } from "node:child_process";
 import "vitest/config";
+import viteAssetsSplitPlugin from "vite-plugin-assets-split";
 
 const fontMetaPlugin = (): PluginOption => ({
   name: "font-meta",
@@ -48,6 +49,9 @@ export default defineConfig(async (): Promise<UserConfig> => {
         },
       }),
       fontMetaPlugin(),
+      viteAssetsSplitPlugin({
+        limit: 20 * 1024 * 1024, // 20 MB
+      }),
     ],
     resolve: {
       alias: [
