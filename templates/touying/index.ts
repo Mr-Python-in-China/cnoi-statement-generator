@@ -1,5 +1,5 @@
 import type TemplateExport from "@/types/templates";
-import { type Content } from "./contentZod";
+import type { Content } from "./contentZod";
 
 export default {
   contentZod: () => import("./contentZod").then((mod) => mod.default),

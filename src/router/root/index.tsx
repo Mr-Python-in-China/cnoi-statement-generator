@@ -6,7 +6,7 @@ import {
 import { Suspense, use, useState, type FC } from "react";
 import { App, Button, message, Select } from "antd";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faPlus, faUpload } from "@fortawesome/free-solid-svg-icons";
+import { faInfo, faPlus, faUpload } from "@fortawesome/free-solid-svg-icons";
 import { useImmer } from "use-immer";
 import DocumentGrid from "./documentGrid";
 import { importDocument } from "@/utils/contestDataUtils";
@@ -17,6 +17,7 @@ import "./index.css";
 import favicon from "/favicon.svg";
 import changeLogHTML from "/CHANGELOG.md";
 import { faGithub } from "@fortawesome/free-brands-svg-icons";
+import { useVersionInfo } from "@/components/useVersionInfo";
 
 const RootImpl: FC<{
   initialDocumentMetasPromise: Promise<DocumentMeta[]>;
@@ -29,6 +30,7 @@ const RootImpl: FC<{
     "name" | "name (reversed)" | "modified at" | "modified at (reversed)"
   >("modified at (reversed)");
   const [openNewDocModal, setOpenNewDocModal] = useState(false);
+  const versionInfo = useVersionInfo();
   return (
     <>
       <NewDocModal
@@ -97,7 +99,14 @@ const RootImpl: FC<{
               >
                 导入文档
               </Button>
+              <Button
+                icon={<FontAwesomeIcon icon={faInfo} />}
+                onClick={versionInfo.show}
+              >
+                关于
+              </Button>
             </div>
+            {versionInfo.contextHolder}
             <div>
               <Select
                 className="root-button-group-sortby"

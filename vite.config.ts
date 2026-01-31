@@ -79,6 +79,7 @@ export default defineConfig(async (): Promise<UserConfig> => {
           ? "unknown"
           : gitCommitHash + (isDirty ? "-dirty" : ""),
       ),
+      BUILD_TIME: JSON.stringify(new Date().toISOString()),
     },
     server: {
       port: 4481,

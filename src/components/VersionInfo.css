@@ -1,0 +1,16 @@
+.version-info-layout {
+  display: flex;
+  gap: 24px;
+  align-items: center;
+}
+
+.version-info-icon {
+  width: 128px;
+  height: 128px;
+  object-fit: contain;
+  border-radius: 8px;
+}
+
+.version-info-details {
+  flex: 1;
+}

@@ -21,6 +21,7 @@ import {
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faAngleLeft } from "@fortawesome/free-solid-svg-icons";
 import { useNavigate } from "react-router";
+import { useVersionInfo } from "@/components/useVersionInfo";
 
 const ContestEditorHeader: FC<{
   doc: ImmerDocument;
@@ -109,6 +110,7 @@ const ContestEditorHeader: FC<{
       console.error("Error when exporting config.", error);
     }
   }, [message, doc]);
+  const versionInfo = useVersionInfo();
   const menuGroup = useMemo(
     (): MenuGroup[] => [
       {
@@ -150,6 +152,7 @@ const ContestEditorHeader: FC<{
           {
             key: "about",
             label: "关于",
+            onSelect: versionInfo.show,
           },
         ],
       },
@@ -160,6 +163,7 @@ const ContestEditorHeader: FC<{
       onClickExportPDF,
       onClickImportConfig,
       typstInitStatus,
+      versionInfo.show,
     ],
   );
   return (
@@ -168,6 +172,7 @@ const ContestEditorHeader: FC<{
         <MenuBar menuGroup={menuGroup} />
       </div>
       <div className="file-name">{doc.name}</div>
+      {versionInfo.contextHolder}
     </header>
   );
 };
