@@ -64,6 +64,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.2",
+    "@mr.python/vite-plugin-remark-rehype": "^0.1.1",
     "@myriaddreamin/typst-ts-node-compiler": "0.7.0-rc2",
     "@types/browser-update": "^3.3.3",
     "@types/fontkit": "^2.0.8",

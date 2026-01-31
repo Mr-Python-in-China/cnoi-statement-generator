@@ -5,6 +5,7 @@ import react from "@vitejs/plugin-react";
 import { exec } from "node:child_process";
 import "vitest/config";
 import viteAssetsSplitPlugin from "vite-plugin-assets-split";
+import ViteRemarkRehypePlugin from "@mr.python/vite-plugin-remark-rehype";
 
 const fontMetaPlugin = (): PluginOption => ({
   name: "font-meta",
@@ -52,6 +53,7 @@ export default defineConfig(async (): Promise<UserConfig> => {
       viteAssetsSplitPlugin({
         limit: 20 * 1024 * 1024, // 20 MB
       }),
+      ViteRemarkRehypePlugin(),
     ],
     resolve: {
       alias: [

@@ -30,6 +30,7 @@
     "templates",
     "examples",
     "import.d.ts",
+    "node_modules/@mr.python/vite-plugin-remark-rehype/types.d.ts",
     "tests/unit/**/*.common.test.ts",
     "tests/unit/**/*.browser.test.ts"
   ]
