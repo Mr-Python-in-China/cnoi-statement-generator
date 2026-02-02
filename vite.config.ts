@@ -42,7 +42,7 @@ export default defineConfig(async (): Promise<UserConfig> => {
     exec("git diff-index --quiet HEAD", (err) => resolve(Boolean(err))),
   );
   return {
-    base: "./",
+    base: "/",
     plugins: [
       react({
         babel: {
