@@ -1,0 +1,55 @@
+name: Auto Release
+
+on:
+  workflow_run:
+    workflows: ["Quality Check"]
+    types:
+      - completed
+    branches:
+      - dev
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout dev
+        uses: actions/checkout@v4
+        with:
+          ref: dev
+          fetch-depth: 0
+
+      - name: Set GITHUB_EVENT_BEFORE
+        run: |
+          set -euo pipefail
+          # HEAD is the pushed commit; HEAD^ is the previous commit
+          echo "GITHUB_EVENT_BEFORE=$(git rev-parse HEAD^)" >> "$GITHUB_ENV"
+
+      - name: Detect version bump
+        id: version_check
+        shell: bash
+        run: |
+          set -euo pipefail
+          node scripts/auto-release.js
+
+      - name: Fast-forward merge to master
+        if: steps.version_check.outputs.changed == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin master
+          git checkout master
+          git merge --ff-only dev
+          git push origin master
+
+      - name: Create GitHub Release
+        if: steps.version_check.outputs.changed == 'true'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version_check.outputs.version }}
+          name: ${{ steps.version_check.outputs.version }}
+          body_path: release_body.md
+          target_commitish: master
