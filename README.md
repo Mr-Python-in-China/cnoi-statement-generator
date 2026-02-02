@@ -9,7 +9,7 @@
 
 在浏览器中快速将 Markdown 格式的题目转为 tuack 风格的 PDF 文件。
 
-![preview screenshot](./docs/readme-screenshot.jpeg)
+![preview screenshot](./docs/readme-screenshot.png)
 
 ## 特色
 
@@ -24,6 +24,7 @@
 - [x] 支持设置图片大小
 - [x] 支持单元格合并
 - [x] 预制模板提供参考
+- [x] 制作演示文稿，可用于赛后讲评等
 - [x] ~~可爱的罗小黑~~
 - [x] 开源、完全免费！
 
