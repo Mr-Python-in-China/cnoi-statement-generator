@@ -15,6 +15,7 @@ import useTemplateManager from "@/components/templateManagerContext";
 import useTypstInitStatus from "@/components/typstInitStatusContext";
 import {
   exportDocument,
+  exportTypstArchive,
   importDocument,
   toImmerContent,
 } from "@/utils/contestDataUtils";
@@ -110,6 +111,15 @@ const ContestEditorHeader: FC<{
       console.error("Error when exporting config.", error);
     }
   }, [message, doc]);
+  const onClickExportTypst = useCallback(async () => {
+    try {
+      await exportTypstArchive(doc);
+      message.success("导出 Typst 源码成功");
+    } catch (error) {
+      message.error("导出 Typst 源码失败");
+      console.error("Error when exporting typst archive.", error);
+    }
+  }, [doc, message]);
   const versionInfo = useVersionInfo();
   const menuGroup = useMemo(
     (): MenuGroup[] => [
@@ -139,6 +149,11 @@ const ContestEditorHeader: FC<{
             onSelect: onClickExportConfig,
           },
           {
+            key: "export typst",
+            label: "导出为 typst 源码",
+            onSelect: onClickExportTypst,
+          },
+          {
             key: "import document",
             label: "导入文档",
             onSelect: onClickImportConfig,
@@ -161,6 +176,7 @@ const ContestEditorHeader: FC<{
       navigate,
       onClickExportConfig,
       onClickExportPDF,
+      onClickExportTypst,
       onClickImportConfig,
       typstInitStatus,
       versionInfo.show,
