@@ -4,7 +4,7 @@ import getProcessor from "@/compiler/getProcessor";
 import base64js from "base64-js";
 import {
   importContentZod,
-  importFontUrlEnteries,
+  importFontUrlEntries,
   importTypstContents,
   importUnifiedPlugins,
 } from "@/utils/importTemplate";
@@ -146,7 +146,7 @@ async function buildTypstArchive(doc: DocumentBase) {
     zip.file(`problem-${index}.typ`, typst);
   });
 
-  const fonts = await importFontUrlEnteries(doc.templateId);
+  const fonts = await importFontUrlEntries(doc.templateId);
   for (const [, fontUrl] of fonts) {
     if (!fontUrl.startsWith("/")) continue;
     const res = await fetch(fontUrl);

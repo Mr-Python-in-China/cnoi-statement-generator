@@ -35,3 +35,7 @@ export async function importFontUrlEnteries(template: string) {
     font.url,
   ]);
 }
+
+export async function importFontUrlEntries(template: string) {
+  return importFontUrlEnteries(template);
+}
