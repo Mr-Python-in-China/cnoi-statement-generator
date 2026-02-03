@@ -51,14 +51,14 @@ async function buildReleaseNotes(version) {
   const md = await readFile(changelogPath, "utf8");
   const esc = escapeRegex(version);
   const re = new RegExp(
-    String.raw`^##\s+${esc}\s*\([^\n]*\)\n([\s\S]*?)(?=^##\s+|$(?![^]))`,
+    String.raw`^##\s+${esc}\s*\([^\n]*\)\n\n([\s\S]*?)(?=^##\s+|$(?![^]))`,
     "m",
   );
   const match = md.match(re);
   if (!match) {
     throw new Error(`Changelog entry not found for version ${version}`);
   }
-  await writeFile("release_body.md", match[0].trim() + "\n");
+  await writeFile("release_body.md", match[1].trim() + "\n");
 }
 
 async function main() {
