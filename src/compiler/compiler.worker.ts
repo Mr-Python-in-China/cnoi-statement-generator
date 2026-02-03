@@ -233,12 +233,13 @@ listen<ExportTypstArchiveMessage>("exportTypstArchive", async (doc) =>
       if (assetUrl.startsWith(ASSET_URL_PREFIX)) {
         const uuid = assetUrl.slice(ASSET_URL_PREFIX.length);
         const image = doc.content.images.find((img) => img.uuid === uuid);
+        const imageName = image?.name;
         if (!image)
           throw new Error(
-            `Referenced image "${uuid}" not found. The image may have been deleted. Please remove the image reference or re-add the image to the document.`,
+            `Referenced image${imageName ? ` "${imageName}"` : ""} (id: ${uuid}) not found. The image may have been deleted. Please remove the image reference or re-add the image to the document.`,
           );
         buffer = new Uint8Array(await image.blob.arrayBuffer());
-        ext = resolveUrlExtension(image.name || "");
+        ext = resolveUrlExtension(imageName || "");
         if (!ext) ext = mimeTypeToExtension(image.blob.type);
       } else if (assetUrl.startsWith("data:")) {
         buffer = dataUrlToUint8Array(assetUrl);
