@@ -15,10 +15,10 @@ import useTemplateManager from "@/components/templateManagerContext";
 import useTypstInitStatus from "@/components/typstInitStatusContext";
 import {
   exportDocument,
-  exportTypstArchive,
   importDocument,
   toImmerContent,
 } from "@/utils/contestDataUtils";
+import { exportTypstArchive } from "@/utils/exportTypstArchive";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faAngleLeft } from "@fortawesome/free-solid-svg-icons";
 import { useNavigate } from "react-router";
