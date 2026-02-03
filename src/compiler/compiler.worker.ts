@@ -207,8 +207,10 @@ listen<ExportTypstArchiveMessage>("exportTypstArchive", async (doc) =>
     const contentForCompile = {
       ...doc.content,
       images: doc.content.images.map((item) => {
-        const { blob, ...rest } = item;
-        void blob;
+        const rest = { ...item } as Omit<typeof item, "blob"> & {
+          blob?: Blob;
+        };
+        delete rest.blob;
         return rest;
       }),
     } satisfies PrecompileContent;
@@ -233,8 +235,9 @@ listen<ExportTypstArchiveMessage>("exportTypstArchive", async (doc) =>
         const image = doc.content.images.find((img) => img.uuid === uuid);
         const imageName = image?.name;
         if (!image) {
-          const imageLabel = imageName
-            ? `"${imageName}" (id: ${uuid})`
+          const safeImageName = imageName?.replaceAll(/[\r\n\t]/g, " ");
+          const imageLabel = safeImageName
+            ? `"${safeImageName}" (id: ${uuid})`
             : `id: ${uuid}`;
           throw new Error(
             `Referenced image ${imageLabel} not found. The image may have been deleted. Please remove the image reference or re-add the image to the document.`,
