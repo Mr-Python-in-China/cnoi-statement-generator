@@ -146,6 +146,10 @@ function dataUrlToUint8Array(dataUrl: string): Uint8Array {
 function dataUrlToExtension(dataUrl: string): string {
   const match = /^data:(?<type>[^;]+);base64,/u.exec(dataUrl);
   const type = match?.groups?.type ?? "application/octet-stream";
+  return mimeTypeToExtension(type);
+}
+
+function mimeTypeToExtension(type: string): string {
   const map: Record<string, string> = {
     "image/png": "png",
     "image/jpeg": "jpg",
@@ -156,21 +160,23 @@ function dataUrlToExtension(dataUrl: string): string {
   return map[type] ?? "bin";
 }
 
-function resolveUrlExtension(url: string): string {
+function resolveUrlExtension(url: string): string | undefined {
   const normalized = url.split("?")[0];
   const match = /\.([a-zA-Z0-9]+)$/.exec(normalized);
-  return match?.[1] ?? "bin";
+  return match?.[1] ?? undefined;
 }
 
 function replaceAssetReferences(
   typst: string,
   assets: Map<string, string>,
 ): string {
-  let result = typst;
-  for (const [filename, assetPath] of assets) {
-    result = result.split(`image("${filename}"`).join(`image("${assetPath}"`);
-  }
-  return result;
+  return typst.replaceAll(
+    /image\("(?<name>[^"]+)"/g,
+    (match, name: string) =>
+      name && assets.has(name)
+        ? `image("${assets.get(name)}"`
+        : match,
+  );
 }
 
 listen<CompileTypstMessage>("compileTypst", async (data) =>
@@ -224,13 +230,14 @@ listen<ExportTypstArchiveMessage>("exportTypstArchive", async (doc) =>
     const assetPaths = new Map<string, string>();
     for (const [filename, assetUrl] of assets) {
       let buffer: Uint8Array;
-      let ext = "bin";
+      let ext: string | undefined;
       if (assetUrl.startsWith("asset://")) {
         const uuid = assetUrl.substring("asset://".length);
         const image = doc.content.images.find((img) => img.uuid === uuid);
         if (!image) throw new Error(`Asset not found: ${uuid}`);
         buffer = new Uint8Array(await image.blob.arrayBuffer());
         ext = resolveUrlExtension(image.name || "");
+        if (!ext) ext = mimeTypeToExtension(image.blob.type);
       } else if (assetUrl.startsWith("data:")) {
         buffer = dataUrlToUint8Array(assetUrl);
         ext = dataUrlToExtension(assetUrl);
@@ -238,6 +245,7 @@ listen<ExportTypstArchiveMessage>("exportTypstArchive", async (doc) =>
         const response = await fetch(assetUrl);
         buffer = new Uint8Array(await response.arrayBuffer());
         ext = resolveUrlExtension(assetUrl);
+        if (!ext) ext = "bin";
       }
       const assetPath = `assets/${filename}.${ext}`;
       assetPaths.set(filename, assetPath);
