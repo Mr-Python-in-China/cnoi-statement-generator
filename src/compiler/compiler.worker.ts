@@ -235,7 +235,7 @@ listen<ExportTypstArchiveMessage>("exportTypstArchive", async (doc) =>
         const image = doc.content.images.find((img) => img.uuid === uuid);
         if (!image)
           throw new Error(
-            "Referenced image not found. The image may have been deleted.",
+            `Referenced image "${uuid}" not found. The image may have been deleted.`,
           );
         buffer = new Uint8Array(await image.blob.arrayBuffer());
         ext = resolveUrlExtension(image.name || "");
