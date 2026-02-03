@@ -14,6 +14,8 @@ import {
 import { listen, sendToMain } from "@mr.python/promise-worker-ts";
 import { Mutex } from "async-mutex";
 import getProcessor from "./getProcessor";
+import JSZip from "jszip";
+import base64js from "base64-js";
 
 const typstAccessModel = new MemoryAccessModel();
 
@@ -128,6 +130,49 @@ async function typstPrepare(
 
 const mutex = new Mutex();
 
+function removeImages(content: DocumentBase["content"]): DocumentBase["content"] {
+  return {
+    ...content,
+    images: [],
+  };
+}
+
+function dataUrlToUint8Array(dataUrl: string): Uint8Array {
+  const match = /^data:(?<type>[^;]+);base64,(?<data>.+)$/u.exec(dataUrl);
+  if (!match?.groups?.data) throw new Error("Invalid data URL");
+  return Uint8Array.from(base64js.toByteArray(match.groups.data));
+}
+
+function dataUrlToExtension(dataUrl: string): string {
+  const match = /^data:(?<type>[^;]+);base64,/u.exec(dataUrl);
+  const type = match?.groups?.type ?? "application/octet-stream";
+  const map: Record<string, string> = {
+    "image/png": "png",
+    "image/jpeg": "jpg",
+    "image/jpg": "jpg",
+    "image/svg+xml": "svg",
+    "image/webp": "webp",
+  };
+  return map[type] ?? "bin";
+}
+
+function resolveUrlExtension(url: string): string {
+  const normalized = url.split("?")[0];
+  const match = /\.([a-zA-Z0-9]+)$/.exec(normalized);
+  return match?.[1] ?? "bin";
+}
+
+function replaceAssetReferences(
+  typst: string,
+  assets: Map<string, string>,
+): string {
+  let result = typst;
+  for (const [filename, assetPath] of assets) {
+    result = result.split(`image("${filename}"`).join(`image("${assetPath}"`);
+  }
+  return result;
+}
+
 listen<CompileTypstMessage>("compileTypst", async (data) =>
   mutex.runExclusive(async () => {
     const [, assets] = compilerPrepare(data);
@@ -148,11 +193,90 @@ listen<RenderTypstMessage>("renderTypst", async (data) =>
   }),
 );
 
+listen<ExportTypstArchiveMessage>("exportTypstArchive", async (doc) =>
+  mutex.runExclusive(async () => {
+    const zip = new JSZip();
+    const typstContents = await importTypstContents(doc.templateId);
+    const contentZod = await importContentZod(doc.templateId);
+    const contentForJson = contentZod.parse(removeImages(doc.content));
+    const contentForCompile = {
+      ...doc.content,
+      images: doc.content.images.map(
+        ({
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          blob,
+          ...rest
+        }) => rest,
+      ),
+    } satisfies PrecompileContent;
+    const [compiledContent, assets] = compilerPrepare(contentForCompile);
+
+    zip.file("content.json", JSON.stringify(contentForJson, null, 2));
+    const configJson = await import("@/utils/jsonDocument").then((mod) =>
+      mod.documentToJson(doc),
+    );
+    zip.file("config.json", configJson);
+
+    for (const [filename, content] of typstContents) {
+      zip.file(filename, content);
+    }
+
+    const assetPaths = new Map<string, string>();
+    for (const [filename, assetUrl] of assets) {
+      let buffer: Uint8Array;
+      let ext = "bin";
+      if (assetUrl.startsWith("asset://")) {
+        const uuid = assetUrl.substring("asset://".length);
+        const image = doc.content.images.find((img) => img.uuid === uuid);
+        if (!image) throw new Error(`Asset not found: ${uuid}`);
+        buffer = new Uint8Array(await image.blob.arrayBuffer());
+        ext = resolveUrlExtension(image.name || "");
+      } else if (assetUrl.startsWith("data:")) {
+        buffer = dataUrlToUint8Array(assetUrl);
+        ext = dataUrlToExtension(assetUrl);
+      } else {
+        const response = await fetch(assetUrl);
+        buffer = new Uint8Array(await response.arrayBuffer());
+        ext = resolveUrlExtension(assetUrl);
+      }
+      const assetPath = `assets/${filename}.${ext}`;
+      assetPaths.set(filename, assetPath);
+      zip.file(assetPath, buffer);
+    }
+
+    for (const [key, extra] of Object.entries(compiledContent.extraContents)) {
+      const typst = replaceAssetReferences(extra.typst, assetPaths);
+      zip.file(`extra-${key}.typ`, typst);
+    }
+
+    compiledContent.problems.forEach((problem, index) => {
+      const typst = replaceAssetReferences(problem.typst, assetPaths);
+      zip.file(`problem-${index}.typ`, typst);
+    });
+
+    const fonts = await importFontUrlEntries(doc.templateId);
+    for (const [, fontUrl] of fonts) {
+      if (!fontUrl.startsWith("/")) continue;
+      const res = await fetch(fontUrl);
+      const buffer = new Uint8Array(await res.arrayBuffer());
+      zip.file(fontUrl.slice(1), buffer);
+    }
+
+    return zip.generateAsync({ type: "uint8array" });
+  }),
+);
+
 import type { PromiseWorkerTagged } from "@mr.python/promise-worker-ts";
-import type { CompiledContent, PrecompileContent } from "@/types/document";
+import type {
+  CompiledContent,
+  DocumentBase,
+  PrecompileContent,
+} from "@/types/document";
 import {
+  importContentZod,
   importTypstContents,
   importUnifiedPlugins,
+  importFontUrlEntries,
 } from "@/utils/importTemplate";
 export type InitMessage = PromiseWorkerTagged<
   "init",
@@ -178,4 +302,9 @@ export type FetchAssetMessage = PromiseWorkerTagged<
   "fetchAsset",
   string,
   ArrayBuffer
+>;
+export type ExportTypstArchiveMessage = PromiseWorkerTagged<
+  "exportTypstArchive",
+  DocumentBase,
+  Uint8Array
 >;
