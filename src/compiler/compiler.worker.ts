@@ -1,10 +1,11 @@
 import {
-  $typst,
   createTypstCompiler,
   createTypstRenderer,
   FetchPackageRegistry,
   loadFonts,
   MemoryAccessModel,
+  type TypstCompiler,
+  type TypstRenderer,
 } from "@myriaddreamin/typst.ts";
 import {
   disableDefaultFontAssets,
@@ -14,14 +15,38 @@ import {
 import { listen, sendToMain } from "@mr.python/promise-worker-ts";
 import { Mutex } from "async-mutex";
 import getProcessor from "./getProcessor";
+import {
+  importTypstContents,
+  importUnifiedPlugins,
+} from "@/utils/importTemplate";
+import { CompileFormatEnum } from "@myriaddreamin/typst.ts/compiler";
+import type { PromiseWorkerTagged } from "@mr.python/promise-worker-ts";
+import type { CompiledContent, PrecompileContent } from "@/types/document";
 
 const typstAccessModel = new MemoryAccessModel();
 
 let processor: ReturnType<typeof getProcessor>;
+let compiler: TypstCompiler;
+let renderer: TypstRenderer;
+
+const mappedShadow: Map<string, Uint8Array> = new Map();
+
+function mapShadow(filename: string, data: Uint8Array) {
+  mappedShadow.set(filename, data);
+  compiler.mapShadow(filename, data);
+}
+function unmapShadow(filename: string) {
+  mappedShadow.delete(filename);
+  compiler.unmapShadow(filename);
+}
+function addSource(filename: string, data: string) {
+  mappedShadow.set(filename, new TextEncoder().encode(data));
+  compiler.addSource(filename, data);
+}
 
 listen<InitMessage>("init", async (data) => {
-  const compiler = createTypstCompiler(),
-    renderer = createTypstRenderer();
+  compiler = createTypstCompiler();
+  renderer = createTypstRenderer();
   await Promise.all([
     compiler.init({
       getModule: () => data.typstCompilerWasm,
@@ -39,10 +64,8 @@ listen<InitMessage>("init", async (data) => {
       processor = getProcessor(await importUnifiedPlugins(data.template));
     })(),
   ]);
-  $typst.setCompiler(compiler);
-  $typst.setRenderer(renderer);
   for (const [filename, content] of await importTypstContents(data.template))
-    $typst.addSource(filename, content);
+    addSource(filename, content);
 });
 
 const SHADOW_CACHE_AGE = 1000 * 30;
@@ -84,22 +107,20 @@ function compilerPrepare(
   ];
 }
 
-async function typstPrepare(
-  content: PrecompileContent,
-  assets: [string, string][],
-) {
+async function typstPrepare(content: PrecompileContent) {
   const now = Date.now();
   for (const [filename, expire] of Array.from(shadowCacheTime.entries()))
     if (expire === -1) shadowCacheTime.set(filename, now + SHADOW_CACHE_AGE);
     else if (now > expire) {
-      $typst.unmapShadow("/" + filename);
+      unmapShadow("/" + filename);
       shadowCacheTime.delete(filename);
     }
+  const [compiledContent, assets] = compilerPrepare(content);
   await Promise.all(
     assets.map(async ([filename, assetUrl]) => {
       const cached = shadowCacheTime.get(filename);
       if (cached === undefined)
-        $typst.mapShadow(
+        mapShadow(
           "/" + filename,
           new Uint8Array(
             await sendToMain<FetchAssetMessage>("fetchAsset", assetUrl),
@@ -108,21 +129,19 @@ async function typstPrepare(
       shadowCacheTime.set(filename, -1);
     }),
   );
-  const [compiledContent] = compilerPrepare(content);
-  $typst.addSource("/content.json", JSON.stringify(compiledContent));
-  for (const filename of lastExtraContents)
-    $typst.unmapShadow(`/${filename}.typ`);
+  addSource("/content.json", JSON.stringify(compiledContent));
+  for (const filename of lastExtraContents) unmapShadow(`/${filename}.typ`);
   lastExtraContents = new Set<string>();
   for (const [filename, content] of Object.entries(
     compiledContent.extraContents,
   )) {
     lastExtraContents.add(filename);
-    $typst.addSource(`/extra-${filename}.typ`, content.typst);
+    addSource(`/extra-${filename}.typ`, content.typst);
   }
   for (let i = 0; i < compiledContent.problems.length; ++i)
-    $typst.addSource(`/problem-${i}.typ`, compiledContent.problems[i].typst);
+    addSource(`/problem-${i}.typ`, compiledContent.problems[i].typst);
   for (let i = compiledContent.problems.length; i < lastProblemCount; ++i)
-    $typst.unmapShadow(`/problem-${i}.typ`);
+    unmapShadow(`/problem-${i}.typ`);
   lastProblemCount = content.problems.length;
 }
 
@@ -130,30 +149,39 @@ const mutex = new Mutex();
 
 listen<CompileTypstMessage>("compileTypst", async (data) =>
   mutex.runExclusive(async () => {
-    const [, assets] = compilerPrepare(data);
-    await typstPrepare(data, assets);
-    return $typst.pdf({
-      mainFilePath: "/main.typ",
-    });
+    await typstPrepare(data);
+    return (
+      await compiler.compile({
+        format: CompileFormatEnum.pdf,
+        mainFilePath: "/main.typ",
+      })
+    ).result;
   }),
 );
 
 listen<RenderTypstMessage>("renderTypst", async (data) =>
   mutex.runExclusive(async () => {
-    const [, assets] = compilerPrepare(data);
-    await typstPrepare(data, assets);
-    return $typst.svg({
-      mainFilePath: "/main.typ",
+    await typstPrepare(data);
+    const vector = (
+      await compiler.compile({
+        format: CompileFormatEnum.vector,
+        mainFilePath: "/main.typ",
+      })
+    ).result;
+    if (!vector) return undefined;
+    return await renderer.runWithSession(async (session) => {
+      renderer.manipulateData({
+        renderSession: session,
+        action: "reset",
+        data: vector,
+      });
+      return renderer.renderSvg({
+        renderSession: session,
+      });
     });
   }),
 );
 
-import type { PromiseWorkerTagged } from "@mr.python/promise-worker-ts";
-import type { CompiledContent, PrecompileContent } from "@/types/document";
-import {
-  importTypstContents,
-  importUnifiedPlugins,
-} from "@/utils/importTemplate";
 export type InitMessage = PromiseWorkerTagged<
   "init",
   {
