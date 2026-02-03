@@ -206,15 +206,11 @@ listen<ExportTypstArchiveMessage>("exportTypstArchive", async (doc) =>
     const contentForJson = contentZod.parse(removeImages(doc.content));
     const contentForCompile = {
       ...doc.content,
-      images: doc.content.images.map(
-        ({
-          blob: _blob,
-          ...rest
-        }) => {
-          void _blob;
-          return rest;
-        },
-      ),
+      images: doc.content.images.map((item) => {
+        const { blob, ...rest } = item;
+        void blob;
+        return rest;
+      }),
     } satisfies PrecompileContent;
     const [compiledContent, assets] = compilerPrepare(contentForCompile);
 
@@ -253,8 +249,7 @@ listen<ExportTypstArchiveMessage>("exportTypstArchive", async (doc) =>
       } else {
         const response = await fetch(assetUrl);
         buffer = new Uint8Array(await response.arrayBuffer());
-        ext = resolveUrlExtension(assetUrl);
-        if (!ext) ext = "bin";
+        ext = resolveUrlExtension(assetUrl) ?? "bin";
       }
       const assetPath = `assets/${filename}.${ext}`;
       assetPaths.set(filename, assetPath);
