@@ -174,7 +174,7 @@ function replaceAssetReferences(
   return typst.replaceAll(
     /image\("(?<name>[^"]+)"/g,
     (match, name: string) =>
-      assets.has(name) ? `image("${assets.get(name)}"` : match,
+      assets.has(name) ? `image("${assets.get(name)}")` : match,
   );
 }
 
@@ -236,7 +236,7 @@ listen<ExportTypstArchiveMessage>("exportTypstArchive", async (doc) =>
         const imageName = image?.name;
         if (!image) {
           const imageLabel = imageName
-            ? `"${imageName.replaceAll(/[\r\n\t]/g, " ")}" (id: ${uuid})`
+            ? `"${imageName.replaceAll(/\s+/g, " ")}" (id: ${uuid})`
             : `id: ${uuid}`;
           throw new Error(
             `Referenced image ${imageLabel} not found. The image may have been deleted. Please remove the image reference or re-add the image to the document.`,
