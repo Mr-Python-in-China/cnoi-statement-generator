@@ -208,10 +208,12 @@ listen<ExportTypstArchiveMessage>("exportTypstArchive", async (doc) =>
       ...doc.content,
       images: doc.content.images.map(
         ({
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          blob,
+          blob: _blob,
           ...rest
-        }) => rest,
+        }) => {
+          void _blob;
+          return rest;
+        },
       ),
     } satisfies PrecompileContent;
     const [compiledContent, assets] = compilerPrepare(contentForCompile);
@@ -234,10 +236,14 @@ listen<ExportTypstArchiveMessage>("exportTypstArchive", async (doc) =>
         const uuid = assetUrl.slice(ASSET_URL_PREFIX.length);
         const image = doc.content.images.find((img) => img.uuid === uuid);
         const imageName = image?.name;
-        if (!image)
+        if (!image) {
+          const imageLabel = imageName
+            ? `"${imageName}" (id: ${uuid})`
+            : `id: ${uuid}`;
           throw new Error(
-            `Referenced image${imageName ? ` "${imageName}"` : ""} (id: ${uuid}) not found. The image may have been deleted. Please remove the image reference or re-add the image to the document.`,
+            `Referenced image ${imageLabel} not found. The image may have been deleted. Please remove the image reference or re-add the image to the document.`,
           );
+        }
         buffer = new Uint8Array(await image.blob.arrayBuffer());
         ext = resolveUrlExtension(imageName || "");
         if (!ext) ext = mimeTypeToExtension(image.blob.type);
