@@ -129,6 +129,7 @@ async function typstPrepare(
 }
 
 const mutex = new Mutex();
+const ASSET_URL_PREFIX = "asset://";
 
 function removeImages(content: DocumentBase["content"]): DocumentBase["content"] {
   return {
@@ -229,11 +230,13 @@ listen<ExportTypstArchiveMessage>("exportTypstArchive", async (doc) =>
     for (const [filename, assetUrl] of assets) {
       let buffer: Uint8Array;
       let ext: string | undefined;
-      if (assetUrl.startsWith("asset://")) {
-        const uuid = assetUrl.substring("asset://".length);
+      if (assetUrl.startsWith(ASSET_URL_PREFIX)) {
+        const uuid = assetUrl.slice(ASSET_URL_PREFIX.length);
         const image = doc.content.images.find((img) => img.uuid === uuid);
         if (!image)
-          throw new Error(`Asset not found in document images: ${uuid}`);
+          throw new Error(
+            `Asset not found in document images: ${uuid}. The referenced image may have been deleted or the document corrupted.`,
+          );
         buffer = new Uint8Array(await image.blob.arrayBuffer());
         ext = resolveUrlExtension(image.name || "");
         if (!ext) ext = mimeTypeToExtension(image.blob.type);
