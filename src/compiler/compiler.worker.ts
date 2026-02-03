@@ -163,7 +163,7 @@ function mimeTypeToExtension(type: string): string {
 function resolveUrlExtension(url: string): string | undefined {
   const normalized = url.split("?")[0];
   const match = /\.([a-zA-Z0-9]+)$/.exec(normalized);
-  return match?.[1] ?? undefined;
+  return match?.[1];
 }
 
 function replaceAssetReferences(
@@ -173,9 +173,7 @@ function replaceAssetReferences(
   return typst.replaceAll(
     /image\("(?<name>[^"]+)"/g,
     (match, name: string) =>
-      name && assets.has(name)
-        ? `image("${assets.get(name)}"`
-        : match,
+      assets.has(name) ? `image("${assets.get(name)}"` : match,
   );
 }
 
@@ -234,7 +232,8 @@ listen<ExportTypstArchiveMessage>("exportTypstArchive", async (doc) =>
       if (assetUrl.startsWith("asset://")) {
         const uuid = assetUrl.substring("asset://".length);
         const image = doc.content.images.find((img) => img.uuid === uuid);
-        if (!image) throw new Error(`Asset not found: ${uuid}`);
+        if (!image)
+          throw new Error(`Asset not found in document images: ${uuid}`);
         buffer = new Uint8Array(await image.blob.arrayBuffer());
         ext = resolveUrlExtension(image.name || "");
         if (!ext) ext = mimeTypeToExtension(image.blob.type);
