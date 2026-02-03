@@ -235,16 +235,15 @@ listen<ExportTypstArchiveMessage>("exportTypstArchive", async (doc) =>
         const image = doc.content.images.find((img) => img.uuid === uuid);
         const imageName = image?.name;
         if (!image) {
-          const safeImageName = imageName?.replaceAll(/[\r\n\t]/g, " ");
-          const imageLabel = safeImageName
-            ? `"${safeImageName}" (id: ${uuid})`
+          const imageLabel = imageName
+            ? `"${imageName.replaceAll(/[\r\n\t]/g, " ")}" (id: ${uuid})`
             : `id: ${uuid}`;
           throw new Error(
             `Referenced image ${imageLabel} not found. The image may have been deleted. Please remove the image reference or re-add the image to the document.`,
           );
         }
         buffer = new Uint8Array(await image.blob.arrayBuffer());
-        ext = resolveUrlExtension(imageName || "");
+        ext = imageName ? resolveUrlExtension(imageName) : undefined;
         if (!ext) ext = mimeTypeToExtension(image.blob.type);
       } else if (assetUrl.startsWith("data:")) {
         buffer = dataUrlToUint8Array(assetUrl);
