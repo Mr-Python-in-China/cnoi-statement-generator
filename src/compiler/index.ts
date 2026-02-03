@@ -6,6 +6,7 @@ import {
   type RenderTypstMessage,
   type InitMessage,
   type FetchAssetMessage,
+  type ExportTypstSourceZipMessage,
 } from "./compiler.worker";
 import type { ContentBase, PrecompileContent } from "@/types/document";
 
@@ -327,6 +328,14 @@ export default class CompilerInstance {
 
   public registerAssetUrls(uuidToUrlMap: Map<string, string>): void {
     this.assetUrlMapping = new Map(uuidToUrlMap);
+  }
+
+  public async exportTypstSourceZip(data: ContentBase) {
+    return send<ExportTypstSourceZipMessage>(
+      "exportTypstSourceZip",
+      this.worker,
+      removeImageBlob(data),
+    );
   }
 
   private async fetchAsset(url: string): Promise<ArrayBuffer> {

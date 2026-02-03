@@ -181,6 +181,17 @@ listen<RenderTypstMessage>("renderTypst", async (data) =>
     });
   }),
 );
+listen<ExportTypstSourceZipMessage>("exportTypstSourceZip", async (data) =>
+  mutex.runExclusive(async () => {
+    await typstPrepare(data);
+    const JSZip = (await import("jszip")).default;
+    const zip = new JSZip();
+    mappedShadow.forEach((value, key) => {
+      zip.file(key.slice(1), value);
+    });
+    return zip.generateAsync({ type: "arraybuffer" });
+  }),
+);
 
 export type InitMessage = PromiseWorkerTagged<
   "init",
@@ -205,5 +216,10 @@ export type RenderTypstMessage = PromiseWorkerTagged<
 export type FetchAssetMessage = PromiseWorkerTagged<
   "fetchAsset",
   string,
+  ArrayBuffer
+>;
+export type ExportTypstSourceZipMessage = PromiseWorkerTagged<
+  "exportTypstSourceZip",
+  PrecompileContent,
   ArrayBuffer
 >;

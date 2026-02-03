@@ -110,6 +110,25 @@ const ContestEditorHeader: FC<{
       console.error("Error when exporting config.", error);
     }
   }, [message, doc]);
+  const onClickExportTypstSource = useCallback(async () => {
+    try {
+      const data = await compiler.exportTypstSourceZip(doc.content);
+      if (!data) throw new Error("Compiler did not return any data.");
+      const blob = new Blob([data], {
+        type: "application/zip",
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${doc.name}-source.zip`;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 0);
+      message.success("Typst 源代码导出成功");
+    } catch (e) {
+      message.error("Typst 源代码导出失败");
+      console.error("Error when exporting Typst source zip.", e);
+    }
+  }, [compiler, doc.name, doc.content, message]);
   const versionInfo = useVersionInfo();
   const menuGroup = useMemo(
     (): MenuGroup[] => [
@@ -143,6 +162,12 @@ const ContestEditorHeader: FC<{
             label: "导入文档",
             onSelect: onClickImportConfig,
           },
+          {
+            key: "export typst source",
+            label: "导出 Typst 源代码",
+            onSelect: onClickExportTypstSource,
+            disabled: typstInitStatus !== "fulfilled",
+          },
         ],
       },
       {
@@ -161,6 +186,7 @@ const ContestEditorHeader: FC<{
       navigate,
       onClickExportConfig,
       onClickExportPDF,
+      onClickExportTypstSource,
       onClickImportConfig,
       typstInitStatus,
       versionInfo.show,
