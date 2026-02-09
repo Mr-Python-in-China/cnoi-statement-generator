@@ -43,7 +43,7 @@
     "@uiw/react-codemirror": "^4.25.4",
     "antd": "^6.2.2",
     "async-mutex": "^0.5.0",
-    "axios": "^1.13.4",
+    "axios": "^1.13.5",
     "base64-js": "^1.5.1",
     "browser-update": "^3.3.63",
     "dayjs": "^1.11.19",
