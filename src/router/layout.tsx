@@ -1,8 +1,25 @@
+import { Outlet } from "react-router";
+import { ConfigProvider, App as AntApp } from "antd";
+import zhCN from "antd/locale/zh_CN";
 import { type FC } from "react";
 import { isRouteErrorResponse, useRouteError } from "react-router";
 import ErrorPage from "./errorPage";
 
-const ErrorBoundary: FC = () => {
+import "./main.css";
+
+const AppLayout = () => {
+  return (
+    <ConfigProvider locale={zhCN}>
+      <AntApp className="app">
+        <Outlet />
+      </AntApp>
+    </ConfigProvider>
+  );
+};
+
+export default AppLayout;
+
+export const ErrorBoundary: FC = () => {
   const error = useRouteError();
   return (
     <ErrorPage>
@@ -16,5 +33,3 @@ const ErrorBoundary: FC = () => {
     </ErrorPage>
   );
 };
-
-export default ErrorBoundary;

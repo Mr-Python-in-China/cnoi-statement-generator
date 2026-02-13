@@ -37,3 +37,6 @@ examples/*/problem-*.typ
 !examples/*/**/*.tsx
 
 templates/*/generated_schema.json
+
+.react-router/
+build/

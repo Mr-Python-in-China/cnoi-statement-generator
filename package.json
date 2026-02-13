@@ -9,17 +9,18 @@
     "url": "https://github.com/Mr-Python-in-China/cnoi-statement-generator"
   },
   "scripts": {
-    "dev": "vite",
-    "build": "tsc -b && vite build",
+    "dev": "react-router dev",
+    "build": "tsc -b && react-router build",
     "lint": "eslint . --cache --cache-location ./node_modules/.cache/.eslintcache",
     "format": "prettier -w . --cache",
-    "preview": "vite preview",
+    "preview": "react-router preview",
+    "router-typegen": "react-router typegen",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "compile-examples": "vite-node scripts/compile-examples.ts",
     "quality": "prettier -c . --cache && npm run lint && tsc -b && npm run test",
-    "prepare": "husky && npm run compile-examples"
+    "prepare": "husky && npm run compile-examples && npm run router-typegen"
   },
   "dependencies": {
     "@codemirror/lang-markdown": "^6.5.0",
@@ -37,6 +38,7 @@
     "@myriaddreamin/typst-ts-renderer": "0.7.0-rc2",
     "@myriaddreamin/typst-ts-web-compiler": "0.7.0-rc2",
     "@myriaddreamin/typst.ts": "0.7.0-rc2",
+    "@react-router/node": "^7.13.0",
     "@reactuses/core": "^6.1.11",
     "@uiw/react-codemirror": "^4.25.4",
     "antd": "^6.2.2",
@@ -46,11 +48,12 @@
     "browser-update": "^3.3.63",
     "dayjs": "^1.11.19",
     "dexie": "^4.2.1",
+    "isbot": "^5.1.35",
     "jszip": "^3.10.1",
     "lodash-es": "^4.17.22",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
-    "react-router": "^7.11.0",
+    "react-router": "^7.13.0",
     "remark": "^15.0.1",
     "remark-directive": "^4.0.0",
     "remark-gfm": "^4.0.1",
@@ -67,6 +70,7 @@
     "@eslint/js": "^9.39.2",
     "@mr.python/vite-plugin-remark-rehype": "^0.1.1",
     "@myriaddreamin/typst-ts-node-compiler": "0.7.0-rc2",
+    "@react-router/dev": "^7.13.0",
     "@types/browser-update": "^3.3.3",
     "@types/fontkit": "^2.0.8",
     "@types/lodash-es": "^4.17.12",
@@ -102,6 +106,8 @@
     "vite": "^7.3.1",
     "vite-node": "^5.3.0",
     "vite-plugin-assets-split": "^1.0.1",
+    "vite-plugin-babel": "^1.5.1",
+    "vite-plugin-devtools-json": "^1.0.0",
     "vitest": "^4.0.10"
   }
 }

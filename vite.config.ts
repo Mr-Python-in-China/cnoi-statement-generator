@@ -1,11 +1,13 @@
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineConfig, type PluginOption, type UserConfig } from "vite";
-import react from "@vitejs/plugin-react";
+import { reactRouter } from "@react-router/dev/vite";
+import babel from "vite-plugin-babel";
 import { exec } from "node:child_process";
 import "vitest/config";
 import viteAssetsSplitPlugin from "vite-plugin-assets-split";
 import ViteRemarkRehypePlugin from "@mr.python/vite-plugin-remark-rehype";
+import devtoolsJson from "vite-plugin-devtools-json";
 
 const fontMetaPlugin = (): PluginOption => ({
   name: "font-meta",
@@ -44,9 +46,12 @@ export default defineConfig(async (): Promise<UserConfig> => {
   return {
     base: "/",
     plugins: [
-      react({
-        babel: {
-          plugins: [["babel-plugin-react-compiler"]],
+      reactRouter(),
+      babel({
+        filter: /\.[jt]sx?$/,
+        babelConfig: {
+          presets: ["@babel/preset-typescript"],
+          plugins: [["babel-plugin-react-compiler", {}]],
         },
       }),
       fontMetaPlugin(),
@@ -54,6 +59,7 @@ export default defineConfig(async (): Promise<UserConfig> => {
         limit: 20 * 1024 * 1024, // 20 MB
       }),
       ViteRemarkRehypePlugin(),
+      devtoolsJson(),
     ],
     resolve: {
       alias: [
