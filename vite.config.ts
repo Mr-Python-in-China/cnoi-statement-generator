@@ -94,6 +94,7 @@ export default defineConfig(async (): Promise<UserConfig> => {
       format: "es",
     },
     build: {
+      sourcemap: true,
       rollupOptions: {
         output: {
           manualChunks: (id) => {
@@ -103,8 +104,17 @@ export default defineConfig(async (): Promise<UserConfig> => {
             if (match) return `example-content-${match[1]}`;
           },
         },
+        onwarn(warning, defaultHandler) {
+          // https://github.com/vitejs/vite/issues/15012
+          if (
+            warning.code === "SOURCEMAP_ERROR" &&
+            warning.message.includes("resolve original location") &&
+            warning.pos === 0
+          )
+            return;
+          defaultHandler(warning);
+        },
       },
-      sourcemap: true,
     },
     test: {
       coverage: {
