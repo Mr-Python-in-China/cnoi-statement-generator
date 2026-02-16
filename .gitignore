@@ -26,17 +26,12 @@ dist-ssr
 temp
 coverage
 
-examples/*/**/*
-!examples/*/*.typ
-!examples/*/content.json
-!examples/*/extra-*.md
-examples/*/extra-*.typ
-!examples/*/problem-*.md
-examples/*/problem-*.typ
-!examples/*/**/*.ts
-!examples/*/**/*.tsx
-
-templates/*/generated_schema.json
-
 .react-router/
 build/
+
+examples/*/**/*
+!examples/*/content.json
+!examples/*/extra-*.md
+!examples/*/problem-*.md
+!examples/*/**/*.ts
+!examples/*/**/*.tsx

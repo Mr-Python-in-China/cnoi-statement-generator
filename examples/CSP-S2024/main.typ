@@ -1,1 +1,0 @@
-../../templates/cnoi/typst/main.typ

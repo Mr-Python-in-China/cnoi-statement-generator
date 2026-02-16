@@ -18,9 +18,10 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
+    "update-example-template": "vite-node scripts/update-example-template.ts",
     "compile-examples": "vite-node scripts/compile-examples.ts",
     "quality": "prettier -c . --cache && npm run lint && tsc -b && npm run test",
-    "prepare": "husky && npm run compile-examples && npm run router-typegen"
+    "prepare": "husky && npm run update-example-template && npm run compile-examples && npm run router-typegen"
   },
   "dependencies": {
     "@codemirror/lang-markdown": "^6.5.0",
