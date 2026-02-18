@@ -1,4 +1,6 @@
 import consola from "assets/typst/fonts/consola.ttf?font-meta";
+import consolab from "assets/typst/fonts/consolab.ttf?font-meta";
+import consolai from "assets/typst/fonts/consolai.ttf?font-meta";
 import latinmodernMath from "assets/typst/fonts/latinmodern-math.otf?font-meta";
 import lmroman10Bold from "assets/typst/fonts/lmroman10-bold.otf?font-meta";
 import lmroman10BoldItalic from "assets/typst/fonts/lmroman10-bolditalic.otf?font-meta";
@@ -14,6 +16,8 @@ import simKai from "assets/typst/fonts/simkai.ttf?font-meta";
 
 export default [
   consola,
+  consolab,
+  consolai,
   latinmodernMath,
   lmroman10Bold,
   lmroman10BoldItalic,
