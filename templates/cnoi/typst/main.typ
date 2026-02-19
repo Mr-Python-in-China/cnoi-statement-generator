@@ -162,6 +162,7 @@
   }
   it
 }
+#show link: set text(fill: rgb("#ed028c"))
 #show raw: it => {
   let mono-font = ("Consolas", "SimSun")
   set text(font: mono-font, size: 12pt)
