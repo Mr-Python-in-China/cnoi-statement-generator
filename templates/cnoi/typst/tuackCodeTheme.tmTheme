@@ -88,6 +88,17 @@
           <string></string>
         </dict>
       </dict>
+      <dict>
+        <key>name</key>
+        <string>#include 后的尖括号</string>
+        <key>scope</key>
+        <string>string.quoted.other</string>
+        <key>settings</key>
+        <dict>
+          <key>fontStyle</key>
+          <string></string>
+        </dict>
+      </dict>
     </array>
   </dict>
 </plist>
