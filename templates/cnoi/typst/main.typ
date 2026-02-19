@@ -131,9 +131,9 @@
   )
 }
 
-#let in-raw-strong-set = state("in-raw-strong-set", ())
+#let in-raw = state("in-raw", false)
 #show strong: st => {
-  if in-raw-strong-set.get().find(x => x == st) == none {
+  if in-raw.get() { st } else {
     set text(font: ("Latin Modern Roman 12", "SimHei"))
     show regex("\p{sc=Hani}+"): s => {
       underline(s, offset: 3pt, stroke: (
@@ -142,8 +142,8 @@
         dash: (array: (0em, 1em), phase: 0.5em),
       ))
     }
+    st
   }
-  st
 }
 #show heading.where(level: 1): it => {
   set text(size: 18pt, weight: "regular", font: ("Latin Modern Roman 17", "SimHei"))
@@ -155,25 +155,17 @@
   set heading(bookmarked: true)
   pad(left: 1.5em, top: 1em, bottom: .5em, [【] + it.body + [】])
 }
-#let in-raw-emph-set = state("in-raw-emph-set", ())
 #show emph: it => {
-  if in-raw-emph-set.get().find(x => x == it) == none {
+  if in-raw.get() { it } else {
     set text(font: "Latin Modern Roman", style: "italic", weight: "bold")
+    it
   }
-  it
 }
 #show link: set text(fill: rgb("#ed028c"))
 #show raw: it => {
+  in-raw.update(true)
   let mono-font = ("Consolas", "SimSun")
   set text(font: mono-font, size: 12pt)
-  show strong: it => {
-    in-raw-strong-set.update(arr => arr + (it,))
-    it
-  }
-  show emph: it => {
-    in-raw-emph-set.update(arr => arr + (it,))
-    it
-  }
   if not it.block { it } else {
     set par(leading: 0pt, spacing: 0pt)
     set block(above: 10pt, below: 10pt)
@@ -220,6 +212,7 @@
     }
     block(it)
   }
+  in-raw.update(false)
 }
 #set raw(tab-size: 4, theme: "./tuackCodeTheme.tmTheme")
 
