@@ -157,7 +157,7 @@
 }
 #show emph: it => {
   if in-raw.get() { it } else {
-    set text(font: "Latin Modern Roman", style: "italic", weight: "bold")
+    set text(font: "Latin Modern Roman", weight: "bold")
     it
   }
 }
