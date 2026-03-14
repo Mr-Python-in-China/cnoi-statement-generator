@@ -25,10 +25,11 @@ const SUPPORTED_IMAGE_TYPES = [
   "image/jpeg",
   "image/gif",
   "image/svg+xml",
+  "image/webp",
 ] as const;
 
 const ACCEPT_IMAGE_TYPES =
-  ".png,.jpeg,.jpg,.gif,.svg,image/png,image/jpeg,image/gif,image/svg+xml";
+  ".png,.jpeg,.jpg,.gif,.svg,.webp,image/png,image/jpeg,image/gif,image/svg+xml,image/webp";
 
 export default function LocalImageManager<
   Content extends ContentBase = ContentBase,
