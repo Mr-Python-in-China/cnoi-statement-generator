@@ -150,25 +150,24 @@ const mutex = new Mutex();
 listen<CompileTypstMessage>("compileTypst", async (data) =>
   mutex.runExclusive(async () => {
     await typstPrepare(data);
-    return (
-      await compiler.compile({
-        format: CompileFormatEnum.pdf,
-        mainFilePath: "/main.typ",
-      })
-    ).result;
+    const result = await compiler.compile({
+      format: CompileFormatEnum.pdf,
+      mainFilePath: "/main.typ",
+    });
+    if (!result.result) throw result.diagnostics;
+    return result.result;
   }),
 );
 
 listen<RenderTypstMessage>("renderTypst", async (data) =>
   mutex.runExclusive(async () => {
     await typstPrepare(data);
-    const vector = (
-      await compiler.compile({
-        format: CompileFormatEnum.vector,
-        mainFilePath: "/main.typ",
-      })
-    ).result;
-    if (!vector) return undefined;
+    const result = await compiler.compile({
+      format: CompileFormatEnum.vector,
+      mainFilePath: "/main.typ",
+    });
+    const vector = result.result;
+    if (!vector) throw result.diagnostics;
     return await renderer.runWithSession(async (session) => {
       renderer.manipulateData({
         renderSession: session,
@@ -206,12 +205,12 @@ export type InitMessage = PromiseWorkerTagged<
 export type CompileTypstMessage = PromiseWorkerTagged<
   "compileTypst",
   PrecompileContent,
-  Uint8Array | undefined
+  Uint8Array
 >;
 export type RenderTypstMessage = PromiseWorkerTagged<
   "renderTypst",
   PrecompileContent,
-  string | undefined
+  string
 >;
 export type FetchAssetMessage = PromiseWorkerTagged<
   "fetchAsset",

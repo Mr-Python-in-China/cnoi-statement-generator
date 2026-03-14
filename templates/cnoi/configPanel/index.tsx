@@ -1,32 +1,18 @@
-import {
-  Button,
-  Card,
-  DatePicker,
-  Input,
-  Switch,
-  Tooltip,
-  App,
-  Upload,
-  Image,
-} from "antd";
+import { Button, DatePicker, Input, Switch, Tooltip } from "antd";
 import { useEffect, useRef, useState, type FC } from "react";
 import dayjs from "dayjs";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faCircleQuestion,
-  faInbox,
-  faPenToSquare,
   faPlus,
-  faTrashCan,
   faXmark,
 } from "@fortawesome/free-solid-svg-icons";
-import { pushBackImage, eraseImageByIndex } from "@/utils/imageUpdater";
 
 import "./index.css";
-import { faMarkdown } from "@fortawesome/free-brands-svg-icons";
 import ProblemList from "./problemList";
 import type { Content, DateArr } from "../types";
 import type { ConfigPanelFC } from "@/types/templates";
+import LocalImageManager from "@/components/LocalImageManager";
 
 const QuestionMarkToolTip: FC<{ children: string }> = ({ children }) => (
   <sup>
@@ -41,12 +27,8 @@ const ConfigPanel: ConfigPanelFC<Content> = ({
   updateContent,
   setPanel,
 }) => {
-  const { message } = App.useApp();
   const formRef = useRef<HTMLFormElement>(null);
   const [width, setWidth] = useState(220);
-  const [imageEditModeId, setImageEditModeId] = useState<number | undefined>(
-    undefined,
-  );
   useEffect(() => {
     if (!formRef.current) return;
     const form = formRef.current;
@@ -80,14 +62,6 @@ const ConfigPanel: ConfigPanelFC<Content> = ({
   ) {
     updateContent((x) => {
       cb(x.support_languages[index]);
-    });
-  }
-  function updateImages(
-    index: number,
-    cb: (x: Content["images"][number]) => void,
-  ) {
-    updateContent((x) => {
-      cb(x.images[index]);
     });
   }
   return (
@@ -302,107 +276,7 @@ const ConfigPanel: ConfigPanelFC<Content> = ({
           panelWidth: width,
         }}
       />
-      <div className="contest-editor-config-label contest-editor-config-image">
-        <div>本地图片</div>
-        <div>
-          {content.images.map((img, index) => {
-            return (
-              <Card
-                key={img.uuid}
-                classNames={{ body: "contest-editor-config-image-card" }}
-              >
-                <Image src={img.url} alt={img.name} height={150} />
-                <div>
-                  {imageEditModeId !== index ? (
-                    <>
-                      <div>{img.name}</div>
-                      <Button
-                        type="text"
-                        icon={<FontAwesomeIcon icon={faPenToSquare} />}
-                        onClick={() => setImageEditModeId(index)}
-                      />
-                    </>
-                  ) : (
-                    <Input
-                      name="edit image name"
-                      value={img.name}
-                      autoFocus
-                      onChange={(e) =>
-                        updateImages(index, (x) => {
-                          x.name = e.target.value;
-                        })
-                      }
-                      onBlur={() => setImageEditModeId(undefined)}
-                    />
-                  )}
-                </div>
-                <div>
-                  <Button
-                    type="text"
-                    icon={<FontAwesomeIcon icon={faMarkdown} />}
-                    onClick={() =>
-                      navigator.clipboard
-                        .writeText(`![${img.name}](asset://${img.uuid})`)
-                        .then(
-                          () => message.success("复制成功"),
-                          (e) => {
-                            console.error("Error when copy.", e);
-                            message.error(
-                              "复制失败：" +
-                                (e instanceof Error ? e.message : String(e)),
-                            );
-                          },
-                        )
-                    }
-                  />
-                  <Button
-                    type="text"
-                    icon={<FontAwesomeIcon icon={faTrashCan} />}
-                    onClick={async () => {
-                      eraseImageByIndex(index, updateContent);
-                    }}
-                  />
-                </div>
-              </Card>
-            );
-          })}
-          <Upload.Dragger
-            name="add image"
-            beforeUpload={(file) => {
-              if (
-                ![
-                  "image/png",
-                  "image/jpeg",
-                  "image/gif",
-                  "image/svg+xml",
-                ].includes(file.type)
-              ) {
-                message.error("不支持该图片类型。");
-                return Upload.LIST_IGNORE;
-              }
-              return true;
-            }}
-            customRequest={async (options) => {
-              const file = options.file;
-              if (!(file instanceof File)) throw new Error("Invalid file");
-              pushBackImage(
-                { name: file.name, uuid: crypto.randomUUID(), blob: file },
-                updateContent,
-              );
-            }}
-            showUploadList={false}
-            accept=".png,.jpeg,.gif,.svg,image/png,image/jpeg,image/gif,image/svg+xml"
-            multiple
-            maxCount={0}
-          >
-            <FontAwesomeIcon icon={faInbox} size="3x" />
-            <div>点击或拖拽上传</div>
-            <div className="contest-editor-config-upload-hint">
-              目前支持格式 PNG/JPEG/GIF/SVG
-            </div>
-          </Upload.Dragger>
-        </div>
-      </div>
+      <LocalImageManager {...{ content, updateContent }} />
     </form>
   );
 };

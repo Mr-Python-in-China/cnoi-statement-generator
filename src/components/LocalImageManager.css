@@ -1,0 +1,39 @@
+.contest-editor-config-image-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, 150px);
+  gap: 8px;
+  margin-left: 8px;
+
+  > * {
+    height: 216px;
+  }
+
+  .contest-editor-config-image-card {
+    height: 100%;
+    padding: unset;
+    display: flex;
+    flex-direction: column;
+
+    > :nth-child(2) {
+      margin-left: 4px;
+      margin-right: 4px;
+      flex: 1;
+      display: flex;
+      align-items: center;
+
+      > :nth-child(1) {
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        overflow: hidden;
+      }
+    }
+
+    > :nth-child(3) {
+      margin-left: auto;
+    }
+  }
+}
+
+.contest-editor-config-upload-hint {
+  color: var(--ant-color-text-description);
+}

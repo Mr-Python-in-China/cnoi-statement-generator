@@ -1,4 +1,5 @@
 import type { ConfigPanelFC } from "@/types/templates";
+import LocalImageManager from "@/components/LocalImageManager";
 import type { Content } from "./contentZod";
 import { Input, Select } from "antd";
 import themeList from "./themeList";
@@ -78,6 +79,7 @@ const ConfigPanel: ConfigPanelFC<Content> = ({ content, updateContent }) => {
           }
         />
       </label>
+      <LocalImageManager {...{ content, updateContent }} />
     </form>
   );
 };

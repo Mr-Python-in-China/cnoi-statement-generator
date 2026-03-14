@@ -285,8 +285,8 @@ export default class CompilerInstance {
   public readonly compileToSvgDebounced = (() => {
     type Task = {
       args: ContentBase;
-      promise: Promise<string | undefined>;
-      resolve: (v: string | undefined) => void;
+      promise: Promise<string>;
+      resolve: (v: string) => void;
       reject: (e: unknown) => void;
     };
     let currentTask: Task | undefined = undefined;
@@ -307,9 +307,9 @@ export default class CompilerInstance {
         });
     };
     return (args: ContentBase) => {
-      let resolve: (v: string | undefined) => void;
+      let resolve: (v: string) => void;
       let reject: (e: unknown) => void;
-      const promise = new Promise<string | undefined>((res, rej) => {
+      const promise = new Promise<string>((res, rej) => {
         resolve = res;
         reject = rej;
       });
