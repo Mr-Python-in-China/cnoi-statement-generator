@@ -109,6 +109,6 @@
     "vite-plugin-assets-split": "^1.0.1",
     "vite-plugin-babel": "^1.5.1",
     "vite-plugin-devtools-json": "^1.0.0",
-    "vitest": "^4.0.10"
+    "vitest": "^4.1.0"
   }
 }
