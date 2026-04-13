@@ -98,7 +98,7 @@
     "pdf-to-img": "^5.0.0",
     "pngjs": "^7.0.0",
     "postcss-load-config": "^6.0.1",
-    "postcss-preset-env": "^11.2.0",
+    "postcss-preset-env": "^11.2.1",
     "prettier": "^3.8.1",
     "sharp": "^0.34.5",
     "ts-toolbelt": "^9.6.0",
