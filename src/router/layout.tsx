@@ -3,6 +3,7 @@ import { ConfigProvider, App as AntApp } from "antd";
 import zhCN from "antd/locale/zh_CN";
 import { type FC } from "react";
 import { isRouteErrorResponse, useRouteError } from "react-router";
+import BackupReminder from "@/components/BackupReminder";
 import ErrorPage from "./errorPage";
 
 import "./main.css";
@@ -11,6 +12,7 @@ const AppLayout = () => {
   return (
     <ConfigProvider locale={zhCN}>
       <AntApp className="app">
+        <BackupReminder />
         <Outlet />
       </AntApp>
     </ConfigProvider>
