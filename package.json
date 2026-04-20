@@ -54,7 +54,7 @@
     "lodash-es": "^4.18.1",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
-    "react-router": "^7.13.0",
+    "react-router": "^7.14.1",
     "remark": "^15.0.1",
     "remark-directive": "^4.0.0",
     "remark-gfm": "^4.0.1",
