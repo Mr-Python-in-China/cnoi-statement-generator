@@ -8,6 +8,7 @@ export type MenuItem = {
   onSelect?: () => void;
   children?: MenuItem[];
   disabled?: boolean;
+  shortcut?: string;
 };
 
 export type MenuGroup = {
@@ -27,6 +28,81 @@ type MenuListProps = {
 
 const isPathOpen = (candidate: string[], openPath: string[]) =>
   candidate.every((key, idx) => openPath[idx] === key);
+
+const normalizeShortcutKey = (key: string) => {
+  const value = key.trim().toLowerCase();
+  if (value === "esc") return "escape";
+  if (value === "del") return "delete";
+  if (value === "space") return " ";
+  return value;
+};
+
+const parseShortcut = (shortcut: string) => {
+  const parts = shortcut
+    .split("+")
+    .map((part) => part.trim())
+    .filter(Boolean);
+  const parsed = {
+    key: "",
+    ctrl: false,
+    alt: false,
+    shift: false,
+    meta: false,
+  };
+
+  for (const part of parts) {
+    const token = part.toLowerCase();
+    if (token === "ctrl" || token === "control") {
+      parsed.ctrl = true;
+      continue;
+    }
+    if (token === "alt" || token === "option") {
+      parsed.alt = true;
+      continue;
+    }
+    if (token === "shift") {
+      parsed.shift = true;
+      continue;
+    }
+    if (token === "cmd" || token === "command" || token === "meta") {
+      parsed.meta = true;
+      continue;
+    }
+    parsed.key = normalizeShortcutKey(token);
+  }
+
+  if (!parsed.key) return null;
+  return parsed;
+};
+
+const isShortcutMatch = (event: KeyboardEvent, shortcut: string) => {
+  const parsed = parseShortcut(shortcut);
+  if (!parsed) return false;
+  const key = normalizeShortcutKey(event.key);
+  if (key !== parsed.key) return false;
+  return (
+    event.ctrlKey === parsed.ctrl &&
+    event.altKey === parsed.alt &&
+    event.shiftKey === parsed.shift &&
+    event.metaKey === parsed.meta
+  );
+};
+
+const collectMenuItems = (groups: MenuGroup[]) => {
+  const items: MenuItem[] = [];
+  const walk = (list?: MenuItem[]) => {
+    if (!list?.length) return;
+    for (const item of list) {
+      items.push(item);
+      if (item.children?.length) walk(item.children);
+    }
+  };
+
+  for (const group of groups) {
+    walk(group.items);
+  }
+  return items;
+};
 
 const MenuList: FC<MenuListProps> = ({
   items,
@@ -57,6 +133,9 @@ const MenuList: FC<MenuListProps> = ({
           >
             <div className="menu-item-main">
               <span className="menu-item-label">{item.label}</span>
+              {item.shortcut ? (
+                <span className="menu-item-shortcut">{item.shortcut}</span>
+              ) : null}
             </div>
             {item.children?.length ? (
               <span className="menu-item-arrow">&gt;</span>
@@ -97,6 +176,28 @@ const MenuBar: FC<{ menuGroup: MenuGroup[] }> = ({ menuGroup }) => {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  useEffect(() => {
+    const items = collectMenuItems(menuGroup).filter(
+      (item) => item.shortcut && item.onSelect && !item.children?.length,
+    );
+    if (!items.length) return;
+
+    const handleKeydown = (event: KeyboardEvent) => {
+      const match = items.find(
+        (item) => item.shortcut && isShortcutMatch(event, item.shortcut),
+      );
+      if (!match || match.disabled) return;
+      event.preventDefault();
+      event.stopPropagation();
+      match.onSelect?.();
+      setOpenRoot(null);
+      setOpenPath([]);
+    };
+
+    window.addEventListener("keydown", handleKeydown);
+    return () => window.removeEventListener("keydown", handleKeydown);
+  }, [menuGroup]);
 
   const handleRootClick = (group: MenuGroup) => {
     // If the root has no submenu, trigger its action directly.

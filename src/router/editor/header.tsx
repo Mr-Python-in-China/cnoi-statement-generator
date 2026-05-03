@@ -1,6 +1,7 @@
 import type { ImmerDocument } from "@/types/document";
 import {
   useCallback,
+  useEffect,
   useMemo,
   type Dispatch,
   type FC,
@@ -13,21 +14,21 @@ import { App } from "antd";
 import "./header.css";
 import useTemplateManager from "@/components/templateManagerContext";
 import useTypstInitStatus from "@/components/typstInitStatusContext";
-import {
-  exportDocument,
-  importDocument,
-  toImmerContent,
-} from "@/utils/contestDataUtils";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faAngleLeft } from "@fortawesome/free-solid-svg-icons";
 import { useNavigate } from "react-router";
 import { useVersionInfo } from "@/components/useVersionInfo";
+import { saveDocument } from "@/storage";
 
 const ContestEditorHeader: FC<{
   doc: ImmerDocument;
+  path: string;
   updateDoc: Updater<ImmerDocument>;
   setPanel: Dispatch<SetStateAction<string>>;
-}> = ({ doc, updateDoc: updateDoc, setPanel }) => {
+  setPath: Dispatch<SetStateAction<string>>;
+  modified: boolean;
+  setModified: Dispatch<SetStateAction<boolean>>;
+}> = ({ doc, path, modified, setModified }) => {
   const { notification, message } = App.useApp();
   const { compiler } = useTemplateManager();
   const navigate = useNavigate();
@@ -73,43 +74,6 @@ const ContestEditorHeader: FC<{
       });
     }
   }, [compiler, doc.content, doc.name, notification]);
-  const onClickImportConfig = useCallback(async () => {
-    try {
-      const data = await importDocument();
-      if (!data) return;
-      if (data.uuid === "") data.uuid = doc.uuid;
-      if (data.uuid !== doc.uuid) {
-        message.error("导入的文档不匹配。");
-        return;
-      }
-
-      // Clear old images
-      doc.content.images.forEach((img) => URL.revokeObjectURL(img.url));
-
-      updateDoc(
-        () =>
-          ({
-            ...data,
-            content: toImmerContent(data.content),
-            previewImage: undefined,
-          }) satisfies ImmerDocument,
-      );
-      setPanel("config");
-      message.success("文档导入成功");
-    } catch (error) {
-      message.error("文档导入失败");
-      console.error("Error when importing config.", error);
-    }
-  }, [doc.content.images, doc.uuid, message, setPanel, updateDoc]);
-  const onClickExportConfig = useCallback(async () => {
-    try {
-      await exportDocument(doc);
-      message.success("文档备份成功");
-    } catch (error) {
-      message.error("文档备份失败");
-      console.error("Error when exporting config.", error);
-    }
-  }, [message, doc]);
   const onClickExportTypstSource = useCallback(async () => {
     try {
       const data = await compiler.exportTypstSourceZip(doc.content);
@@ -129,6 +93,15 @@ const ContestEditorHeader: FC<{
       console.error("Error when exporting Typst source zip.", e);
     }
   }, [compiler, doc.name, doc.content, message]);
+  const onClickSave = useCallback(async () => {
+    try {
+      await saveDocument(new URL(path), doc);
+      setModified(false);
+    } catch (e) {
+      console.error("Error when saving document.", e);
+      message.error("保存失败");
+    }
+  }, [doc, path, message, setModified]);
   const versionInfo = useVersionInfo();
   const menuGroup = useMemo(
     (): MenuGroup[] => [
@@ -147,20 +120,17 @@ const ContestEditorHeader: FC<{
         label: "文件",
         items: [
           {
+            key: "save",
+            label: "保存",
+            onSelect: onClickSave,
+            shortcut: "Ctrl+S",
+          },
+          {
             key: "export PDF",
             label: "导出 PDF",
             onSelect: onClickExportPDF,
             disabled: typstInitStatus !== "fulfilled",
-          },
-          {
-            key: "backup document",
-            label: "备份文档",
-            onSelect: onClickExportConfig,
-          },
-          {
-            key: "import document",
-            label: "导入文档",
-            onSelect: onClickImportConfig,
+            shortcut: "Ctrl+Shift+P",
           },
           {
             key: "export typst source",
@@ -184,20 +154,25 @@ const ContestEditorHeader: FC<{
     ],
     [
       navigate,
-      onClickExportConfig,
       onClickExportPDF,
       onClickExportTypstSource,
-      onClickImportConfig,
       typstInitStatus,
       versionInfo.show,
+      onClickSave,
     ],
   );
+  useEffect(() => {
+    document.title = `${modified ? "● " : ""}${doc.name} - CNOI Statement Generator`;
+  });
   return (
     <header>
       <div>
         <MenuBar menuGroup={menuGroup} />
       </div>
-      <div className="file-name">{doc.name}</div>
+      <div className="title">
+        <div className="file-name">{doc.name}</div>
+        {modified && <div className="modified-indicator">●</div>}
+      </div>
       {versionInfo.contextHolder}
     </header>
   );

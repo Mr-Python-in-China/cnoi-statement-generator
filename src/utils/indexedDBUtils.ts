@@ -8,7 +8,7 @@ import type {
 import Dexie from "dexie";
 import { toImmerContent } from "./contestDataUtils";
 
-export class DocumnetNotFoundError extends Error {
+export class DocumentNotFoundError extends Error {
   constructor() {
     super("Document not found in IndexedDB");
   }
@@ -174,7 +174,7 @@ export async function loadDocumentFromDB(uuid: string): Promise<ImmerDocument> {
     db.documents_content.get(uuid),
     db.documents_meta.get(uuid),
   ]);
-  if (!contentEntry || !metaEntry) throw new DocumnetNotFoundError();
+  if (!contentEntry || !metaEntry) throw new DocumentNotFoundError();
   return {
     ...contentEntry,
     content: toImmerContent(contentEntry.content),
@@ -189,7 +189,7 @@ export async function loadDocumentMetasFromDB(): Promise<DocumentMeta[]> {
 export async function cloneDocumentToDB(uuid: string, newName: string) {
   const contentEntry = await db.documents_content.get(uuid);
   const metaEntry = await db.documents_meta.get(uuid);
-  if (!contentEntry || !metaEntry) throw new DocumnetNotFoundError();
+  if (!contentEntry || !metaEntry) throw new DocumentNotFoundError();
 
   const newUUID = crypto.randomUUID();
   const newMeta = {
@@ -216,7 +216,7 @@ export async function cloneDocumentToDB(uuid: string, newName: string) {
 }
 export async function renameDocumentToDB(uuid: string, newName: string) {
   const metaEntry = await db.documents_meta.get(uuid);
-  if (!metaEntry) throw new DocumnetNotFoundError();
+  if (!metaEntry) throw new DocumentNotFoundError();
   const newMeta = {
     ...metaEntry,
     name: newName,

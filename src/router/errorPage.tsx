@@ -10,7 +10,7 @@ import "./errorPage.css";
 const ErrorPage: FC<{ children: string }> = ({ children }) => {
   return (
     <div className="error">
-      <img src={errorGIF} alt="Not Found" width="200px" />
+      <img src={errorGIF} alt="Error" width="200px" />
       <div>{children}</div>
       <Link to="/">
         <Button type="primary" icon={<FontAwesomeIcon icon={faHome} />}>
