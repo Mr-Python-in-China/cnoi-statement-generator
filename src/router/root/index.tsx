@@ -177,6 +177,7 @@ const RootImpl: FC<{
 const ChangeLog = () => {
   return (
     <div className="root-changelog">
+      <p>加 QQ 群（1012989587）关注项目最新动态。也可反馈问题或闲聊。</p>
       <h1>更新日志</h1>
       <article dangerouslySetInnerHTML={{ __html: changeLogHTML }} />
     </div>
