@@ -164,8 +164,9 @@
 #show link: set text(fill: rgb("#ed028c"))
 #show raw: it => {
   in-raw.update(true)
-  let mono-font = ("Consolas", "SimSun")
+  let mono-font = ("Fira Code", "SimSun")
   set text(font: mono-font, size: 12pt)
+  show strong: it => text(it.body, weight: "medium")
   if not it.block { it } else {
     let border = 0.4pt + rgb("#0000ff")
     show raw.line: jt => {
