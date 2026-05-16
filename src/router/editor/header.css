@@ -6,10 +6,17 @@ header {
   align-items: center;
   gap: 12px;
   padding: 8px 12px 0;
-  > .file-name {
+  > .title {
     flex: 1;
-    text-align: center;
-    font-weight: bold;
-    color: var(--ant-color-text-secondary);
+    display: flex;
+    justify-content: center;
+    gap: 4px;
+    > .file-name {
+      font-weight: bold;
+      color: var(--ant-color-text-secondary);
+    }
+    > .modified-indicator {
+      color: var(--ant-color-text-secondary);
+    }
   }
 }

@@ -2,10 +2,9 @@ import {
   type FC,
   useEffect,
   useState,
-  useMemo,
   use,
-  Suspense,
   useCallback,
+  Suspense,
 } from "react";
 import { useImmer, type Updater } from "use-immer";
 import type {
@@ -15,17 +14,10 @@ import type {
 } from "@/types/document";
 import { App, Tabs, type TabsProps } from "antd";
 import Body from "./body";
-import { debounce } from "lodash-es";
 import useTemplateManager, {
   TemplateManagerContext,
 } from "@/components/templateManagerContext";
-
 import "./index.css";
-import {
-  DocumnetNotFoundError,
-  loadDocumentFromDB,
-  saveDocumentToDB,
-} from "@/utils/indexedDBUtils";
 import TemplateManager from "@/utils/templateManager";
 import {
   removeProblemCallback,
@@ -33,43 +25,66 @@ import {
 } from "@/utils/contestDataUtils";
 import TypstInitStatusProvider from "@/components/typstInitStatusProvider";
 import ContestEditorHeader from "./header";
-import { useParams } from "react-router";
-
+import { redirect } from "react-router";
 import ErrorPage from "../errorPage";
+import type { Route } from "./+types";
+import { loadDocument } from "@/storage";
+import DocNotFoundError from "@/storage/docNotFoundError";
 
-const ContestEditorImpl: FC<{ initialDoc: DocumentBase }> = ({
-  initialDoc,
-}) => {
+export async function clientLoader({ request }: Route.ClientLoaderArgs) {
+  const file = new URL(request.url).searchParams.get("file");
+  if (!file) throw redirect("/");
+  const data = await loadDocument(new URL(file));
+  return {
+    doc: data,
+    path: file,
+  };
+}
+
+export const ErrorBoundary: FC<Route.ErrorBoundaryProps> = ({ error }) => {
+  console.error("Failed to load document in editor route", error);
+  return (
+    <ErrorPage>
+      {error instanceof DocNotFoundError ? "文档不存在" : "加载文档时发生错误"}
+    </ErrorPage>
+  );
+};
+
+const ContestEditorImpl: FC<{
+  initialData: { doc: DocumentBase; path: string };
+}> = ({ initialData }) => {
   const templateManager = useTemplateManager();
-  const compiler = templateManager.compiler;
   const uiMeta = use(templateManager.uiMetadataPromise);
+  const compiler = templateManager.compiler;
 
   const [doc, updateDoc] = useImmer<ImmerDocument>({
-    ...initialDoc,
-    content: toImmerContent(initialDoc.content),
+    ...initialData.doc,
+    content: toImmerContent(initialData.doc.content),
     previewImage: undefined,
   });
+  const [path, setPath] = useState(initialData.path);
+  const [modified, setModified] = useState(false);
+
   const content = doc.content;
-  const updateContent =
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    useCallback(
-      ((updater) => {
-        if (typeof updater === "function")
-          updateDoc((d) => {
-            const x = updater(d.content);
-            if (x !== undefined)
-              return {
-                ...d,
-                content: x,
-              };
-          });
-        else
-          updateDoc((d) => {
-            d.content = updater;
-          });
-      }) satisfies Updater<ImmerContent>,
-      [updateDoc],
-    );
+  const updateContent = useCallback(
+    ((updater) => {
+      if (typeof updater === "function")
+        updateDoc((d) => {
+          const x = updater(d.content);
+          if (x !== undefined)
+            return {
+              ...d,
+              content: x,
+            };
+        });
+      else
+        updateDoc((d) => {
+          d.content = updater;
+        });
+      setModified(true);
+    }) satisfies Updater<ImmerContent>,
+    [updateDoc],
+  );
 
   // Register asset blob URLs with compiler whenever images change
   useEffect(() => {
@@ -79,27 +94,6 @@ const ContestEditorImpl: FC<{ initialDoc: DocumentBase }> = ({
 
   // "config" | "extra-{name}" | "{problem-uuid}"
   const [panel, setPanel] = useState("config");
-
-  // Create a debounced save function (saves at most once per 500ms)
-  const debouncedSave = useMemo(
-    () =>
-      debounce(async (data: ImmerDocument) => {
-        try {
-          await saveDocumentToDB({
-            ...data,
-            modifiedAt: new Date().toISOString(),
-          });
-        } catch (error) {
-          console.error("Failed to auto-save:", error);
-        }
-      }, 500),
-    [],
-  );
-
-  // Auto-save to IndexedDB whenever content changes (debounced)
-  useEffect(() => {
-    debouncedSave(doc);
-  }, [doc, debouncedSave]);
 
   const { modal } = App.useApp();
   const items: TabsProps["items"] = [
@@ -127,12 +121,29 @@ const ContestEditorImpl: FC<{ initialDoc: DocumentBase }> = ({
     })),
   ];
   const removeProblem = removeProblemCallback(modal, setPanel, updateContent);
+
+  useEffect(() => {
+    if (!modified) return;
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = "你确定要离开吗？未保存的更改将会丢失。";
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [modified]);
+
   return (
     <>
       <ContestEditorHeader
-        doc={doc}
-        updateDoc={updateDoc}
-        setPanel={setPanel}
+        {...{
+          doc,
+          updateDoc,
+          setPanel,
+          path,
+          setPath,
+          modified,
+          setModified,
+        }}
       />
       <main>
         <Tabs
@@ -168,45 +179,25 @@ const ContestEditorImpl: FC<{ initialDoc: DocumentBase }> = ({
   );
 };
 
-const ContestEditorWithInitalPromise: FC<{
-  initialPromise: Promise<
-    | {
-        doc: DocumentBase;
-        templateManager: TemplateManager;
-      }
-    | undefined
-  >;
-}> = ({ initialPromise }) => {
-  const initial = use(initialPromise);
-  return !initial ? (
-    <ErrorPage>该文档不存在</ErrorPage>
-  ) : (
-    <TemplateManagerContext.Provider value={initial.templateManager}>
-      <TypstInitStatusProvider>
-        <ContestEditorImpl initialDoc={initial.doc} />
-      </TypstInitStatusProvider>
-    </TemplateManagerContext.Provider>
-  );
-};
-
-const ContestEditor: FC = () => {
-  const { documentId } = useParams();
-  const initialPromise = (async () => {
-    try {
-      const document = await loadDocumentFromDB(documentId!);
-      return {
-        doc: document,
-        templateManager: new TemplateManager(document.templateId),
-      };
-    } catch (e) {
-      if (e instanceof DocumnetNotFoundError) return undefined;
-      throw e;
-    }
-  })();
+const ContestEditor: FC<Route.ComponentProps> = ({ loaderData }) => {
+  const [templateManager, setTemplateManager] = useState<
+    TemplateManager | undefined
+  >(undefined);
+  useEffect(() => {
+    const v = new TemplateManager(loaderData.doc.templateId);
+    setTemplateManager(v);
+    return () => v.dispose();
+  }, [loaderData.doc]);
   return (
-    <Suspense>
-      <ContestEditorWithInitalPromise initialPromise={initialPromise} />
-    </Suspense>
+    templateManager && (
+      <TemplateManagerContext.Provider value={templateManager}>
+        <TypstInitStatusProvider>
+          <Suspense>
+            <ContestEditorImpl initialData={loaderData} />
+          </Suspense>
+        </TypstInitStatusProvider>
+      </TemplateManagerContext.Provider>
+    )
   );
 };
 

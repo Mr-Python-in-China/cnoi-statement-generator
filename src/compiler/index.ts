@@ -103,14 +103,18 @@ export class TypstInitTask {
 }
 
 export let fontAccessConfirmResolve: (() => void) | undefined = undefined;
+const fontAccessConfirmResolveFunctions: (() => void)[] = [];
 function requestFontAccessConfirm() {
-  if (fontAccessConfirmResolve)
-    throw new Error("Font access already requested");
-  return new Promise<void>((resolve) => {
+  if (!fontAccessConfirmResolve)
     fontAccessConfirmResolve = () => {
-      resolve();
+      for (const func of fontAccessConfirmResolveFunctions) func();
+      fontAccessConfirmResolveFunctions.length = 0;
       fontAccessConfirmResolve = undefined;
     };
+  return new Promise<void>((resolve) => {
+    if (fontAccessConfirmResolve)
+      fontAccessConfirmResolveFunctions.push(resolve);
+    else resolve();
   });
 }
 
@@ -128,6 +132,7 @@ function removeImageBlob(content: ContentBase): PrecompileContent {
 }
 
 export default class CompilerInstance {
+  _createdAt = new Date();
   private worker: Worker;
   private assetUrlMapping = new Map<string, string>();
   public typstInitInfo: {

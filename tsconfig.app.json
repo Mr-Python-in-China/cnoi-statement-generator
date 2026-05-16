@@ -5,6 +5,7 @@
       "@/*": ["src/*"],
       "/*": ["./*"]
     },
+    "rootDirs": [".", "./.react-router/types"],
     "tsBuildInfoFile": "./node_modules/.cache/tsconfig.app.tsbuildinfo",
     "target": "ES2022",
     "useDefineForClassFields": true,
@@ -33,6 +34,7 @@
     "import.d.ts",
     "node_modules/@mr.python/vite-plugin-remark-rehype/types.d.ts",
     "tests/unit/**/*.common.test.ts",
-    "tests/unit/**/*.browser.test.ts"
+    "tests/unit/**/*.browser.test.ts",
+    ".react-router/types"
   ]
 }

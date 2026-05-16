@@ -33,7 +33,7 @@ export default { postscriptName: ${JSON.stringify(postScriptName)}, url };`;
 });
 
 // https://vite.dev/config/
-export default defineConfig(async (): Promise<UserConfig> => {
+export default defineConfig(async (env): Promise<UserConfig> => {
   const gitCommitHash = await new Promise<undefined | string>((resolve) =>
     exec("git rev-parse --short HEAD", (err, stdout) => {
       if (err) resolve(undefined);
@@ -47,13 +47,17 @@ export default defineConfig(async (): Promise<UserConfig> => {
     base: "/",
     plugins: [
       reactRouter(),
-      babel({
-        filter: /\.[jt]sx?$/,
-        babelConfig: {
-          presets: ["@babel/preset-typescript"],
-          plugins: [["babel-plugin-react-compiler", {}]],
-        },
-      }),
+      babel(
+        env.mode === "development"
+          ? {}
+          : {
+              filter: /\.[jt]sx?$/,
+              babelConfig: {
+                presets: ["@babel/preset-typescript"],
+                plugins: [["babel-plugin-react-compiler", {}]],
+              },
+            },
+      ),
       fontMetaPlugin(),
       viteAssetsSplitPlugin({
         limit: 20 * 1024 * 1024, // 20 MB

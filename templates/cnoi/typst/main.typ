@@ -168,50 +168,44 @@
   set text(font: mono-font, size: 12pt)
   show strong: it => text(it.body, weight: "medium")
   if not it.block { it } else {
-    set par(leading: 0pt, spacing: 0pt)
-    set block(above: 10pt, below: 10pt)
+    let border = 0.4pt + rgb("#0000ff")
     show raw.line: jt => {
-      let stroke = (
-        left: 0.4pt + rgb("#0000ff"),
-        right: 0.4pt + rgb("#0000ff"),
-      )
-      let inset = (
-        top: 8.5pt / 2,
-        bottom: 8.5pt / 2,
-        left: 3pt,
-        right: 3pt,
-      )
-      if jt.number == 1 {
-        stroke.top = 0.4pt + rgb("#0000ff")
-        inset.top = 6pt
-      }
-      if jt.number == jt.count {
-        stroke.bottom = 0.4pt + rgb("#0000ff")
-        inset.bottom = 9pt
-      }
-      context (
-        box(move(
-          dx: 3pt + 6pt,
-          box(
-            box(
-              grid(
-                columns: (0pt, 0pt, 100% - 6pt),
-                align: (bottom, bottom, bottom),
-                move(
-                  dx: -9pt - measure([#jt.number]).width,
-                  text(fill: rgb("#808080"), size: 10pt, [#jt.number]),
-                ),
-                cjk-align-mark,
-                jt.body,
-              ),
-            ),
-            stroke: stroke,
-            inset: inset,
+      block(
+        place(
+          dx: -9pt - measure([#jt.number]).width,
+          text(fill: rgb("#808080"), size: 10pt, [#jt.number]) + cjk-align-mark,
+        )
+          + par(
+            leading: 0.65em,
+            spacing: 0em,
+            first-line-indent: 0em,
+            hanging-indent: 1.5em,
+            cjk-align-mark + jt,
           ),
-        ))
       )
     }
-    block(it)
+    block(
+      inset: (left: 9pt),
+      block(
+        width: 100% + 3pt,
+        stroke: (x: border),
+        inset: (x: 3pt, top: 6pt, bottom: 9pt),
+        place(
+          dx: -3pt,
+          dy: -6pt,
+          line(stroke: border, length: 100% + 3pt * 2),
+        )
+          + {
+            set par(spacing: 0pt)
+            it
+          }
+          + place(
+            dx: -3pt,
+            dy: 9pt,
+            line(stroke: border, length: 100% + 3pt * 2),
+          ),
+      ),
+    )
   }
   in-raw.update(false)
 }

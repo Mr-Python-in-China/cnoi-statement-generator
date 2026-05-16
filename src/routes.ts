@@ -10,8 +10,12 @@ export default [
         file: "./router/root/index.tsx",
       },
       {
-        path: "editor/:documentId",
+        path: "editor",
         file: "./router/editor/index.tsx",
+      },
+      {
+        path: "editor/:docId",
+        file: "./router/editor/_docUuidInPath.tsx",
       },
     ],
   },

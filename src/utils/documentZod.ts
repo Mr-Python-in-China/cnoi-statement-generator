@@ -1,6 +1,10 @@
 import z from "zod";
 import base64js from "base64-js";
-import type { ContentBase } from "@/types/document";
+import type {
+  ContentBase,
+  DocumentBase,
+  ImmerDocument,
+} from "@/types/document";
 
 export const zProblemBase = z.object({
   uuid: z.uuid(),
@@ -36,4 +40,24 @@ export function getZDocument<Content extends ContentBase>(
     modifiedAt: z.iso.datetime(),
     content: zContent,
   });
+}
+
+export function removeImmer(content: ImmerDocument): DocumentBase {
+  const x = {
+    name: content.name,
+    templateId: content.templateId,
+    modifiedAt: content.modifiedAt,
+    uuid: content.uuid,
+    content: {
+      ...content.content,
+      images: content.content.images.map(({ url: _url, ...img }) => img),
+    },
+  };
+  // 检查协变和逆变
+  true satisfies typeof x extends DocumentBase
+    ? DocumentBase extends typeof x
+      ? true
+      : false
+    : false;
+  return x;
 }
