@@ -166,6 +166,7 @@
   in-raw.update(true)
   let mono-font = ("Fira Code", "SimSun")
   set text(font: mono-font, size: 12pt)
+  show strong: it => text(it.body, weight: "medium")
   if not it.block { it } else {
     set par(leading: 0pt, spacing: 0pt)
     set block(above: 10pt, below: 10pt)
