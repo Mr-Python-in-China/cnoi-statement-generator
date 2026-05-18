@@ -53,7 +53,7 @@
     "jszip": "^3.10.1",
     "lodash-es": "^4.18.1",
     "react": "^19.2.3",
-    "react-dom": "^19.2.3",
+    "react-dom": "^19.2.6",
     "react-router": "^7.15.1",
     "remark": "^15.0.1",
     "remark-directive": "^4.0.0",
