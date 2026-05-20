@@ -82,7 +82,6 @@ export async function jsonToDocument(str: string): Promise<DocumentBase> {
     const content = await zOldContent.parseAsync(obj);
     return {
       name: content.title,
-      uuid: "",
       templateId: "cnoi",
       modifiedAt: new Date().toISOString(),
       content: {

@@ -131,8 +131,10 @@ function removeImageBlob(content: ContentBase): PrecompileContent {
   };
 }
 
+let _id = 0;
+
 export default class CompilerInstance {
-  _createdAt = new Date();
+  public readonly _id = _id++;
   private worker: Worker;
   private assetUrlMapping = new Map<string, string>();
   public typstInitInfo: {

@@ -13,10 +13,6 @@ export default [
         path: "editor",
         file: "./router/editor/index.tsx",
       },
-      {
-        path: "editor/:docId",
-        file: "./router/editor/_docUuidInPath.tsx",
-      },
     ],
   },
 ] satisfies RouteConfig;

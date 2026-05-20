@@ -5,13 +5,13 @@ import {
   use,
   useCallback,
   Suspense,
+  type Dispatch,
+  type SetStateAction,
+  useMemo,
+  useLayoutEffect,
 } from "react";
 import { useImmer, type Updater } from "use-immer";
-import type {
-  DocumentBase,
-  ImmerContent,
-  ImmerDocument,
-} from "@/types/document";
+import type { ImmerContent, ImmerDocument } from "@/types/document";
 import { App, Tabs, type TabsProps } from "antd";
 import Body from "./body";
 import useTemplateManager, {
@@ -29,15 +29,16 @@ import { redirect } from "react-router";
 import ErrorPage from "../errorPage";
 import type { Route } from "./+types";
 import { loadDocument } from "@/storage";
-import DocNotFoundError from "@/storage/docNotFoundError";
+import { DocNotFoundError } from "@/storage/errors";
 
 export async function clientLoader({ request }: Route.ClientLoaderArgs) {
   const file = new URL(request.url).searchParams.get("file");
   if (!file) throw redirect("/");
-  const data = await loadDocument(new URL(file));
+  const path = file.split("/").map((x) => decodeURIComponent(x));
+  const doc = await loadDocument(path);
   return {
-    doc: data,
-    path: file,
+    doc,
+    path,
   };
 }
 
@@ -50,20 +51,19 @@ export const ErrorBoundary: FC<Route.ErrorBoundaryProps> = ({ error }) => {
   );
 };
 
-const ContestEditorImpl: FC<{
-  initialData: { doc: DocumentBase; path: string };
-}> = ({ initialData }) => {
+const ContestEditorMain: FC<{
+  doc: ImmerDocument;
+  updateDoc: Updater<ImmerDocument>;
+  path: string[];
+  setPath: Dispatch<SetStateAction<string[]>>;
+  panel: string;
+  setPanel: Dispatch<SetStateAction<string>>;
+  modified: boolean;
+  setModified: Dispatch<SetStateAction<boolean>>;
+}> = ({ doc, updateDoc, panel, setPanel, modified, setModified }) => {
   const templateManager = useTemplateManager();
   const uiMeta = use(templateManager.uiMetadataPromise);
   const compiler = templateManager.compiler;
-
-  const [doc, updateDoc] = useImmer<ImmerDocument>({
-    ...initialData.doc,
-    content: toImmerContent(initialData.doc.content),
-    previewImage: undefined,
-  });
-  const [path, setPath] = useState(initialData.path);
-  const [modified, setModified] = useState(false);
 
   const content = doc.content;
   const updateContent = useCallback(
@@ -83,7 +83,7 @@ const ContestEditorImpl: FC<{
         });
       setModified(true);
     }) satisfies Updater<ImmerContent>,
-    [updateDoc],
+    [updateDoc, setModified],
   );
 
   // Register asset blob URLs with compiler whenever images change
@@ -91,9 +91,6 @@ const ContestEditorImpl: FC<{
     const mapping = new Map(content.images.map((img) => [img.uuid, img.url]));
     compiler.registerAssetUrls(mapping);
   }, [compiler, content.images]);
-
-  // "config" | "extra-{name}" | "{problem-uuid}"
-  const [panel, setPanel] = useState("config");
 
   const { modal } = App.useApp();
   const items: TabsProps["items"] = [
@@ -134,17 +131,6 @@ const ContestEditorImpl: FC<{
 
   return (
     <>
-      <ContestEditorHeader
-        {...{
-          doc,
-          updateDoc,
-          setPanel,
-          path,
-          setPath,
-          modified,
-          setModified,
-        }}
-      />
       <main>
         <Tabs
           type="editable-card"
@@ -180,24 +166,69 @@ const ContestEditorImpl: FC<{
 };
 
 const ContestEditor: FC<Route.ComponentProps> = ({ loaderData }) => {
-  const [templateManager, setTemplateManager] = useState<
+  const [doc, updateDoc] = useImmer<ImmerDocument>({
+    ...loaderData.doc,
+    content: toImmerContent(loaderData.doc.content),
+    previewImage: undefined,
+  });
+  const [path, setPath] = useState(loaderData.path);
+
+  const pathStr = useMemo(() => path.map(encodeURIComponent).join("/"), [path]);
+  const [templateManagerState, setTemplateManagerState] = useState<
     TemplateManager | undefined
   >(undefined);
-  useEffect(() => {
-    const v = new TemplateManager(loaderData.doc.templateId);
-    setTemplateManager(v);
-    return () => v.dispose();
-  }, [loaderData.doc]);
+  useLayoutEffect(() => {
+    const manager = new TemplateManager(doc.templateId);
+    setTemplateManagerState(manager);
+    return () => manager.dispose();
+  }, [doc.templateId]);
+  const templateManager =
+    templateManagerState?.template === doc.templateId
+      ? templateManagerState
+      : undefined;
+
+  // "config" | "extra-{name}" | "{problem-uuid}"
+  const [panel, setPanel] = useState("config");
+
+  const [modified, setModified] = useState(false);
+  useLayoutEffect(
+    () => setModified(false),
+    // oxlint-disable-next-line eslint-plugin-react-hooks/exhaustive-deps
+    [pathStr],
+  );
+
+  if (!templateManager) return undefined;
+
   return (
-    templateManager && (
-      <TemplateManagerContext.Provider value={templateManager}>
-        <TypstInitStatusProvider>
-          <Suspense>
-            <ContestEditorImpl initialData={loaderData} />
-          </Suspense>
-        </TypstInitStatusProvider>
-      </TemplateManagerContext.Provider>
-    )
+    <TemplateManagerContext.Provider value={templateManager}>
+      <TypstInitStatusProvider>
+        <ContestEditorHeader
+          {...{
+            doc,
+            updateDoc,
+            setPanel,
+            path,
+            setPath,
+            modified,
+            setModified,
+          }}
+        />
+        <Suspense>
+          <ContestEditorMain
+            {...{
+              doc,
+              updateDoc,
+              panel,
+              setPanel,
+              path,
+              setPath,
+              modified,
+              setModified,
+            }}
+          />
+        </Suspense>
+      </TypstInitStatusProvider>
+    </TemplateManagerContext.Provider>
   );
 };
 

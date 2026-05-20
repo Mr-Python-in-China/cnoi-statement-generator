@@ -17,6 +17,7 @@ import {
   loadDocumentFromDB,
   renameDocumentToDB,
   saveDocumentToDB,
+  DocumentNameConflictError,
 } from "@/utils/indexedDBUtils";
 import { exportDocument } from "@/utils/contestDataUtils";
 import { Link } from "react-router";
@@ -28,14 +29,17 @@ const DocumentGrid: FC<{
   updateDocumentMetas: Updater<DocumentMeta[]>;
 }> = ({ documentMetas, updateDocumentMetas }) => {
   const { message } = App.useApp();
-  const [editingTargetUUID, setEditingTargetUUID] = useState<
+  const [editingTargetName, setEditingTargetName] = useState<
     string | undefined
   >(undefined);
+
   return (
     <div className="root-document-grid">
       {documentMetas.map((meta) => (
-        <div key={meta.uuid}>
-          <Link to={`/editor/${meta.uuid}`}>
+        <div key={meta.name}>
+          <Link
+            to={`/editor?file=${encodeURIComponent(`browser/${encodeURIComponent(meta.name)}`)}`}
+          >
             {meta.previewImage ? (
               <BlobImage
                 blob={meta.previewImage}
@@ -45,9 +49,7 @@ const DocumentGrid: FC<{
               <div
                 style={{
                   // @ts-expect-error CSS variable
-                  "--doc-preview-card-color-hue":
-                    (parseInt(meta.uuid[meta.uuid.length - 1], 16) % 8) / 8 +
-                    "turn",
+                  "--doc-preview-card-color-hue": 0.625 + "turn",
                 }}
               >
                 <div>{meta.name}</div>
@@ -64,13 +66,13 @@ const DocumentGrid: FC<{
                       const newName = `${meta.name} 副本`;
                       try {
                         const newMeta = await cloneDocumentToDB(
-                          meta.uuid,
+                          meta.name,
                           newName,
                         );
                         updateDocumentMetas((draft) => {
                           draft.push(newMeta);
                         });
-                        setEditingTargetUUID(newMeta.uuid);
+                        setEditingTargetName(newMeta.name);
                       } catch (e) {
                         message.error("复制文档失败");
                         console.error("Failed to clone document:", e);
@@ -81,7 +83,7 @@ const DocumentGrid: FC<{
                     key: "rename",
                     label: "重命名",
                     icon: <FontAwesomeIcon icon={faPenToSquare} />,
-                    onClick: () => setEditingTargetUUID(meta.uuid),
+                    onClick: () => setEditingTargetName(meta.name),
                   },
                   {
                     key: "backup",
@@ -90,7 +92,7 @@ const DocumentGrid: FC<{
                     onClick: async () => {
                       try {
                         await exportDocument(
-                          await loadDocumentFromDB(meta.uuid),
+                          await loadDocumentFromDB(meta.name),
                         );
                         message.success("文档备份成功");
                       } catch (error) {
@@ -106,11 +108,11 @@ const DocumentGrid: FC<{
                     icon: <FontAwesomeIcon icon={faTrash} />,
                     onClick: async () => {
                       try {
-                        const backup = await loadDocumentFromDB(meta.uuid);
-                        await deleteDocumentFromDB(meta.uuid);
+                        const backup = await loadDocumentFromDB(meta.name);
+                        await deleteDocumentFromDB(meta.name);
                         updateDocumentMetas((draft) => {
                           draft.splice(
-                            draft.findIndex((m) => m.uuid === meta.uuid),
+                            draft.findIndex((m) => m.name === meta.name),
                             1,
                           );
                         });
@@ -126,7 +128,6 @@ const DocumentGrid: FC<{
                                   saveDocumentToDB(backup, true);
                                   updateDocumentMetas((draft) => {
                                     draft.push({
-                                      uuid: backup.uuid,
                                       name: backup.name,
                                       templateId: backup.templateId,
                                       modifiedAt: backup.modifiedAt,
@@ -165,26 +166,31 @@ const DocumentGrid: FC<{
           <Typography.Text
             editable={{
               triggerType: ["text"],
-              editing: editingTargetUUID === meta.uuid,
-              onStart: () => setEditingTargetUUID(meta.uuid),
+              editing: editingTargetName === meta.name,
+              onStart: () => setEditingTargetName(meta.name),
               onChange: async (s) => {
                 if (s.length === 0) {
                   message.error("文档名不能为空");
                   return;
                 }
                 try {
-                  await renameDocumentToDB(meta.uuid, s);
+                  const renamedMeta = await renameDocumentToDB(meta.name, s);
                   updateDocumentMetas((draft) => {
-                    draft[draft.findIndex((m) => m.uuid === meta.uuid)].name =
-                      s;
+                    const index = draft.findIndex((m) => m.name === meta.name);
+                    if (index !== -1) draft[index] = renamedMeta;
                   });
                 } catch (e) {
-                  message.error("重命名文档失败");
-                  console.error("Failed to rename document:", e);
+                  if (e instanceof DocumentNameConflictError) {
+                    message.error("文档名已存在");
+                  } else {
+                    message.error("重命名文档失败");
+                    console.error("Failed to rename document:", e);
+                  }
+                } finally {
+                  setEditingTargetName(undefined);
                 }
-                setEditingTargetUUID(undefined);
               },
-              onCancel: () => setEditingTargetUUID(undefined),
+              onCancel: () => setEditingTargetName(undefined),
             }}
           >
             {meta.name}

@@ -61,45 +61,6 @@ const RootImpl: FC<{
                 新建文档
               </Button>
               <Button
-                type="default"
-                icon={<FontAwesomeIcon icon={faUpload} />}
-                onClick={async () => {
-                  try {
-                    const data = await importDocument();
-                    if (!data) return;
-                    if (data.uuid === "") data.uuid = crypto.randomUUID();
-                    const existing = documentMetas.find(
-                      (meta) => meta.uuid === data.uuid,
-                    );
-                    if (existing)
-                      if (
-                        !(await modal.confirm({
-                          title: "你确定要覆盖已有的文档吗？",
-                        }))
-                      )
-                        return;
-                    await saveDocumentToDB(data, true);
-                    updateDocumentMetas((draft) => {
-                      const newMeta: DocumentMeta = {
-                        uuid: data.uuid,
-                        name: data.name,
-                        modifiedAt: data.modifiedAt,
-                        templateId: data.templateId,
-                        previewImage: undefined,
-                      };
-                      if (existing) draft[draft.indexOf(existing)] = newMeta;
-                      else draft.push(newMeta);
-                    });
-                    message.success("文档导入成功");
-                  } catch (error) {
-                    message.error("导入文档失败");
-                    console.error("Error when importing document.", error);
-                  }
-                }}
-              >
-                导入文档
-              </Button>
-              <Button
                 icon={<FontAwesomeIcon icon={faInfo} />}
                 onClick={versionInfo.show}
               >

@@ -14,6 +14,52 @@ export class DocumentNotFoundError extends Error {
   }
 }
 
+export class DocumentNameConflictError extends Error {
+  constructor(public readonly documentName: string) {
+    super(`Document name already exists: ${documentName}`);
+  }
+}
+
+export function resolveUniqueDocumentName(
+  baseName: string,
+  existingNames: Iterable<string>,
+): string {
+  const takenNames = new Set(existingNames);
+  if (!takenNames.has(baseName)) return baseName;
+
+  for (let index = 1; ; index += 1) {
+    const candidate = `${baseName}(${index})`;
+    if (!takenNames.has(candidate)) return candidate;
+  }
+}
+
+type StoredDocument = DocumentBase & {
+  previewImage?: Blob | undefined;
+};
+
+function stripImmerDocument(doc: ImmerDocument): StoredDocument {
+  return {
+    ...doc,
+    content: {
+      ...doc.content,
+      images: doc.content.images.map(({ url: _url, ...img }) => img),
+    },
+  };
+}
+
+function toStoredDocument(doc: ImmerDocument | DocumentBase): StoredDocument {
+  return "previewImage" in doc ? stripImmerDocument(doc) : doc;
+}
+
+function toDocumentMeta(doc: StoredDocument): DocumentMeta {
+  return {
+    name: doc.name,
+    templateId: doc.templateId,
+    modifiedAt: doc.modifiedAt,
+    previewImage: doc.previewImage,
+  };
+}
+
 /**
  * Dexie database schema
  */
@@ -25,7 +71,7 @@ class CnoiDatabase extends Dexie {
   constructor() {
     super("cnoi-statement-generator");
     this.version(1).stores({
-      config: "", // Empty string means the key is not part of the object (out-of-line key)
+      config: "",
       images: "uuid",
     });
     this.version(2)
@@ -87,7 +133,6 @@ class CnoiDatabase extends Dexie {
                 blob: images[img.uuid],
               })),
             } satisfies import("templates/cnoi/types").Content as ContentBase,
-            uuid: crypto.randomUUID(),
             name: old.title,
             templateId: "cnoi",
             modifiedAt: new Date().toISOString(),
@@ -112,7 +157,6 @@ class CnoiDatabase extends Dexie {
           .then((docs) => tx.table("documents_content").bulkPut(docs));
         const docs = await tx.table("documents").toArray();
         const metas: DocumentMeta[] = docs.map((doc) => ({
-          uuid: doc.uuid,
           name: doc.name,
           templateId: doc.templateId,
           modifiedAt: doc.modifiedAt,
@@ -120,34 +164,92 @@ class CnoiDatabase extends Dexie {
         }));
         await tx.table("documents_meta").bulkPut(metas);
       });
+
+    this.version(4)
+      .stores({
+        documents_content_by_name: "name",
+        documents_meta_by_name: "name",
+      })
+      .upgrade(async (tx) => {
+        const oldMetaEntries = (await tx
+          .table("documents_meta")
+          .toArray()) as Array<DocumentMeta & { uuid: string }>;
+        const oldContentEntries = (await tx
+          .table("documents_content")
+          .toArray()) as Array<{ uuid: string; content: ContentBase }>;
+        const contentByUuid = new Map(
+          oldContentEntries.map(
+            (entry) => [entry.uuid, entry.content] as const,
+          ),
+        );
+        const seenNames = new Set<string>();
+        const newContentEntries: DocumentContentOnly[] = [];
+        const newMetaEntries: DocumentMeta[] = [];
+
+        for (const oldMeta of oldMetaEntries) {
+          const content = contentByUuid.get(oldMeta.uuid);
+          if (!content) continue;
+
+          const uniqueName = resolveUniqueDocumentName(oldMeta.name, seenNames);
+          seenNames.add(uniqueName);
+
+          newContentEntries.push({
+            name: uniqueName,
+            content,
+          });
+          newMetaEntries.push({
+            name: uniqueName,
+            templateId: oldMeta.templateId,
+            modifiedAt: oldMeta.modifiedAt,
+            previewImage: oldMeta.previewImage,
+          });
+        }
+
+        await tx.table("documents_content_by_name").bulkPut(newContentEntries);
+        await tx.table("documents_meta_by_name").bulkPut(newMetaEntries);
+      });
+
+    this.version(5).stores({
+      documents_content: null,
+      documents_meta: null,
+      documents_content_by_name: "name",
+      documents_meta_by_name: "name",
+    });
+
+    this.version(6)
+      .stores({
+        documents_content_by_name: null,
+        documents_meta_by_name: null,
+        documents_content: "name",
+        documents_meta: "name",
+      })
+      .upgrade(async (tx) => {
+        const oldContentEntries = (await tx
+          .table("documents_content_by_name")
+          .toArray()) as DocumentContentOnly[];
+        const oldMetaEntries = (await tx
+          .table("documents_meta_by_name")
+          .toArray()) as DocumentMeta[];
+
+        await tx.table("documents_content").bulkPut(oldContentEntries);
+        await tx.table("documents_meta").bulkPut(oldMetaEntries);
+      });
   }
 }
 
 const db = new CnoiDatabase();
 
-export async function saveDocumentToDB(
+async function writeDocumentToDB(
   doc: ImmerDocument | DocumentBase,
   doNotOverrideModifiedAt = false,
-): Promise<void> {
-  const targetDoc =
-    "previewImage" in doc
-      ? {
-          ...doc,
-          content: {
-            ...doc.content,
-            images: doc.content.images.map(
-              ({
-                // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                url, // Remove url field
-                ...rest
-              }) => rest,
-            ),
-          },
-        }
-      : {
-          ...doc,
-          previewImage: undefined,
-        };
+): Promise<StoredDocument> {
+  const targetDoc = toStoredDocument(doc);
+  const storedDocument: StoredDocument = {
+    ...targetDoc,
+    modifiedAt: doNotOverrideModifiedAt
+      ? targetDoc.modifiedAt
+      : new Date().toISOString(),
+  };
 
   await db.transaction(
     "rw",
@@ -155,24 +257,38 @@ export async function saveDocumentToDB(
     db.documents_meta,
     async () => {
       await db.documents_content.put({
-        uuid: targetDoc.uuid,
-        content: targetDoc.content,
+        name: storedDocument.name,
+        content: storedDocument.content,
       });
 
-      await db.documents_meta.put({
-        ...targetDoc,
-        modifiedAt: doNotOverrideModifiedAt
-          ? targetDoc.modifiedAt
-          : new Date().toISOString(),
-      });
+      await db.documents_meta.put(toDocumentMeta(storedDocument));
     },
   );
+
+  return storedDocument;
 }
 
-export async function loadDocumentFromDB(uuid: string): Promise<ImmerDocument> {
+export async function saveDocumentToDB(
+  doc: ImmerDocument | DocumentBase,
+  doNotOverrideModifiedAt = false,
+): Promise<void> {
+  await writeDocumentToDB(doc, doNotOverrideModifiedAt);
+}
+
+export async function createDocumentToDB(
+  doc: ImmerDocument | DocumentBase,
+  doNotOverrideModifiedAt = false,
+): Promise<DocumentBase> {
+  const targetDoc = toStoredDocument(doc);
+  const existing = await db.documents_meta.get(targetDoc.name);
+  if (existing) throw new DocumentNameConflictError(targetDoc.name);
+  return await writeDocumentToDB(targetDoc, doNotOverrideModifiedAt);
+}
+
+export async function loadDocumentFromDB(name: string): Promise<ImmerDocument> {
   const [contentEntry, metaEntry] = await Promise.all([
-    db.documents_content.get(uuid),
-    db.documents_meta.get(uuid),
+    db.documents_content.get(name),
+    db.documents_meta.get(name),
   ]);
   if (!contentEntry || !metaEntry) throw new DocumentNotFoundError();
   return {
@@ -183,55 +299,80 @@ export async function loadDocumentFromDB(uuid: string): Promise<ImmerDocument> {
 }
 
 export async function loadDocumentMetasFromDB(): Promise<DocumentMeta[]> {
-  return db.documents_meta.toArray();
+  return await db.documents_meta.toArray();
 }
 
-export async function cloneDocumentToDB(uuid: string, newName: string) {
-  const contentEntry = await db.documents_content.get(uuid);
-  const metaEntry = await db.documents_meta.get(uuid);
+export async function cloneDocumentToDB(name: string, newName: string) {
+  const contentEntry = await db.documents_content.get(name);
+  const metaEntry = await db.documents_meta.get(name);
   if (!contentEntry || !metaEntry) throw new DocumentNotFoundError();
 
-  const newUUID = crypto.randomUUID();
-  const newMeta = {
-    uuid: newUUID,
+  const existingNames = await db.documents_meta.toCollection().primaryKeys();
+  const uniqueName = resolveUniqueDocumentName(newName, existingNames);
+  const newDoc: StoredDocument = {
+    name: uniqueName,
+    templateId: metaEntry.templateId,
+    modifiedAt: new Date().toISOString(),
+    previewImage: metaEntry.previewImage,
+    content: contentEntry.content,
+  };
+
+  await writeDocumentToDB(newDoc, true);
+  return toDocumentMeta(newDoc);
+}
+
+export async function renameDocumentToDB(
+  oldName: string,
+  newName: string,
+): Promise<DocumentMeta> {
+  if (oldName === newName) {
+    const metaEntry = await db.documents_meta.get(oldName);
+    if (!metaEntry) throw new DocumentNotFoundError();
+    return metaEntry;
+  }
+
+  const [contentEntry, metaEntry, targetMeta] = await Promise.all([
+    db.documents_content.get(oldName),
+    db.documents_meta.get(oldName),
+    db.documents_meta.get(newName),
+  ]);
+  if (!contentEntry || !metaEntry) throw new DocumentNotFoundError();
+  if (targetMeta) throw new DocumentNameConflictError(newName);
+
+  const renamedDocument: StoredDocument = {
     name: newName,
     templateId: metaEntry.templateId,
     modifiedAt: new Date().toISOString(),
     previewImage: metaEntry.previewImage,
+    content: contentEntry.content,
   };
+
   await db.transaction(
     "rw",
     db.documents_content,
     db.documents_meta,
     async () => {
+      await db.documents_content.delete(oldName);
+      await db.documents_meta.delete(oldName);
       await db.documents_content.put({
-        uuid: newUUID,
-        content: contentEntry.content,
+        name: renamedDocument.name,
+        content: renamedDocument.content,
       });
-
-      await db.documents_meta.put(newMeta);
+      await db.documents_meta.put(toDocumentMeta(renamedDocument));
     },
   );
-  return newMeta;
+
+  return toDocumentMeta(renamedDocument);
 }
-export async function renameDocumentToDB(uuid: string, newName: string) {
-  const metaEntry = await db.documents_meta.get(uuid);
-  if (!metaEntry) throw new DocumentNotFoundError();
-  const newMeta = {
-    ...metaEntry,
-    name: newName,
-    modifiedAt: new Date().toISOString(),
-  };
-  await db.documents_meta.put(newMeta);
-}
-export async function deleteDocumentFromDB(uuid: string) {
+
+export async function deleteDocumentFromDB(name: string) {
   await db.transaction(
     "rw",
     db.documents_content,
     db.documents_meta,
     async () => {
-      await db.documents_content.delete(uuid);
-      await db.documents_meta.delete(uuid);
+      await db.documents_content.delete(name);
+      await db.documents_meta.delete(name);
     },
   );
 }

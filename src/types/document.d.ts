@@ -53,9 +53,9 @@ export type DocumentBase = z.infer<
 
 export type DocumentMeta = Pick<
   DocumentBase,
-  "uuid" | "name" | "templateId" | "modifiedAt"
+  "name" | "templateId" | "modifiedAt"
 > & {
   previewImage: Blob | undefined;
 };
 
-export type DocumentContentOnly = Pick<DocumentBase, "uuid" | "content">;
+export type DocumentContentOnly = Pick<DocumentBase, "name" | "content">;

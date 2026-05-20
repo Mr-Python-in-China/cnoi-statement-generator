@@ -19,19 +19,22 @@ import { faAngleLeft } from "@fortawesome/free-solid-svg-icons";
 import { useNavigate } from "react-router";
 import { useVersionInfo } from "@/components/useVersionInfo";
 import { saveDocument } from "@/storage";
+import useExplorer from "@/components/useExplorer";
+import { toImmerContent } from "@/utils/contestDataUtils";
 
 const ContestEditorHeader: FC<{
   doc: ImmerDocument;
-  path: string;
+  path: string[];
   updateDoc: Updater<ImmerDocument>;
   setPanel: Dispatch<SetStateAction<string>>;
-  setPath: Dispatch<SetStateAction<string>>;
+  setPath: Dispatch<SetStateAction<string[]>>;
   modified: boolean;
   setModified: Dispatch<SetStateAction<boolean>>;
-}> = ({ doc, path, modified, setModified }) => {
-  const { notification, message } = App.useApp();
+}> = ({ doc, path, modified, setModified, setPath, updateDoc }) => {
+  const { notification, message, modal } = App.useApp();
   const { compiler } = useTemplateManager();
   const navigate = useNavigate();
+  const explorer = useExplorer();
 
   const typstInitStatus = useTypstInitStatus();
 
@@ -74,6 +77,7 @@ const ContestEditorHeader: FC<{
       });
     }
   }, [compiler, doc.content, doc.name, notification]);
+
   const onClickExportTypstSource = useCallback(async () => {
     try {
       const data = await compiler.exportTypstSourceZip(doc.content);
@@ -93,15 +97,68 @@ const ContestEditorHeader: FC<{
       console.error("Error when exporting Typst source zip.", e);
     }
   }, [compiler, doc.name, doc.content, message]);
+
   const onClickSave = useCallback(async () => {
     try {
-      await saveDocument(new URL(path), doc);
+      await saveDocument(path, doc);
       setModified(false);
     } catch (e) {
       console.error("Error when saving document.", e);
       message.error("保存失败");
     }
   }, [doc, path, message, setModified]);
+
+  const onClickOpen = useCallback(async () => {
+    const confirmed =
+      !modified ||
+      (await modal.confirm({
+        content: "你的更改尚未保存，要继续吗？",
+      }));
+    if (!confirmed) return;
+    const data = await explorer.show({
+      mode: "open",
+    });
+    if (data.state === "success") {
+      setPath(data.path);
+      updateDoc({
+        ...data.doc,
+        content: toImmerContent(data.doc.content),
+        previewImage: undefined,
+      });
+      const nowUrl = new URL(window.location.href);
+      nowUrl.searchParams.set(
+        "file",
+        data.path.map(encodeURIComponent).join("/"),
+      );
+      history.pushState(undefined, "", new URL(nowUrl).href);
+    }
+  }, [explorer, setPath, updateDoc, modal, modified]);
+
+  const onClickSaveAs = useCallback(() => {
+    explorer
+      .show({
+        mode: "save",
+        doc,
+      })
+      .then((data) => {
+        if (data.state === "success") {
+          setPath(data.path);
+          updateDoc({
+            ...data.doc,
+            content: toImmerContent(data.doc.content),
+            previewImage: undefined,
+          });
+          const nowUrl = new URL(window.location.href);
+          nowUrl.searchParams.set(
+            "file",
+            data.path.map(encodeURIComponent).join("/"),
+          );
+          history.pushState(undefined, "", new URL(nowUrl).href);
+          message.success("保存成功");
+        }
+      });
+  }, [explorer, setPath, updateDoc, doc, message]);
+
   const versionInfo = useVersionInfo();
   const menuGroup = useMemo(
     (): MenuGroup[] => [
@@ -120,10 +177,22 @@ const ContestEditorHeader: FC<{
         label: "文件",
         items: [
           {
+            key: "open",
+            label: "打开",
+            onSelect: onClickOpen,
+            shortcut: "Ctrl+O",
+          },
+          {
             key: "save",
             label: "保存",
             onSelect: onClickSave,
             shortcut: "Ctrl+S",
+          },
+          {
+            key: "saveAs",
+            label: "另存为",
+            onSelect: onClickSaveAs,
+            shortcut: "Ctrl+Shift+S",
           },
           {
             key: "export PDF",
@@ -159,6 +228,8 @@ const ContestEditorHeader: FC<{
       typstInitStatus,
       versionInfo.show,
       onClickSave,
+      onClickSaveAs,
+      onClickOpen,
     ],
   );
   useEffect(() => {
@@ -174,6 +245,7 @@ const ContestEditorHeader: FC<{
         {modified && <div className="modified-indicator">●</div>}
       </div>
       {versionInfo.contextHolder}
+      {explorer.ContextHolder}
     </header>
   );
 };

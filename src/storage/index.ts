@@ -1,29 +1,32 @@
 import type { DocumentBase } from "@/types/document";
 
-import * as browserStorage from "./browser";
-import DocNotFoundError from "./docNotFoundError";
+import browserStorage from "./browser";
+import { DocNotFoundError } from "./errors";
+import type { StorageMethodObject } from "./types";
 
-const storageMethods = {
+export const storageMethods = {
   browser: browserStorage,
-};
+} satisfies Record<string, StorageMethodObject>;
 
 export async function saveDocument(
-  path: URL,
+  path: string[],
   content: DocumentBase,
 ): Promise<DocumentBase> {
-  const protocol = path.protocol.slice(0, -1);
-  if (!(protocol in storageMethods)) {
-    throw new DocNotFoundError(`Unsupported storage method: ${protocol}`);
+  const [methodName, ...restPath] = path;
+  if (!(methodName in storageMethods)) {
+    throw new DocNotFoundError(`Unsupported storage method: ${methodName}`);
   }
-  const method = storageMethods[protocol as keyof typeof storageMethods];
-  return await method.saveDocument(path, content);
+  const storageMethod =
+    storageMethods[methodName as keyof typeof storageMethods];
+  return await storageMethod.saveDocument(restPath, content);
 }
 
-export async function loadDocument(path: URL): Promise<DocumentBase> {
-  const protocol = path.protocol.slice(0, -1);
-  if (!(protocol in storageMethods)) {
-    throw new DocNotFoundError(`Unsupported storage method: ${protocol}`);
+export async function loadDocument(path: string[]): Promise<DocumentBase> {
+  const [methodName, ...restPath] = path;
+  if (!(methodName in storageMethods)) {
+    throw new DocNotFoundError(`Unsupported storage method: ${methodName}`);
   }
-  const method = storageMethods[protocol as keyof typeof storageMethods];
-  return await method.loadDocument(path);
+  const storageMethod =
+    storageMethods[methodName as keyof typeof storageMethods];
+  return await storageMethod.loadDocument(restPath);
 }

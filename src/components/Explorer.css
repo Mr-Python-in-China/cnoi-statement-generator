@@ -1,0 +1,80 @@
+.explorer-modal {
+  height: 100%;
+  width: 100%;
+  top: 0;
+  margin: 0 auto;
+  padding: 16px;
+  max-width: 1200px;
+  .ant-modal-container {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+}
+
+.explorer-modal-body {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 60vh;
+}
+
+.explorer-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.explorer-nav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.explorer-address {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.explorer-breadcrumb-button {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  color: inherit;
+  cursor: pointer;
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.explorer-content {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.explorer-footer {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 12px;
+  align-items: center;
+}
+
+.explorer-filename-label {
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+  .explorer-toolbar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .explorer-footer {
+    grid-template-columns: 1fr;
+  }
+}

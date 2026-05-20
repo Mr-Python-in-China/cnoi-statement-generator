@@ -1,7 +1,10 @@
 import { App, Button, Input, Modal } from "antd";
 import { useCallback, useState, type FC } from "react";
 import { exampleDocuments, loadExampleContent } from "@/utils/exampleDocuments";
-import { saveDocumentToDB } from "@/utils/indexedDBUtils";
+import {
+  createDocumentToDB,
+  DocumentNameConflictError,
+} from "@/utils/indexedDBUtils";
 import { useNavigate } from "react-router";
 
 import "./newDocModal.css";
@@ -22,18 +25,22 @@ const NewDocModal: FC<{ open: boolean; onClose: () => void }> = ({
       setLoading(true);
       try {
         const content = await loadExampleContent(exampleName);
-        const uuid = crypto.randomUUID();
-        await saveDocumentToDB({
-          uuid,
+        await createDocumentToDB({
           name: filename,
           templateId: exampleDocuments[exampleName].meta.template,
           modifiedAt: new Date().toISOString(),
           content,
         });
-        navigate(`/editor/${uuid}`);
+        navigate(
+          `/editor?file=${encodeURIComponent(`browser/${encodeURIComponent(filename)}`)}`,
+        );
       } catch (e) {
-        message.error("创建文档失败");
-        console.error(e);
+        if (e instanceof DocumentNameConflictError) {
+          message.error("文档名已存在");
+        } else {
+          message.error("创建文档失败");
+          console.error(e);
+        }
       } finally {
         setLoading(false);
       }

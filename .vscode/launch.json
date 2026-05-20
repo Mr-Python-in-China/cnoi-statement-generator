@@ -11,6 +11,12 @@
       "name": "Launch Firefox",
       "request": "launch",
       "url": "http://localhost:4481"
+    },
+    {
+      "type": "editor-browser",
+      "name": "Launch Editor Browser",
+      "request": "launch",
+      "url": "http://localhost:4481"
     }
   ]
 }
