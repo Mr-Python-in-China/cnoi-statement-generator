@@ -1,6 +1,6 @@
-import firaCodeRegular from "assets/typst/fonts/FiraCode-Regular.ttf?font-meta";
-import firaCodeBold from "assets/typst/fonts/FiraCode-Bold.ttf?font-meta";
-import firaCodeMedium from "assets/typst/fonts/FiraCode-Medium.ttf?font-meta";
+import firaMonoRegular from "assets/typst/fonts/FiraMono-Regular.ttf?font-meta";
+import firaMonoBold from "assets/typst/fonts/FiraMono-Bold.ttf?font-meta";
+import firaMonoMedium from "assets/typst/fonts/FiraMono-Medium.ttf?font-meta";
 import latinmodernMath from "assets/typst/fonts/latinmodern-math.otf?font-meta";
 import lmroman10Bold from "assets/typst/fonts/lmroman10-bold.otf?font-meta";
 import lmroman10BoldItalic from "assets/typst/fonts/lmroman10-bolditalic.otf?font-meta";
@@ -15,9 +15,9 @@ import simHei from "assets/typst/fonts/simhei.ttf?font-meta";
 import simKai from "assets/typst/fonts/simkai.ttf?font-meta";
 
 export default [
-  firaCodeRegular,
-  firaCodeBold,
-  firaCodeMedium,
+  firaMonoRegular,
+  firaMonoBold,
+  firaMonoMedium,
   latinmodernMath,
   lmroman10Bold,
   lmroman10BoldItalic,
