@@ -164,7 +164,7 @@
 #show link: set text(fill: rgb("#ed028c"))
 #show raw: it => {
   in-raw.update(true)
-  let mono-font = ("Consolas", "SimSun")
+  let mono-font = ("Fira Mono", "SimSun")
   set text(font: mono-font, size: 12pt)
   if not it.block { it } else {
     set par(leading: 0pt, spacing: 0pt)
