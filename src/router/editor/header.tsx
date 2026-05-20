@@ -21,6 +21,7 @@ import { useVersionInfo } from "@/components/useVersionInfo";
 import { saveDocument } from "@/storage";
 import useExplorer from "@/components/useExplorer";
 import { toImmerContent } from "@/utils/contestDataUtils";
+import navigationState from "./navigationState";
 
 const ContestEditorHeader: FC<{
   doc: ImmerDocument;
@@ -112,27 +113,37 @@ const ContestEditorHeader: FC<{
     const confirmed =
       !modified ||
       (await modal.confirm({
-        content: "你的更改尚未保存，要继续吗？",
+        content: (
+          <>
+            你确定要继续吗？
+            <br />
+            未保存的更改将会丢失。
+          </>
+        ),
+        mask: {
+          closable: true,
+        },
       }));
     if (!confirmed) return;
     const data = await explorer.show({
       mode: "open",
     });
     if (data.state === "success") {
-      setPath(data.path);
-      updateDoc({
-        ...data.doc,
-        content: toImmerContent(data.doc.content),
-        previewImage: undefined,
+      const url = new URL(window.location.href);
+      url.searchParams.set("file", data.path.map(encodeURIComponent).join("/"));
+      url.searchParams.set("_noConfirm", "");
+      navigationState.value = {
+        doc: {
+          ...data.doc,
+          content: toImmerContent(data.doc.content),
+          previewImage: undefined,
+        },
+      };
+      navigate({
+        search: url.search,
       });
-      const nowUrl = new URL(window.location.href);
-      nowUrl.searchParams.set(
-        "file",
-        data.path.map(encodeURIComponent).join("/"),
-      );
-      history.pushState(undefined, "", new URL(nowUrl).href);
     }
-  }, [explorer, setPath, updateDoc, modal, modified]);
+  }, [explorer, modal, modified, navigate]);
 
   const onClickSaveAs = useCallback(() => {
     explorer
@@ -153,11 +164,10 @@ const ContestEditorHeader: FC<{
             "file",
             data.path.map(encodeURIComponent).join("/"),
           );
-          history.pushState(undefined, "", new URL(nowUrl).href);
-          message.success("保存成功");
+          history.replaceState(undefined, "", new URL(nowUrl).href);
         }
       });
-  }, [explorer, setPath, updateDoc, doc, message]);
+  }, [explorer, setPath, updateDoc, doc]);
 
   const versionInfo = useVersionInfo();
   const menuGroup = useMemo(

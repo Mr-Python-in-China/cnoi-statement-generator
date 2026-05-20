@@ -25,17 +25,24 @@ import {
 } from "@/utils/contestDataUtils";
 import TypstInitStatusProvider from "@/components/typstInitStatusProvider";
 import ContestEditorHeader from "./header";
-import { redirect } from "react-router";
+import { redirect, useBeforeUnload, useBlocker } from "react-router";
 import ErrorPage from "../errorPage";
 import type { Route } from "./+types";
 import { loadDocument } from "@/storage";
 import { DocNotFoundError } from "@/storage/errors";
+import navigationState from "./navigationState";
 
 export async function clientLoader({ request }: Route.ClientLoaderArgs) {
+  const url = new URL(request.url);
+  if (url.searchParams.has("_noConfirm")) {
+    url.searchParams.delete("_noConfirm");
+    throw redirect(url.toString());
+  }
   const file = new URL(request.url).searchParams.get("file");
   if (!file) throw redirect("/");
   const path = file.split("/").map((x) => decodeURIComponent(x));
-  const doc = await loadDocument(path);
+  const doc = navigationState.value?.doc || (await loadDocument(path));
+  navigationState.value = undefined;
   return {
     doc,
     path,
@@ -60,7 +67,7 @@ const ContestEditorMain: FC<{
   setPanel: Dispatch<SetStateAction<string>>;
   modified: boolean;
   setModified: Dispatch<SetStateAction<boolean>>;
-}> = ({ doc, updateDoc, panel, setPanel, modified, setModified }) => {
+}> = ({ doc, updateDoc, panel, setPanel, setModified }) => {
   const templateManager = useTemplateManager();
   const uiMeta = use(templateManager.uiMetadataPromise);
   const compiler = templateManager.compiler;
@@ -119,16 +126,6 @@ const ContestEditorMain: FC<{
   ];
   const removeProblem = removeProblemCallback(modal, setPanel, updateContent);
 
-  useEffect(() => {
-    if (!modified) return;
-    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
-      event.preventDefault();
-      event.returnValue = "你确定要离开吗？未保存的更改将会丢失。";
-    };
-    window.addEventListener("beforeunload", handleBeforeUnload);
-    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
-  }, [modified]);
-
   return (
     <>
       <main>
@@ -166,13 +163,23 @@ const ContestEditorMain: FC<{
 };
 
 const ContestEditor: FC<Route.ComponentProps> = ({ loaderData }) => {
-  const [doc, updateDoc] = useImmer<ImmerDocument>({
-    ...loaderData.doc,
-    content: toImmerContent(loaderData.doc.content),
-    previewImage: undefined,
-  });
-  const [path, setPath] = useState(loaderData.path);
+  const loaderImmerDoc = useMemo(
+    (): ImmerDocument => ({
+      ...loaderData.doc,
+      content: toImmerContent(loaderData.doc.content),
+      previewImage: undefined,
+    }),
+    [loaderData.doc],
+  );
 
+  const [doc, updateDoc] = useImmer<ImmerDocument>(loaderImmerDoc);
+  const [path, setPath] = useState(loaderData.path);
+  const { modal } = App.useApp();
+
+  useLayoutEffect(() => {
+    updateDoc(loaderImmerDoc);
+    setPath(loaderData.path);
+  }, [loaderData, loaderImmerDoc, updateDoc]);
   const pathStr = useMemo(() => path.map(encodeURIComponent).join("/"), [path]);
   const [templateManagerState, setTemplateManagerState] = useState<
     TemplateManager | undefined
@@ -197,38 +204,76 @@ const ContestEditor: FC<Route.ComponentProps> = ({ loaderData }) => {
     [pathStr],
   );
 
-  if (!templateManager) return undefined;
+  useBeforeUnload((event: BeforeUnloadEvent) => {
+    if (!modified) return;
+    event.preventDefault();
+    event.returnValue = "你确定要离开吗？未保存的更改将会丢失。";
+  });
+  const blocker = useBlocker(
+    ({ nextLocation }) =>
+      modified && !/(\?|&)_noConfirm/.test(nextLocation.search),
+  );
+  useEffect(() => {
+    let oldState = "";
+    if (blocker.state === "blocked" && oldState !== "blocked") {
+      modal
+        .confirm({
+          content: (
+            <>
+              你确定要继续吗？
+              <br />
+              未保存的更改将会丢失。
+            </>
+          ),
+          mask: {
+            closable: true,
+          },
+        })
+        .then(
+          (confirmed) => {
+            if (confirmed) blocker.proceed();
+            else blocker.reset();
+          },
+          () => blocker.reset(),
+        );
+    }
+    oldState = blocker.state;
+  }, [blocker, modal]);
 
   return (
-    <TemplateManagerContext.Provider value={templateManager}>
-      <TypstInitStatusProvider>
-        <ContestEditorHeader
-          {...{
-            doc,
-            updateDoc,
-            setPanel,
-            path,
-            setPath,
-            modified,
-            setModified,
-          }}
-        />
-        <Suspense>
-          <ContestEditorMain
-            {...{
-              doc,
-              updateDoc,
-              panel,
-              setPanel,
-              path,
-              setPath,
-              modified,
-              setModified,
-            }}
-          />
-        </Suspense>
-      </TypstInitStatusProvider>
-    </TemplateManagerContext.Provider>
+    <>
+      {templateManager && (
+        <TemplateManagerContext.Provider value={templateManager}>
+          <TypstInitStatusProvider>
+            <ContestEditorHeader
+              {...{
+                doc,
+                updateDoc,
+                setPanel,
+                path,
+                setPath,
+                modified,
+                setModified,
+              }}
+            />
+            <Suspense>
+              <ContestEditorMain
+                {...{
+                  doc,
+                  updateDoc,
+                  panel,
+                  setPanel,
+                  path,
+                  setPath,
+                  modified,
+                  setModified,
+                }}
+              />
+            </Suspense>
+          </TypstInitStatusProvider>
+        </TemplateManagerContext.Provider>
+      )}
+    </>
   );
 };
 
