@@ -1,15 +1,11 @@
 import type { DocumentMeta } from "@/types/document";
-import {
-  loadDocumentMetasFromDB,
-  saveDocumentToDB,
-} from "@/utils/indexedDBUtils";
+import { loadDocumentMetasFromDB } from "@/utils/indexedDBUtils";
 import { Suspense, use, useState, type FC } from "react";
-import { App, Button, message, Select } from "antd";
+import { Button, Select } from "antd";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faInfo, faPlus, faUpload } from "@fortawesome/free-solid-svg-icons";
+import { faInfo, faPlus } from "@fortawesome/free-solid-svg-icons";
 import { useImmer } from "use-immer";
 import DocumentGrid from "./documentGrid";
-import { importDocument } from "@/utils/contestDataUtils";
 import { Link } from "react-router";
 import NewDocModal from "./newDocModal";
 
@@ -22,7 +18,6 @@ import { useVersionInfo } from "@/components/useVersionInfo";
 const RootImpl: FC<{
   initialDocumentMetasPromise: Promise<DocumentMeta[]>;
 }> = ({ initialDocumentMetasPromise }) => {
-  const { modal } = App.useApp();
   const [documentMetas, updateDocumentMetas] = useImmer(
     use(initialDocumentMetasPromise),
   );
