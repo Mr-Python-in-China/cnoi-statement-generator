@@ -44,18 +44,16 @@ export type ImmerDocument<Document extends DocumentBase = DocumentBase> = Omit<
   "content"
 > & {
   content: ImmerContent<Document["content"]>;
-  previewImage: Blob | undefined;
 };
 
 export type DocumentBase = z.infer<
   ReturnType<typeof getZDocument<typeof zContentBase>>
 >;
 
-export type DocumentMeta = Pick<
-  DocumentBase,
-  "name" | "templateId" | "modifiedAt"
-> & {
-  previewImage: Blob | undefined;
+export type DocumentMeta = {
+  templateId: string;
+  name: string;
+  modifiedAt: Date;
 };
 
 export type DocumentContentOnly = Pick<DocumentBase, "name" | "content">;

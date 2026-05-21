@@ -167,7 +167,6 @@ const ContestEditor: FC<Route.ComponentProps> = ({ loaderData }) => {
     (): ImmerDocument => ({
       ...loaderData.doc,
       content: toImmerContent(loaderData.doc.content),
-      previewImage: undefined,
     }),
     [loaderData.doc],
   );

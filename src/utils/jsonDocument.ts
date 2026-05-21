@@ -83,7 +83,6 @@ export async function jsonToDocument(str: string): Promise<DocumentBase> {
     return {
       name: content.title,
       templateId: "cnoi",
-      modifiedAt: new Date().toISOString(),
       content: {
         title: content.title,
         subtitle: content.subtitle,

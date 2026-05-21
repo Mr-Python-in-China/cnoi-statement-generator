@@ -1,7 +1,6 @@
 import type { DocumentMeta } from "@/types/document";
 import { useState, type FC } from "react";
 import type { Updater } from "use-immer";
-import BlobImage from "@/components/BlobImage";
 import { App, Button, Dropdown, Tooltip, Typography } from "antd";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -18,6 +17,7 @@ import {
   renameDocumentToDB,
   saveDocumentToDB,
   DocumentNameConflictError,
+  loadDocumentMetaFromDB,
 } from "@/utils/indexedDBUtils";
 import { exportDocument } from "@/utils/contestDataUtils";
 import { Link } from "react-router";
@@ -40,21 +40,20 @@ const DocumentGrid: FC<{
           <Link
             to={`/editor?file=${encodeURIComponent(`browser/${encodeURIComponent(meta.name)}`)}`}
           >
-            {meta.previewImage ? (
+            {/*{meta.previewImage ? (
               <BlobImage
                 blob={meta.previewImage}
                 alt={`Document "${meta.name}" preview`}
               />
-            ) : (
-              <div
-                style={{
-                  // @ts-expect-error CSS variable
-                  "--doc-preview-card-color-hue": 0.625 + "turn",
-                }}
-              >
-                <div>{meta.name}</div>
-              </div>
-            )}
+            ) : */}
+            <div
+              style={{
+                // @ts-expect-error CSS variable
+                "--doc-preview-card-color-hue": 0.625 + "turn",
+              }}
+            >
+              <div>{meta.name}</div>
+            </div>
             <Dropdown
               menu={{
                 items: [
@@ -109,6 +108,9 @@ const DocumentGrid: FC<{
                     onClick: async () => {
                       try {
                         const backup = await loadDocumentFromDB(meta.name);
+                        const backupMeta = await loadDocumentMetaFromDB(
+                          meta.name,
+                        );
                         await deleteDocumentFromDB(meta.name);
                         updateDocumentMetas((draft) => {
                           draft.splice(
@@ -125,13 +127,15 @@ const DocumentGrid: FC<{
                               已删除{" "}
                               <Typography.Link
                                 onClick={() => {
-                                  saveDocumentToDB(backup, true);
+                                  saveDocumentToDB(
+                                    backup,
+                                    backupMeta.modifiedAt,
+                                  );
                                   updateDocumentMetas((draft) => {
                                     draft.push({
                                       name: backup.name,
                                       templateId: backup.templateId,
-                                      modifiedAt: backup.modifiedAt,
-                                      previewImage: backup.previewImage,
+                                      modifiedAt: backupMeta.modifiedAt,
                                     });
                                   });
                                   message.destroy(messageKey);

@@ -2,8 +2,8 @@ import { App, Button, Input, Modal } from "antd";
 import { useCallback, useState, type FC } from "react";
 import { exampleDocuments, loadExampleContent } from "@/utils/exampleDocuments";
 import {
-  createDocumentToDB,
   DocumentNameConflictError,
+  createDocumentToDB,
 } from "@/utils/indexedDBUtils";
 import { useNavigate } from "react-router";
 
@@ -28,7 +28,6 @@ const NewDocModal: FC<{ open: boolean; onClose: () => void }> = ({
         await createDocumentToDB({
           name: filename,
           templateId: exampleDocuments[exampleName].meta.template,
-          modifiedAt: new Date().toISOString(),
           content,
         });
         navigate(

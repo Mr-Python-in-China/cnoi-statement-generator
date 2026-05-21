@@ -33,30 +33,25 @@ export function resolveUniqueDocumentName(
   }
 }
 
-type StoredDocument = DocumentBase & {
-  previewImage?: Blob | undefined;
-};
+type StoredDocument = DocumentBase;
 
-function stripImmerDocument(doc: ImmerDocument): StoredDocument {
+function toStoredDocument(doc: ImmerDocument | DocumentBase): StoredDocument {
   return {
     ...doc,
     content: {
       ...doc.content,
-      images: doc.content.images.map(({ url: _url, ...img }) => img),
+      images: doc.content.images.map((x) =>
+        "url" in x ? (({ url: _url, ...rest }) => rest)(x) : x,
+      ),
     },
   };
 }
 
-function toStoredDocument(doc: ImmerDocument | DocumentBase): StoredDocument {
-  return "previewImage" in doc ? stripImmerDocument(doc) : doc;
-}
-
-function toDocumentMeta(doc: StoredDocument): DocumentMeta {
+function toDocumentMeta(doc: StoredDocument, modifiedAt: Date): DocumentMeta {
   return {
     name: doc.name,
     templateId: doc.templateId,
-    modifiedAt: doc.modifiedAt,
-    previewImage: doc.previewImage,
+    modifiedAt,
   };
 }
 
@@ -90,7 +85,7 @@ class CnoiDatabase extends Dexie {
           .table("config")
           .toArray()) as import("@/types/_oldContestData").StoredContestData[];
         for (const old of oldConfigs) {
-          const doc: DocumentBase = {
+          const doc = {
             content: {
               title: old.title,
               date: old.date,
@@ -201,6 +196,7 @@ class CnoiDatabase extends Dexie {
             name: uniqueName,
             templateId: oldMeta.templateId,
             modifiedAt: oldMeta.modifiedAt,
+            // @ts-expect-error old schema
             previewImage: oldMeta.previewImage,
           });
         }
@@ -234,21 +230,36 @@ class CnoiDatabase extends Dexie {
         await tx.table("documents_content").bulkPut(oldContentEntries);
         await tx.table("documents_meta").bulkPut(oldMetaEntries);
       });
+
+    this.version(7)
+      .stores({
+        documents_content: "name",
+        documents_meta: "name",
+      })
+      .upgrade(async (tx) => {
+        const oldMetaEntries = (await tx
+          .table("documents_meta")
+          .toArray()) as Array<DocumentMeta & { modifiedAt: string }>;
+
+        const newMetaEntries = oldMetaEntries.map((meta) => ({
+          ...meta,
+          modifiedAt: new Date(meta.modifiedAt),
+        }));
+
+        await tx.table("documents_meta").bulkPut(newMetaEntries);
+      });
   }
 }
 
 const db = new CnoiDatabase();
 
-async function writeDocumentToDB(
+export async function saveDocumentToDB(
   doc: ImmerDocument | DocumentBase,
-  doNotOverrideModifiedAt = false,
+  modifiedAt: Date = new Date(),
 ): Promise<StoredDocument> {
   const targetDoc = toStoredDocument(doc);
   const storedDocument: StoredDocument = {
     ...targetDoc,
-    modifiedAt: doNotOverrideModifiedAt
-      ? targetDoc.modifiedAt
-      : new Date().toISOString(),
   };
 
   await db.transaction(
@@ -261,28 +272,20 @@ async function writeDocumentToDB(
         content: storedDocument.content,
       });
 
-      await db.documents_meta.put(toDocumentMeta(storedDocument));
+      await db.documents_meta.put(toDocumentMeta(storedDocument, modifiedAt));
     },
   );
 
   return storedDocument;
 }
 
-export async function saveDocumentToDB(
-  doc: ImmerDocument | DocumentBase,
-  doNotOverrideModifiedAt = false,
-): Promise<void> {
-  await writeDocumentToDB(doc, doNotOverrideModifiedAt);
-}
-
 export async function createDocumentToDB(
   doc: ImmerDocument | DocumentBase,
-  doNotOverrideModifiedAt = false,
 ): Promise<DocumentBase> {
   const targetDoc = toStoredDocument(doc);
   const existing = await db.documents_meta.get(targetDoc.name);
   if (existing) throw new DocumentNameConflictError(targetDoc.name);
-  return await writeDocumentToDB(targetDoc, doNotOverrideModifiedAt);
+  return await saveDocumentToDB(targetDoc, new Date());
 }
 
 export async function loadDocumentFromDB(name: string): Promise<ImmerDocument> {
@@ -312,13 +315,12 @@ export async function cloneDocumentToDB(name: string, newName: string) {
   const newDoc: StoredDocument = {
     name: uniqueName,
     templateId: metaEntry.templateId,
-    modifiedAt: new Date().toISOString(),
-    previewImage: metaEntry.previewImage,
     content: contentEntry.content,
   };
 
-  await writeDocumentToDB(newDoc, true);
-  return toDocumentMeta(newDoc);
+  const now = new Date();
+  await saveDocumentToDB(newDoc, now);
+  return toDocumentMeta(newDoc, now);
 }
 
 export async function renameDocumentToDB(
@@ -342,10 +344,10 @@ export async function renameDocumentToDB(
   const renamedDocument: StoredDocument = {
     name: newName,
     templateId: metaEntry.templateId,
-    modifiedAt: new Date().toISOString(),
-    previewImage: metaEntry.previewImage,
     content: contentEntry.content,
   };
+
+  const now = new Date();
 
   await db.transaction(
     "rw",
@@ -358,11 +360,11 @@ export async function renameDocumentToDB(
         name: renamedDocument.name,
         content: renamedDocument.content,
       });
-      await db.documents_meta.put(toDocumentMeta(renamedDocument));
+      await db.documents_meta.put(toDocumentMeta(renamedDocument, now));
     },
   );
 
-  return toDocumentMeta(renamedDocument);
+  return toDocumentMeta(renamedDocument, now);
 }
 
 export async function deleteDocumentFromDB(name: string) {
@@ -375,4 +377,12 @@ export async function deleteDocumentFromDB(name: string) {
       await db.documents_meta.delete(name);
     },
   );
+}
+
+export async function loadDocumentMetaFromDB(
+  name: string,
+): Promise<DocumentMeta> {
+  const metaEntry = await db.documents_meta.get(name);
+  if (!metaEntry) throw new DocumentNotFoundError();
+  return metaEntry;
 }

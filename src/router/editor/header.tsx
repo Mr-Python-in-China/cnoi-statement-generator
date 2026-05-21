@@ -136,7 +136,6 @@ const ContestEditorHeader: FC<{
         doc: {
           ...data.doc,
           content: toImmerContent(data.doc.content),
-          previewImage: undefined,
         },
       };
       navigate({
@@ -157,7 +156,6 @@ const ContestEditorHeader: FC<{
           updateDoc({
             ...data.doc,
             content: toImmerContent(data.doc.content),
-            previewImage: undefined,
           });
           const nowUrl = new URL(window.location.href);
           nowUrl.searchParams.set(

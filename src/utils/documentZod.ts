@@ -36,7 +36,6 @@ export function getZDocument<Content extends ContentBase>(
   return z.object({
     name: z.string(),
     templateId: z.string(),
-    modifiedAt: z.iso.datetime(),
     content: zContent,
   });
 }
@@ -45,7 +44,6 @@ export function removeImmer(content: ImmerDocument): DocumentBase {
   const x = {
     name: content.name,
     templateId: content.templateId,
-    modifiedAt: content.modifiedAt,
     content: {
       ...content.content,
       images: content.content.images.map(({ url: _url, ...img }) => img),
