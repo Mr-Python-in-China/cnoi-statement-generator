@@ -11,7 +11,7 @@
     "useDefineForClassFields": true,
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "module": "ESNext",
-    "types": ["vite/client"],
+    "types": ["vite/client", "@types/wicg-file-system-access"],
     "skipLibCheck": true,
 
     /* Bundler mode */

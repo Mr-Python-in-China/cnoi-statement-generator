@@ -12,6 +12,7 @@ import "./Explorer.css";
 
 const Page: StorageMethodObject["ExplorerPage"] = ({
   path,
+  mode,
   onSelect,
   onOpenFolder,
   setFileItems,
@@ -44,6 +45,7 @@ const Page: StorageMethodObject["ExplorerPage"] = ({
   return (
     <StorageExplorerPage
       path={path.slice(1)}
+      mode={mode}
       onSelect={(url) => onSelect(url)}
       onOpenFolder={onOpenFolder}
       setFileItems={setFileItems}
@@ -70,6 +72,8 @@ export type ExplorerProps = (
 };
 
 const Explorer: FC<ExplorerProps & { open: boolean }> = (props) => {
+  const { onClose } = props;
+
   const { message } = App.useApp();
   const [navState, setNavState] = useState(() => ({
     history: [new Array<string>()],
@@ -161,16 +165,18 @@ const Explorer: FC<ExplorerProps & { open: boolean }> = (props) => {
     [currentPath, navigateTo],
   );
 
-  const closeAsCancelled = () => {
-    props.onClose({ state: "cancelled" });
-  };
+  const closeAsCancelled = useCallback(() => {
+    onClose({ state: "cancelled" });
+  }, [onClose]);
 
-  const handleConfirm = async (filekey: string) => {
-    const path = [...currentPath, filekey];
+  const handleConfirm = async (file: string | ExplorerItem) => {
+    const path = [...currentPath, typeof file === "string" ? file : file.key];
     try {
       if (props.mode === "open") {
-        if (!filekey) return;
-        const fileObj = fileItems?.find((item) => item.key === filekey);
+        const fileObj =
+          typeof file === "string"
+            ? fileItems?.find((item) => item.key === file)
+            : file;
         if (!fileObj) {
           message.error("文件不存在");
           return;
@@ -182,11 +188,11 @@ const Explorer: FC<ExplorerProps & { open: boolean }> = (props) => {
         }
         const doc = await loadDocument(path);
         message.success("打开成功");
-        props.onClose({ state: "success", doc, path });
+        onClose({ state: "success", doc, path });
       } else {
         const doc = await saveDocument(path, props.doc);
         message.success("保存成功");
-        props.onClose({ state: "success", doc, path });
+        onClose({ state: "success", doc, path });
       }
     } catch (error) {
       if (error instanceof DocNotFoundError) {
@@ -263,6 +269,7 @@ const Explorer: FC<ExplorerProps & { open: boolean }> = (props) => {
       <div className="explorer-content">
         <Page
           path={currentPath}
+          mode={props.mode}
           onSelect={(key) => setFilename(key)}
           onOpenFolder={(key: string) => navigateTo([...currentPath, key])}
           setFileItems={handleSetFileItems}

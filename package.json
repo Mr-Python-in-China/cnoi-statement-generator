@@ -80,6 +80,7 @@
     "@types/react": "^19.2.8",
     "@types/react-dom": "^19.2.3",
     "@types/unist": "^3.0.3",
+    "@types/wicg-file-system-access": "^2023.10.7",
     "@types/xxhashjs": "^0.2.4",
     "@vitejs/plugin-react": "^5.1.4",
     "@vitest/coverage-v8": "^4.0.18",

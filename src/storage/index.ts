@@ -1,12 +1,16 @@
 import type { DocumentBase } from "@/types/document";
 
-import browserStorage from "./browser";
 import { DocNotFoundError } from "./errors";
 import type { StorageMethodObject } from "./types";
 
-export const storageMethods = {
-  browser: browserStorage,
-} satisfies Record<string, StorageMethodObject>;
+export const storageMethods = Object.fromEntries(
+  Object.entries(
+    import.meta.glob<StorageMethodObject>("./*/index.tsx", {
+      eager: true,
+      import: "default",
+    }),
+  ).map(([key, module]) => [key.split("/")[1], module]),
+);
 
 export async function saveDocument(
   path: string[],

@@ -14,10 +14,11 @@ export type StorageMethodObject = {
   loadDocument: (path: string[]) => Promise<DocumentBase>;
   ExplorerPage: FC<{
     path: string[];
+    mode: "open" | "save";
     onSelect: (key: string) => void;
     onOpenFolder: (key: string) => void;
     setFileItems: (items: ExplorerItem[]) => void;
-    onConfirm: (key: string) => void;
+    onConfirm: (file: string | ExplorerItem) => void;
   }>;
   icon: ReactNode;
   name: string;
