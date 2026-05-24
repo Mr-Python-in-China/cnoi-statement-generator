@@ -169,22 +169,26 @@ const Explorer: FC<ExplorerProps & { open: boolean }> = (props) => {
     onClose({ state: "cancelled" });
   }, [onClose]);
 
-  const handleConfirm = async (file: string | ExplorerItem) => {
-    const path = [...currentPath, typeof file === "string" ? file : file.key];
+  const handleConfirm = async (file: string | string[] | ExplorerItem) => {
+    const path = Array.isArray(file)
+      ? [...currentPath, ...file]
+      : [...currentPath, typeof file === "string" ? file : file.key];
     try {
       if (props.mode === "open") {
-        const fileObj =
-          typeof file === "string"
-            ? fileItems?.find((item) => item.key === file)
-            : file;
-        if (!fileObj) {
-          message.error("文件不存在");
-          return;
-        }
-        setLoading(true);
-        if (fileObj.type === "folder") {
-          navigateTo(path);
-          return;
+        if (!Array.isArray(file)) {
+          const fileObj =
+            typeof file === "string"
+              ? fileItems?.find((item) => item.key === file)
+              : file;
+          if (!fileObj) {
+            message.error("文件不存在");
+            return;
+          }
+          setLoading(true);
+          if (fileObj.type === "folder") {
+            navigateTo(path);
+            return;
+          }
         }
         const doc = await loadDocument(path);
         message.success("打开成功");

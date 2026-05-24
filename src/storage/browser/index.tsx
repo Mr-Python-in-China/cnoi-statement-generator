@@ -3,7 +3,7 @@ import {
   loadDocumentFromDB,
   loadDocumentMetasFromDB,
   saveDocumentToDB,
-} from "@/utils/indexedDBUtils";
+} from "@/utils/indexedDB/browserStorage";
 import {
   faFileLines,
   faWindowMaximize,

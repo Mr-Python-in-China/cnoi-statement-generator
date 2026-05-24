@@ -1,7 +1,8 @@
 import type { DocumentBase } from "@/types/document";
 import type { FC, ReactNode } from "react";
+import type { ExplorerItem } from "../components/ExplorerPage";
 
-export { ExplorerItem } from "../components/ExplorerPage";
+export { ExplorerItem };
 export type GetExplorerItemFunction = (
   path: string[],
 ) => Promise<ExplorerItem[]>;
@@ -18,7 +19,7 @@ export type StorageMethodObject = {
     onSelect: (key: string) => void;
     onOpenFolder: (key: string) => void;
     setFileItems: (items: ExplorerItem[]) => void;
-    onConfirm: (file: string | ExplorerItem) => void;
+    onConfirm: (file: string | string[] | ExplorerItem) => void;
   }>;
   icon: ReactNode;
   name: string;

@@ -18,7 +18,7 @@ import {
   saveDocumentToDB,
   DocumentNameConflictError,
   loadDocumentMetaFromDB,
-} from "@/utils/indexedDBUtils";
+} from "@/utils/indexedDB/browserStorage";
 import { exportDocument } from "@/utils/contestDataUtils";
 import { Link } from "react-router";
 

@@ -8,8 +8,7 @@ import { DocNotFoundError, SaveDocumentError } from "../errors";
 import { documentToJson, jsonToDocument } from "@/utils/jsonDocument";
 
 import "./index.css";
-
-const fileHandleMap = new Map<string, FileSystemFileHandle>();
+import { getFsHandle, saveFsHandle } from "@/utils/indexedDB/fsHandles";
 
 const jsonPickerOptions: OpenFilePickerOptions = {
   multiple: false,
@@ -46,26 +45,14 @@ const ensurePermission = async (
   }
 };
 
-const registerHandle = (handle: FileSystemFileHandle, key?: string) => {
-  const handleKey = key ?? handle.name;
-  fileHandleMap.set(handleKey, handle);
-  if (handleKey !== handle.name) {
-    fileHandleMap.set(handle.name, handle);
-  }
-  return handleKey;
-};
-
-const getHandle = (key: string) => fileHandleMap.get(key);
-
 export default {
   name: "本机",
   saveDocument: async (
     path: string[],
     content: DocumentBase,
   ): Promise<DocumentBase> => {
-    const key = path[0];
     ensureFileSystemApi();
-    let handle = key ? getHandle(key) : undefined;
+    const handle = await getFsHandle(path);
     if (!handle) throw new DocNotFoundError("文件句柄不存在，请重新选择文件");
     await ensurePermission(handle, "readwrite");
     const writable = await handle.createWritable();
@@ -78,8 +65,8 @@ export default {
     return payload;
   },
   loadDocument: async (path: string[]): Promise<DocumentBase> => {
-    const key = path[0];
-    const handle = key ? getHandle(key) : undefined;
+    if (!navigator.userActivation.hasBeenActive) alert("你需要授权文件访问。"); // 用户交互后才能读取文件
+    const handle = await getFsHandle(path);
     if (!handle) {
       throw new DocNotFoundError("文件句柄不存在，请重新选择文件");
     }
@@ -108,8 +95,8 @@ export default {
             ? (await window.showOpenFilePicker(jsonPickerOptions))[0]
             : await window.showSaveFilePicker(jsonSaveOptions);
         if (!handle) return;
-        const key = registerHandle(handle);
-        onConfirmRef.current({ type: "file", key });
+        const key = await saveFsHandle(handle);
+        onConfirmRef.current(key);
       } catch (error) {
         if (error instanceof DOMException && error.name === "AbortError") {
           return;

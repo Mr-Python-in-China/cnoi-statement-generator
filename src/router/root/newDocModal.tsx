@@ -4,7 +4,7 @@ import { exampleDocuments, loadExampleContent } from "@/utils/exampleDocuments";
 import {
   DocumentNameConflictError,
   createDocumentToDB,
-} from "@/utils/indexedDBUtils";
+} from "@/utils/indexedDB/browserStorage";
 import { useNavigate } from "react-router";
 
 import "./newDocModal.css";

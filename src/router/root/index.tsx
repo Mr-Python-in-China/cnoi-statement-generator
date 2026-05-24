@@ -1,5 +1,5 @@
 import type { DocumentMeta } from "@/types/document";
-import { loadDocumentMetasFromDB } from "@/utils/indexedDBUtils";
+import { loadDocumentMetasFromDB } from "@/utils/indexedDB/browserStorage";
 import { Suspense, use, useState, type FC } from "react";
 import { Button, Select } from "antd";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
