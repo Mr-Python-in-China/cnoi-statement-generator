@@ -1,10 +1,14 @@
 import { useCallback, useEffect, useRef } from "react";
 import type { StorageMethodObject } from "../types";
-import { Button } from "antd";
+import { App, Button } from "antd";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faHardDrive, faInbox } from "@fortawesome/free-solid-svg-icons";
 import type { DocumentBase } from "@/types/document";
-import { DocNotFoundError, SaveDocumentError } from "../errors";
+import {
+  DocNotFoundError,
+  LoadDocumentError,
+  SaveDocumentError,
+} from "../errors";
 import { documentToJson, jsonToDocument } from "@/utils/jsonDocument";
 
 import "./index.css";
@@ -27,19 +31,29 @@ const jsonSaveOptions: SaveFilePickerOptions = {
   startIn: "documents",
 };
 
-const ensureFileSystemApi = () => {
-  if (!("showOpenFilePicker" in window) || !("showSaveFilePicker" in window)) {
+const ensureFileLoadSystemApi = () => {
+  if (!("showOpenFilePicker" in window))
+    throw new LoadDocumentError("当前浏览器不支持");
+};
+
+const ensureFileSaveSystemApi = () => {
+  if (!("showSaveFilePicker" in window))
     throw new SaveDocumentError("当前浏览器不支持");
+};
+
+const ensureLoadPermission = async (handle: FileSystemFileHandle) => {
+  const status = await handle.queryPermission({ mode: "read" });
+  if (status === "granted") return;
+  const next = await handle.requestPermission({ mode: "read" });
+  if (next !== "granted") {
+    throw new LoadDocumentError("未授予文件访问权限");
   }
 };
 
-const ensurePermission = async (
-  handle: FileSystemFileHandle,
-  mode: FileSystemPermissionMode,
-) => {
-  const status = await handle.queryPermission({ mode });
+const ensureSavePermission = async (handle: FileSystemFileHandle) => {
+  const status = await handle.queryPermission({ mode: "readwrite" });
   if (status === "granted") return;
-  const next = await handle.requestPermission({ mode });
+  const next = await handle.requestPermission({ mode: "readwrite" });
   if (next !== "granted") {
     throw new SaveDocumentError("未授予文件访问权限");
   }
@@ -51,10 +65,10 @@ export default {
     path: string[],
     content: DocumentBase,
   ): Promise<DocumentBase> => {
-    ensureFileSystemApi();
+    ensureFileSaveSystemApi();
     const handle = await getFsHandle(path);
-    if (!handle) throw new DocNotFoundError("文件句柄不存在，请重新选择文件");
-    await ensurePermission(handle, "readwrite");
+    if (!handle) throw new DocNotFoundError("File handle not found");
+    await ensureSavePermission(handle);
     const writable = await handle.createWritable();
     const payload = {
       ...content,
@@ -65,12 +79,12 @@ export default {
     return payload;
   },
   loadDocument: async (path: string[]): Promise<DocumentBase> => {
-    if (!navigator.userActivation.hasBeenActive) alert("你需要授权文件访问。"); // 用户交互后才能读取文件
+    ensureFileLoadSystemApi();
     const handle = await getFsHandle(path);
     if (!handle) {
-      throw new DocNotFoundError("文件句柄不存在，请重新选择文件");
+      throw new DocNotFoundError("File handle not found");
     }
-    await ensurePermission(handle, "read");
+    await ensureLoadPermission(handle);
     const file = await handle.getFile();
     const doc = await jsonToDocument(await file.text());
     return {
@@ -82,18 +96,22 @@ export default {
   ExplorerPage: ({ onConfirm, mode }) => {
     const didAutoPick = useRef(false);
     const onConfirmRef = useRef(onConfirm);
+    const { message } = App.useApp();
 
     useEffect(() => {
       onConfirmRef.current = onConfirm;
     }, [onConfirm]);
 
     const handlePickFile = useCallback(async () => {
-      ensureFileSystemApi();
       try {
-        const handle =
-          mode === "open"
-            ? (await window.showOpenFilePicker(jsonPickerOptions))[0]
-            : await window.showSaveFilePicker(jsonSaveOptions);
+        let handle: FileSystemFileHandle;
+        if (mode === "open") {
+          ensureFileLoadSystemApi();
+          handle = (await window.showOpenFilePicker(jsonPickerOptions))[0];
+        } else {
+          ensureFileSaveSystemApi();
+          handle = await window.showSaveFilePicker(jsonSaveOptions);
+        }
         if (!handle) return;
         const key = await saveFsHandle(handle);
         onConfirmRef.current(key);
@@ -101,9 +119,15 @@ export default {
         if (error instanceof DOMException && error.name === "AbortError") {
           return;
         }
+        message.error(
+          error instanceof LoadDocumentError ||
+            error instanceof SaveDocumentError
+            ? error.message
+            : "操作失败",
+        );
         throw error;
       }
-    }, [mode]);
+    }, [mode, message]);
 
     useEffect(() => {
       if (didAutoPick.current) return;

@@ -11,7 +11,11 @@ import {
   useLayoutEffect,
 } from "react";
 import { useImmer, type Updater } from "use-immer";
-import type { ImmerContent, ImmerDocument } from "@/types/document";
+import type {
+  DocumentBase,
+  ImmerContent,
+  ImmerDocument,
+} from "@/types/document";
 import { App, Tabs, type TabsProps } from "antd";
 import Body from "./body";
 import useTemplateManager, {
@@ -25,38 +29,93 @@ import {
 } from "@/utils/contestDataUtils";
 import TypstInitStatusProvider from "@/components/typstInitStatusProvider";
 import ContestEditorHeader from "./header";
-import { redirect, useBeforeUnload, useBlocker } from "react-router";
+import {
+  useBeforeUnload,
+  useBlocker,
+  useNavigate,
+  useSearchParams,
+} from "react-router";
 import ErrorPage from "../errorPage";
 import type { Route } from "./+types";
 import { loadDocument } from "@/storage";
-import { DocNotFoundError } from "@/storage/errors";
+import { DocNotFoundError, LoadDocumentError } from "@/storage/errors";
 import navigationState from "./navigationState";
+import { requestUserAction } from "@/components/RequestUserActionHolder";
 
-export async function clientLoader({ request }: Route.ClientLoaderArgs) {
-  const url = new URL(request.url);
-  if (url.searchParams.has("_noConfirm")) {
-    url.searchParams.delete("_noConfirm");
-    throw redirect(url.toString());
-  }
-  const file = new URL(request.url).searchParams.get("file");
-  if (!file) throw redirect("/");
-  const path = file.split("/").map((x) => decodeURIComponent(x));
-  const doc = navigationState.value?.doc || (await loadDocument(path));
-  navigationState.value = undefined;
-  return {
-    doc,
-    path,
-  };
-}
+const ContestEditorLoader: FC<Route.ComponentProps> = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const [state, setState] = useState<
+    | {
+        doc: DocumentBase;
+        path: string[];
+      }
+    | { error: unknown }
+    | null
+  >(null);
 
-export const ErrorBoundary: FC<Route.ErrorBoundaryProps> = ({ error }) => {
-  console.error("Failed to load document in editor route", error);
-  return (
-    <ErrorPage>
-      {error instanceof DocNotFoundError ? "文档不存在" : "加载文档时发生错误"}
-    </ErrorPage>
-  );
+  useEffect(() => {
+    let cancelled = false;
+
+    const run = async () => {
+      try {
+        if (searchParams.has("_noConfirm")) {
+          setSearchParams(
+            (prev) => {
+              prev.delete("_noConfirm");
+              return prev;
+            },
+            {
+              replace: true,
+            },
+          );
+          return;
+        }
+        const file = searchParams.get("file");
+        if (!file) {
+          navigate("/", { replace: true });
+          return;
+        }
+        const parsedPath = file.split("/").map((x) => decodeURIComponent(x));
+        let nextDoc: DocumentBase | undefined = navigationState.value?.doc;
+        if (!nextDoc) {
+          if (parsedPath[0] === "fs") await requestUserAction();
+          nextDoc = await loadDocument(parsedPath);
+        }
+        navigationState.value = undefined;
+        if (cancelled) return;
+        setState({
+          doc: nextDoc,
+          path: parsedPath,
+        });
+      } catch (err) {
+        if (cancelled) return;
+        console.error("Failed to load document in editor route", err);
+        setState({ error: err });
+      }
+    };
+
+    run();
+    return () => void (cancelled = true);
+  }, [searchParams, setSearchParams, navigate]);
+
+  if (!state) return null;
+
+  if (state && "error" in state)
+    return (
+      <ErrorPage>
+        {state.error instanceof DocNotFoundError
+          ? "文档不存在"
+          : state.error instanceof LoadDocumentError
+            ? state.error.message
+            : "加载文档时发生错误"}
+      </ErrorPage>
+    );
+
+  return <ContestEditor {...state} />;
 };
+
+export default ContestEditorLoader;
 
 const ContestEditorMain: FC<{
   doc: ImmerDocument;
@@ -162,23 +221,26 @@ const ContestEditorMain: FC<{
   );
 };
 
-const ContestEditor: FC<Route.ComponentProps> = ({ loaderData }) => {
+const ContestEditor: FC<{ doc: DocumentBase; path: string[] }> = ({
+  doc: rawDoc,
+  path: initialPath,
+}) => {
   const loaderImmerDoc = useMemo(
     (): ImmerDocument => ({
-      ...loaderData.doc,
-      content: toImmerContent(loaderData.doc.content),
+      ...rawDoc,
+      content: toImmerContent(rawDoc.content),
     }),
-    [loaderData.doc],
+    [rawDoc],
   );
 
   const [doc, updateDoc] = useImmer<ImmerDocument>(loaderImmerDoc);
-  const [path, setPath] = useState(loaderData.path);
+  const [path, setPath] = useState(initialPath);
   const { modal } = App.useApp();
 
   useLayoutEffect(() => {
     updateDoc(loaderImmerDoc);
-    setPath(loaderData.path);
-  }, [loaderData, loaderImmerDoc, updateDoc]);
+    setPath(initialPath);
+  }, [initialPath, loaderImmerDoc, updateDoc]);
   const pathStr = useMemo(() => path.map(encodeURIComponent).join("/"), [path]);
   const [templateManagerState, setTemplateManagerState] = useState<
     TemplateManager | undefined
@@ -275,5 +337,3 @@ const ContestEditor: FC<Route.ComponentProps> = ({ loaderData }) => {
     </>
   );
 };
-
-export default ContestEditor;

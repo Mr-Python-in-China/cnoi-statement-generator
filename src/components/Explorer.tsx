@@ -6,7 +6,11 @@ import type { ExplorerItem, StorageMethodObject } from "@/storage/types";
 import { App, AutoComplete, Breadcrumb, Button, Modal, Space } from "antd";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowLeft, faArrowRight } from "@fortawesome/free-solid-svg-icons";
-import { DocNotFoundError, SaveDocumentError } from "@/storage/errors";
+import {
+  DocNotFoundError,
+  LoadDocumentError,
+  SaveDocumentError,
+} from "@/storage/errors";
 
 import "./Explorer.css";
 
@@ -201,7 +205,10 @@ const Explorer: FC<ExplorerProps & { open: boolean }> = (props) => {
     } catch (error) {
       if (error instanceof DocNotFoundError) {
         message.error("文档不存在");
-      } else if (error instanceof SaveDocumentError) {
+      } else if (
+        error instanceof LoadDocumentError ||
+        error instanceof SaveDocumentError
+      ) {
         message.error(error.message);
       } else {
         message.error(props.mode === "open" ? "打开失败" : "保存失败");

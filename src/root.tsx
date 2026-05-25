@@ -1,7 +1,7 @@
-import type { ReactNode } from "react";
+import type { FC, ReactNode } from "react";
 import { Links, Meta, Outlet, Scripts, ScrollRestoration } from "react-router";
 
-export function Layout({ children }: { children: ReactNode }) {
+export const Layout: FC<{ children: ReactNode }> = ({ children }) => {
   return (
     <html lang="zh-CN">
       <head>
@@ -29,8 +29,8 @@ export function Layout({ children }: { children: ReactNode }) {
       </body>
     </html>
   );
-}
+};
 
-export default function Root() {
-  return <Outlet />;
-}
+const Root: FC = () => <Outlet />;
+
+export default Root;

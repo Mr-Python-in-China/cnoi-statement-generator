@@ -6,8 +6,9 @@ import type {
 import { toImmerContent } from "@/utils/contestDataUtils";
 import db from "./db";
 import resolveUniqueDocumentName from "../resolveUniqueDocumentName";
+import { DocNotFoundError } from "@/storage/errors";
 
-export class DocumentNotFoundError extends Error {
+class DocumentNotFoundError extends DocNotFoundError {
   constructor() {
     super("Document not found in IndexedDB");
   }
