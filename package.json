@@ -91,7 +91,7 @@
     "husky": "^9.1.7",
     "jiti": "^2.6.1",
     "mdast-util-to-hast": "^13.2.1",
-    "oxfmt": "^0.45.0",
+    "oxfmt": "^0.51.0",
     "oxlint": "^1.65.0",
     "pdf-to-img": "^6.1.0",
     "pngjs": "^7.0.0",
