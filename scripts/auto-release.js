@@ -1,8 +1,8 @@
 // @ts-check
 
+import { execSync } from "child_process";
 import { appendFile, readFile, writeFile } from "fs/promises";
 import { join } from "path";
-import { execSync } from "child_process";
 
 const workspaceRoot = process.cwd();
 const packagePath = join(workspaceRoot, "package.json");

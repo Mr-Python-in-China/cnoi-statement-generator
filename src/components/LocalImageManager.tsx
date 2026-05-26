@@ -1,15 +1,16 @@
-import { App, Button, Card, Image, Input, Upload } from "antd";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faMarkdown } from "@fortawesome/free-brands-svg-icons";
 import {
   faInbox,
   faPenToSquare,
   faTrashCan,
 } from "@fortawesome/free-solid-svg-icons";
-import { useState } from "react";
-import type { ContentBase, ImmerContent } from "@/types/document";
-import type { Updater } from "use-immer";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { App, Button, Card, Image, Input, Upload } from "antd";
 import type { Draft } from "immer";
+import { useState } from "react";
+import type { Updater } from "use-immer";
+
+import type { ContentBase, ImmerContent } from "@/types/document";
 import { eraseImageByIndex, pushBackImage } from "@/utils/imageUpdater";
 
 import "./LocalImageManager.css";

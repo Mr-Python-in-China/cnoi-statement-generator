@@ -1,11 +1,12 @@
 import { App, Button, Input, Modal } from "antd";
 import { useCallback, useState, type FC } from "react";
+import { useNavigate } from "react-router";
+
 import { exampleDocuments, loadExampleContent } from "@/utils/exampleDocuments";
 import {
   DocumentNameConflictError,
   createDocumentToDB,
 } from "@/utils/indexedDB/browserStorage";
-import { useNavigate } from "react-router";
 
 import "./newDocModal.css";
 

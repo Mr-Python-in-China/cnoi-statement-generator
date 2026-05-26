@@ -1,4 +1,5 @@
 import type { ImmerContent } from "@/types/document";
+
 import type { Content } from "./types";
 
 export default function createNewProblem(

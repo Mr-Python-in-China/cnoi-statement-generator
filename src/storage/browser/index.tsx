@@ -1,17 +1,19 @@
+import {
+  faFileLines,
+  faWindowMaximize,
+} from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { useEffect, useState } from "react";
+
+import ExplorerPage from "@/components/ExplorerPage";
 import type { DocumentBase, DocumentMeta } from "@/types/document";
 import {
   loadDocumentFromDB,
   loadDocumentMetasFromDB,
   saveDocumentToDB,
 } from "@/utils/indexedDB/browserStorage";
-import {
-  faFileLines,
-  faWindowMaximize,
-} from "@fortawesome/free-solid-svg-icons";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+
 import type { StorageMethodObject } from "../types";
-import ExplorerPage from "@/components/ExplorerPage";
-import { useEffect, useState } from "react";
 
 export default {
   name: "浏览器存储",

@@ -1,4 +1,4 @@
-import type { ImmerContent } from "@/types/document";
+import { Splitter } from "antd";
 import {
   useEffect,
   useRef,
@@ -9,10 +9,12 @@ import {
   use,
 } from "react";
 import { type Updater } from "use-immer";
-import Preview from "./preview";
-import { Splitter } from "antd";
-import MarkdownPanel from "./markdownPanel";
+
 import useTemplateManager from "@/components/templateManagerContext";
+import type { ImmerContent } from "@/types/document";
+
+import MarkdownPanel from "./markdownPanel";
+import Preview from "./preview";
 
 import "./body.css";
 import "./config-common.css";

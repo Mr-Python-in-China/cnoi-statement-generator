@@ -1,9 +1,9 @@
-import { Button, Modal } from "antd";
-import { type FC } from "react";
 import {
   version as APP_VERSION,
   repository as REPOSITORY_URL,
 } from "/package.json";
+import { Button, Modal } from "antd";
+import { type FC } from "react";
 import { Link } from "react-router";
 
 import "./VersionInfo.css";

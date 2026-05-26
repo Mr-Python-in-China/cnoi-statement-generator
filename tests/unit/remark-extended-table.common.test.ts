@@ -1,7 +1,8 @@
-import { describe, expect, test } from "vitest";
-import remarkExtendedTable from "@/compiler/remarkExtendedTable";
 import type { Root, Table, TableRow, TableCell } from "mdast";
 import { unified } from "unified";
+import { describe, expect, test } from "vitest";
+
+import remarkExtendedTable from "@/compiler/remarkExtendedTable";
 
 // Helper function to create a table cell
 function createCell(text: string): TableCell {

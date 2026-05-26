@@ -1,8 +1,10 @@
-import type { ContentBase, DocumentBase } from "@/types/document";
+import base64js from "base64-js";
 import z from "zod";
+
+import type { ContentBase, DocumentBase } from "@/types/document";
+
 import { getZDocument } from "./documentZod";
 import { importContentZod } from "./importTemplate";
-import base64js from "base64-js";
 
 const zOldContent = z.object({
   title: z.string(),

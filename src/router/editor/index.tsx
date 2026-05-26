@@ -1,3 +1,4 @@
+import { App, Tabs, type TabsProps } from "antd";
 import {
   type FC,
   useEffect,
@@ -10,37 +11,39 @@ import {
   useMemo,
   useLayoutEffect,
 } from "react";
-import { useImmer, type Updater } from "use-immer";
-import type {
-  DocumentBase,
-  ImmerContent,
-  ImmerDocument,
-} from "@/types/document";
-import { App, Tabs, type TabsProps } from "antd";
-import Body from "./body";
-import useTemplateManager, {
-  TemplateManagerContext,
-} from "@/components/templateManagerContext";
-import "./index.css";
-import TemplateManager from "@/utils/templateManager";
-import {
-  removeProblemCallback,
-  toImmerContent,
-} from "@/utils/contestDataUtils";
-import TypstInitStatusProvider from "@/components/typstInitStatusProvider";
-import ContestEditorHeader from "./header";
 import {
   useBeforeUnload,
   useBlocker,
   useNavigate,
   useSearchParams,
 } from "react-router";
-import ErrorPage from "../errorPage";
-import type { Route } from "./+types";
+import { useImmer, type Updater } from "use-immer";
+
+import { requestUserAction } from "@/components/RequestUserActionHolder";
+import useTemplateManager, {
+  TemplateManagerContext,
+} from "@/components/templateManagerContext";
+
+import "./index.css";
+import TypstInitStatusProvider from "@/components/typstInitStatusProvider";
 import { loadDocument } from "@/storage";
 import { DocNotFoundError, LoadDocumentError } from "@/storage/errors";
+import type {
+  DocumentBase,
+  ImmerContent,
+  ImmerDocument,
+} from "@/types/document";
+import {
+  removeProblemCallback,
+  toImmerContent,
+} from "@/utils/contestDataUtils";
+import TemplateManager from "@/utils/templateManager";
+
+import ErrorPage from "../errorPage";
+import type { Route } from "./+types";
+import Body from "./body";
+import ContestEditorHeader from "./header";
 import navigationState from "./navigationState";
-import { requestUserAction } from "@/components/RequestUserActionHolder";
 
 const ContestEditorLoader: FC<Route.ComponentProps> = () => {
   const [searchParams] = useSearchParams();

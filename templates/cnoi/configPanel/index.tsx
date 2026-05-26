@@ -1,18 +1,19 @@
-import { Button, DatePicker, Input, Switch, Tooltip } from "antd";
-import { useEffect, useRef, useState, type FC } from "react";
-import dayjs from "dayjs";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faCircleQuestion,
   faPlus,
   faXmark,
 } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { Button, DatePicker, Input, Switch, Tooltip } from "antd";
+import dayjs from "dayjs";
+import { useEffect, useRef, useState, type FC } from "react";
 
 import "./index.css";
-import ProblemList from "./problemList";
-import type { Content, DateArr } from "../types";
-import type { ConfigPanelFC } from "@/types/templates";
 import LocalImageManager from "@/components/LocalImageManager";
+import type { ConfigPanelFC } from "@/types/templates";
+
+import type { Content, DateArr } from "../types";
+import ProblemList from "./problemList";
 
 const QuestionMarkToolTip: FC<{ children: string }> = ({ children }) => (
   <sup>

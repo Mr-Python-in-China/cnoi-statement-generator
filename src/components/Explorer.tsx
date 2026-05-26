@@ -1,16 +1,18 @@
-import { useCallback, useEffect, useMemo, useState, type FC } from "react";
-import ExplorerPage from "./ExplorerPage";
-import { loadDocument, saveDocument, storageMethods } from "@/storage";
-import type { DocumentBase } from "@/types/document";
-import type { ExplorerItem, StorageMethodObject } from "@/storage/types";
-import { App, AutoComplete, Breadcrumb, Button, Modal, Space } from "antd";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowLeft, faArrowRight } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { App, AutoComplete, Breadcrumb, Button, Modal, Space } from "antd";
+import { useCallback, useEffect, useMemo, useState, type FC } from "react";
+
+import { loadDocument, saveDocument, storageMethods } from "@/storage";
 import {
   DocNotFoundError,
   LoadDocumentError,
   SaveDocumentError,
 } from "@/storage/errors";
+import type { ExplorerItem, StorageMethodObject } from "@/storage/types";
+import type { DocumentBase } from "@/types/document";
+
+import ExplorerPage from "./ExplorerPage";
 
 import "./Explorer.css";
 

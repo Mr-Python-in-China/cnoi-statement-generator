@@ -1,6 +1,6 @@
 import type mdast from "mdast";
-import { visit } from "unist-util-visit";
 import stringWidth from "string-width";
+import { visit } from "unist-util-visit";
 
 export default [
   () => (tree: mdast.Root) => {

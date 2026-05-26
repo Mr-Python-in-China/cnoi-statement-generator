@@ -1,7 +1,8 @@
+import fsp from "node:fs/promises";
+
 import type { ContentBase } from "@/types/document";
 import type ExampleMetaExport from "@/types/examples";
 import type TemplateExport from "@/types/templates";
-import fsp from "node:fs/promises";
 
 for (const exampleName of await fsp.readdir("examples")) {
   console.log(`Updating example template: ${exampleName}`);

@@ -1,6 +1,12 @@
-import axiosInstance from "@/utils/axiosInstance";
 import { listenMain, send } from "@mr.python/promise-worker-ts";
+import TypstRendererWasmUrl from "@myriaddreamin/typst-ts-renderer/pkg/typst_ts_renderer_bg.wasm?url";
+import TypstCompilerWasmUrls from "@myriaddreamin/typst-ts-web-compiler/pkg/typst_ts_web_compiler_bg.wasm?split";
 import { isAxiosError } from "axios";
+
+import type { ContentBase, PrecompileContent } from "@/types/document";
+import axiosInstance from "@/utils/axiosInstance";
+import { importFontUrlEnteries } from "@/utils/importTemplate";
+
 import {
   type CompileTypstMessage,
   type RenderTypstMessage,
@@ -8,12 +14,7 @@ import {
   type FetchAssetMessage,
   type ExportTypstSourceZipMessage,
 } from "./compiler.worker";
-import type { ContentBase, PrecompileContent } from "@/types/document";
-
-import TypstCompilerWasmUrls from "@myriaddreamin/typst-ts-web-compiler/pkg/typst_ts_web_compiler_bg.wasm?split";
-import TypstRendererWasmUrl from "@myriaddreamin/typst-ts-renderer/pkg/typst_ts_renderer_bg.wasm?url";
 import TypstWorker from "./compiler.worker?worker";
-import { importFontUrlEnteries } from "@/utils/importTemplate";
 
 const browserCache: Cache | undefined =
   await window.caches?.open("typst-assets");

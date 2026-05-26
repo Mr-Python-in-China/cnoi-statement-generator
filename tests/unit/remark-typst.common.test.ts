@@ -1,4 +1,6 @@
 import { describe, expect, test } from "vitest";
+import { h64 } from "xxhashjs";
+
 import compileMdast, {
   initContext,
   collectDefinitions,
@@ -6,7 +8,6 @@ import compileMdast, {
   handlers,
   TYPST_RELATIVE_VALUE_REGEX,
 } from "@/compiler/remarkTypst/compiler";
-import { h64 } from "xxhashjs";
 
 const hash = (s: string) => h64(s, 147154220).toString(16).padStart(16, "0");
 

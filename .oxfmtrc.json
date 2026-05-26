@@ -1,5 +1,7 @@
 {
   "printWidth": 80,
+  "sortImports": true,
+  "sortPackageJson": true,
   "ignorePatterns": [
     "node_modules/",
     "dist/",

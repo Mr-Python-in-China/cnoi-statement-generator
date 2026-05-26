@@ -1,3 +1,5 @@
+import { listen, sendToMain } from "@mr.python/promise-worker-ts";
+import type { PromiseWorkerTagged } from "@mr.python/promise-worker-ts";
 import {
   createTypstCompiler,
   createTypstRenderer,
@@ -7,21 +9,21 @@ import {
   type TypstCompiler,
   type TypstRenderer,
 } from "@myriaddreamin/typst.ts";
+import { CompileFormatEnum } from "@myriaddreamin/typst.ts/compiler";
 import {
   disableDefaultFontAssets,
   withAccessModel,
   withPackageRegistry,
 } from "@myriaddreamin/typst.ts/options.init";
-import { listen, sendToMain } from "@mr.python/promise-worker-ts";
 import { Mutex } from "async-mutex";
-import getProcessor from "./getProcessor";
+
+import type { CompiledContent, PrecompileContent } from "@/types/document";
 import {
   importTypstContents,
   importUnifiedPlugins,
 } from "@/utils/importTemplate";
-import { CompileFormatEnum } from "@myriaddreamin/typst.ts/compiler";
-import type { PromiseWorkerTagged } from "@mr.python/promise-worker-ts";
-import type { CompiledContent, PrecompileContent } from "@/types/document";
+
+import getProcessor from "./getProcessor";
 
 const typstAccessModel = new MemoryAccessModel();
 

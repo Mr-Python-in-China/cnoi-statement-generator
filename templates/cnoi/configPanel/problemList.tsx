@@ -1,22 +1,5 @@
-import {
-  useEffect,
-  useRef,
-  type Dispatch,
-  type FC,
-  type SetStateAction,
-} from "react";
-import { useDeepCompareEffect } from "@reactuses/core";
-import type { Updater } from "use-immer";
-import {
-  faChevronUp,
-  faChevronDown,
-  faXmark,
-  faPlus,
-  faBars,
-} from "@fortawesome/free-solid-svg-icons";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { Card, Switch, Button, Input, App } from "antd";
 import { DndContext, MeasuringStrategy, useDndContext } from "@dnd-kit/core";
+import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
 import {
   arrayMove,
   arraySwap,
@@ -25,10 +8,29 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
-import type { Content } from "../types";
-import createNewProblem from "../createNewProblem";
+import {
+  faChevronUp,
+  faChevronDown,
+  faXmark,
+  faPlus,
+  faBars,
+} from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { useDeepCompareEffect } from "@reactuses/core";
+import { Card, Switch, Button, Input, App } from "antd";
+import {
+  useEffect,
+  useRef,
+  type Dispatch,
+  type FC,
+  type SetStateAction,
+} from "react";
+import type { Updater } from "use-immer";
+
 import { removeProblemCallback } from "@/utils/contestDataUtils";
+
+import createNewProblem from "../createNewProblem";
+import type { Content } from "../types";
 
 type ImmerContent = import("@/types/document").ImmerContent<Content>;
 

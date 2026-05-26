@@ -1,5 +1,5 @@
-import type { Plugin } from "unified";
 import type mdast from "mdast";
+import type { Plugin } from "unified";
 import { SKIP, visit } from "unist-util-visit";
 
 declare module "mdast" {

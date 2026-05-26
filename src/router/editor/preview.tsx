@@ -1,11 +1,12 @@
-import { memo, useEffect, useImperativeHandle, useRef, useState } from "react";
-import type { ImmerContent } from "@/types/document";
 import { Alert } from "antd";
-import { isEqual } from "lodash-es";
-import useTemplateManager from "@/components/templateManagerContext";
-
-import loadingImg from "assets/preview-loading.webp";
 import errorImg from "assets/preview-error.webp";
+import loadingImg from "assets/preview-loading.webp";
+import { isEqual } from "lodash-es";
+import { memo, useEffect, useImperativeHandle, useRef, useState } from "react";
+
+import useTemplateManager from "@/components/templateManagerContext";
+import type { ImmerContent } from "@/types/document";
+
 import "./preview.css";
 
 const PreviewContainer = memo<{

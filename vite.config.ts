@@ -1,12 +1,13 @@
+import { exec } from "node:child_process";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { defineConfig, type PluginOption, type UserConfig } from "vite";
+
+import ViteRemarkRehypePlugin from "@mr.python/vite-plugin-remark-rehype";
 import { reactRouter } from "@react-router/dev/vite";
-import babel from "vite-plugin-babel";
-import { exec } from "node:child_process";
+import { defineConfig, type PluginOption, type UserConfig } from "vite";
 import "vitest/config";
 import viteAssetsSplitPlugin from "vite-plugin-assets-split";
-import ViteRemarkRehypePlugin from "@mr.python/vite-plugin-remark-rehype";
+import babel from "vite-plugin-babel";
 import devtoolsJson from "vite-plugin-devtools-json";
 
 const fontMetaPlugin = (): PluginOption => ({

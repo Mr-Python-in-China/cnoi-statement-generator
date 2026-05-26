@@ -1,8 +1,3 @@
-import type { DocumentMeta } from "@/types/document";
-import { useState, type FC } from "react";
-import type { Updater } from "use-immer";
-import { App, Button, Dropdown, Tooltip, Typography } from "antd";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faCopy,
   faDownload,
@@ -10,6 +5,14 @@ import {
   faPenToSquare,
   faTrash,
 } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { App, Button, Dropdown, Tooltip, Typography } from "antd";
+import { useState, type FC } from "react";
+import { Link } from "react-router";
+import type { Updater } from "use-immer";
+
+import type { DocumentMeta } from "@/types/document";
+import { exportDocument } from "@/utils/contestDataUtils";
 import {
   cloneDocumentToDB,
   deleteDocumentFromDB,
@@ -19,8 +22,6 @@ import {
   DocumentNameConflictError,
   loadDocumentMetaFromDB,
 } from "@/utils/indexedDB/browserStorage";
-import { exportDocument } from "@/utils/contestDataUtils";
-import { Link } from "react-router";
 
 import "./documentGrid.css";
 

@@ -1,4 +1,5 @@
 import z from "zod";
+
 import { zContentBase, getZDocument } from "@/utils/documentZod";
 
 export type ContentBase = z.infer<typeof zContentBase>;

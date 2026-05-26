@@ -1,5 +1,7 @@
-import type { DocumentBase } from "@/types/document";
 import type { FC, ReactNode } from "react";
+
+import type { DocumentBase } from "@/types/document";
+
 import type { ExplorerItem } from "../components/ExplorerPage";
 
 export { ExplorerItem };

@@ -1,5 +1,6 @@
 import type { HookAPI as ModalHookAPI } from "antd/es/modal/useModal";
 import type { Updater } from "use-immer";
+
 import type {
   ContentBase,
   DocumentBase,

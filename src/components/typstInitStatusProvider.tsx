@@ -1,8 +1,10 @@
-import { type FC, type ReactNode, useEffect, useState } from "react";
 import { App, Button, Progress, Space } from "antd";
+import { type FC, type ReactNode, useEffect, useState } from "react";
+
 import { fontAccessConfirmResolve } from "@/compiler";
-import { TypstInitStatusContext } from "./typstInitStatusContext";
+
 import useTemplateManager from "./templateManagerContext";
+import { TypstInitStatusContext } from "./typstInitStatusContext";
 
 const LoadedTextHelper: FC<{
   loaded: number;

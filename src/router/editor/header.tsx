@@ -1,4 +1,6 @@
-import type { ImmerDocument } from "@/types/document";
+import { faAngleLeft } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { App } from "antd";
 import {
   useCallback,
   useEffect,
@@ -7,23 +9,23 @@ import {
   type FC,
   type SetStateAction,
 } from "react";
+import { useNavigate } from "react-router";
 import { type Updater } from "use-immer";
+
 import MenuBar, { type MenuGroup } from "@/components/menuBar";
-import { App } from "antd";
 import useTemplateManager from "@/components/templateManagerContext";
 import useTypstInitStatus from "@/components/typstInitStatusContext";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faAngleLeft } from "@fortawesome/free-solid-svg-icons";
-import { useNavigate } from "react-router";
+import useExplorer from "@/components/useExplorer";
 import { useVersionInfo } from "@/components/useVersionInfo";
 import { saveDocument } from "@/storage";
-import useExplorer from "@/components/useExplorer";
+import type { ImmerDocument } from "@/types/document";
 import { toImmerContent } from "@/utils/contestDataUtils";
-import navigationState from "./navigationState";
+import { removeImmer } from "@/utils/documentZod";
 
 import "./header.css";
 import { documentToJson, jsonToDocument } from "@/utils/jsonDocument";
-import { removeImmer } from "@/utils/documentZod";
+
+import navigationState from "./navigationState";
 
 const ContestEditorHeader: FC<{
   doc: ImmerDocument;

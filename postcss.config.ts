@@ -1,5 +1,5 @@
-import type { Config } from "postcss-load-config";
 import autoprefixer from "autoprefixer";
+import type { Config } from "postcss-load-config";
 import postcssPresetEnv from "postcss-preset-env";
 
 const config: Config = {

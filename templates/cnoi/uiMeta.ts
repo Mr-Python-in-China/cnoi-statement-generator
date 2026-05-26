@@ -1,7 +1,8 @@
 import type { TemplateUiMetadata } from "@/types/templates";
-import type { Content } from "./types";
+
 import ConfigPanel from "./configPanel";
 import createNewProblem from "./createNewProblem";
+import type { Content } from "./types";
 
 export default {
   extraContents: {

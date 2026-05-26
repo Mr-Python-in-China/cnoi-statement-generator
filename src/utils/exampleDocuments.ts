@@ -1,6 +1,6 @@
+import type { ContentBase } from "@/types/document";
 import type ExampleMetaExport from "@/types/examples";
 import { importContentZod } from "@/utils/importTemplate";
-import type { ContentBase } from "@/types/document";
 
 const metaModules = import.meta.glob<ExampleMetaExport>(
   "/examples/*/meta.{ts,tsx}",

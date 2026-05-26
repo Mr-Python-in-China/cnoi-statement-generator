@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
-import useTemplateManager from "./templateManagerContext";
+
 import type { PromiseStatus } from "@/compiler";
+
+import useTemplateManager from "./templateManagerContext";
 
 export default function useCompilerReadyState(): PromiseStatus {
   const { compiler } = useTemplateManager();

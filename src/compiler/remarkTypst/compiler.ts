@@ -1,13 +1,13 @@
 import type * as mdast from "mdast";
-import { visit } from "unist-util-visit";
-import { h64 } from "xxhashjs";
-
 import type {} from "remark-directive";
 import type {} from "remark-gfm";
 import type {} from "remark-math";
 import type {} from "remark-parse";
-import type {} from "../remarkImageAttr";
+import { visit } from "unist-util-visit";
+import { h64 } from "xxhashjs";
+
 import type {} from "../remarkExtendedTable";
+import type {} from "../remarkImageAttr";
 
 declare module "mdast" {
   interface TypstContentNode {

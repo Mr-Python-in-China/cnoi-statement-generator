@@ -1,10 +1,10 @@
-import { type Dispatch, type FC, type SetStateAction } from "react";
-import CodeMirror from "@uiw/react-codemirror";
 import {
   markdown as markdownExtension,
   markdownLanguage,
 } from "@codemirror/lang-markdown";
 import { EditorView } from "@codemirror/view";
+import CodeMirror from "@uiw/react-codemirror";
+import { type Dispatch, type FC, type SetStateAction } from "react";
 
 import "./markdownPanel.css";
 

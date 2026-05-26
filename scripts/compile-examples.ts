@@ -1,15 +1,17 @@
 import fsp from "node:fs/promises";
+import { resolve } from "node:path";
+
 import { NodeCompiler } from "@myriaddreamin/typst-ts-node-compiler";
+import { pdf } from "pdf-to-img";
+import sharp from "sharp";
+
+import getProcessor from "@/compiler/getProcessor";
+import type ExampleMetaExport from "@/types/examples";
 import {
   importContentZod,
   importFontUrlEnteries,
   importUnifiedPlugins,
 } from "@/utils/importTemplate";
-import type ExampleMetaExport from "@/types/examples";
-import getProcessor from "@/compiler/getProcessor";
-import { resolve } from "node:path";
-import { pdf } from "pdf-to-img";
-import sharp from "sharp";
 
 for (const exampleName of await fsp.readdir("examples")) {
   console.log(`Compiling example: ${exampleName}`);

@@ -1,4 +1,5 @@
 import type TemplateExport from "@/types/templates";
+
 import type { Content } from "./contentZod";
 
 export default {

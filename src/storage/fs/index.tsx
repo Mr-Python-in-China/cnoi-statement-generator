@@ -1,18 +1,20 @@
-import { useCallback, useEffect, useRef } from "react";
-import type { StorageMethodObject } from "../types";
-import { App, Button } from "antd";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faHardDrive, faInbox } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { App, Button } from "antd";
+import { useCallback, useEffect, useRef } from "react";
+
 import type { DocumentBase } from "@/types/document";
+import { getFsHandle, saveFsHandle } from "@/utils/indexedDB/fsHandles";
+import { documentToJson, jsonToDocument } from "@/utils/jsonDocument";
+
 import {
   DocNotFoundError,
   LoadDocumentError,
   SaveDocumentError,
 } from "../errors";
-import { documentToJson, jsonToDocument } from "@/utils/jsonDocument";
 
 import "./index.css";
-import { getFsHandle, saveFsHandle } from "@/utils/indexedDB/fsHandles";
+import type { StorageMethodObject } from "../types";
 
 const jsonPickerOptions: OpenFilePickerOptions = {
   multiple: false,

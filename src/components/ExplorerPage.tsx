@@ -1,3 +1,5 @@
+import { Table, type TableColumnsType } from "antd";
+import type { TableRef } from "antd/es/table";
 import {
   useEffect,
   useLayoutEffect,
@@ -7,8 +9,6 @@ import {
   type FC,
   type ReactNode,
 } from "react";
-import { Table, type TableColumnsType } from "antd";
-import type { TableRef } from "antd/es/table";
 
 import "./ExplorerPage.css";
 

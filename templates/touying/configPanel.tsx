@@ -1,7 +1,9 @@
-import type { ConfigPanelFC } from "@/types/templates";
-import LocalImageManager from "@/components/LocalImageManager";
-import type { Content } from "./contentZod";
 import { Input, Select } from "antd";
+
+import LocalImageManager from "@/components/LocalImageManager";
+import type { ConfigPanelFC } from "@/types/templates";
+
+import type { Content } from "./contentZod";
 import themeList from "./themeList";
 
 const ConfigPanel: ConfigPanelFC<Content> = ({ content, updateContent }) => {

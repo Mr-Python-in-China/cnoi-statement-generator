@@ -1,5 +1,6 @@
 import type * as mdast from "mdast";
 import type { Plugin } from "unified";
+
 import type { AssetInfo } from "./compiler";
 import compileMdast from "./compiler";
 

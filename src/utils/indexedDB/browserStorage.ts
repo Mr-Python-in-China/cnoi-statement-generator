@@ -1,12 +1,13 @@
+import { DocNotFoundError } from "@/storage/errors";
 import type {
   DocumentBase,
   DocumentMeta,
   ImmerDocument,
 } from "@/types/document";
 import { toImmerContent } from "@/utils/contestDataUtils";
-import db from "./db";
+
 import resolveUniqueDocumentName from "../resolveUniqueDocumentName";
-import { DocNotFoundError } from "@/storage/errors";
+import db from "./db";
 
 class DocumentNotFoundError extends DocNotFoundError {
   constructor() {

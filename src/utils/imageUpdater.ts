@@ -1,6 +1,7 @@
-import type { ContentBase, ImmerContent } from "@/types/document";
-import type { Updater } from "use-immer";
 import type { Draft } from "immer";
+import type { Updater } from "use-immer";
+
+import type { ContentBase, ImmerContent } from "@/types/document";
 
 export function pushBackImage<Base extends ContentBase = ContentBase>(
   data: Base["images"][number],

@@ -1,6 +1,7 @@
-import { describe, expect, test } from "vitest";
-import { remark } from "remark";
 import type { Root, Paragraph, Image, ImageReference, Text } from "mdast";
+import { remark } from "remark";
+import { describe, expect, test } from "vitest";
+
 import remarkImageAttr, { parseAttr } from "@/compiler/remarkImageAttr";
 
 describe("parseAttr", () => {

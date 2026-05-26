@@ -1,6 +1,7 @@
 import type { TemplateUiMetadata } from "@/types/templates";
-import { type Content } from "./contentZod";
+
 import ConfigPanel from "./configPanel";
+import { type Content } from "./contentZod";
 
 export default {
   extraContents: {

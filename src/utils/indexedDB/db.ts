@@ -1,9 +1,11 @@
+import Dexie from "dexie";
+
 import type {
   ContentBase,
   DocumentContentOnly,
   DocumentMeta,
 } from "@/types/document";
-import Dexie from "dexie";
+
 import resolveUniqueDocumentName from "../resolveUniqueDocumentName";
 
 /**

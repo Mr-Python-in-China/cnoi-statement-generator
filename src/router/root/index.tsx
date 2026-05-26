@@ -1,19 +1,21 @@
-import type { DocumentMeta } from "@/types/document";
-import { loadDocumentMetasFromDB } from "@/utils/indexedDB/browserStorage";
-import { Suspense, use, useState, type FC } from "react";
-import { Button, Select } from "antd";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import changeLogHTML from "/CHANGELOG.md";
+import favicon from "/favicon.svg";
+import { faGithub } from "@fortawesome/free-brands-svg-icons";
 import { faInfo, faPlus } from "@fortawesome/free-solid-svg-icons";
-import { useImmer } from "use-immer";
-import DocumentGrid from "./documentGrid";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { Button, Select } from "antd";
+import { Suspense, use, useState, type FC } from "react";
 import { Link } from "react-router";
-import NewDocModal from "./newDocModal";
+import { useImmer } from "use-immer";
+
+import { useVersionInfo } from "@/components/useVersionInfo";
 
 import "./index.css";
-import favicon from "/favicon.svg";
-import changeLogHTML from "/CHANGELOG.md";
-import { faGithub } from "@fortawesome/free-brands-svg-icons";
-import { useVersionInfo } from "@/components/useVersionInfo";
+import type { DocumentMeta } from "@/types/document";
+import { loadDocumentMetasFromDB } from "@/utils/indexedDB/browserStorage";
+
+import DocumentGrid from "./documentGrid";
+import NewDocModal from "./newDocModal";
 
 const RootImpl: FC<{
   initialDocumentMetasPromise: Promise<DocumentMeta[]>;
