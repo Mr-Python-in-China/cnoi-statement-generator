@@ -43,12 +43,12 @@ import navigationState from "./navigationState";
 import { requestUserAction } from "@/components/RequestUserActionHolder";
 
 const ContestEditorLoader: FC<Route.ComponentProps> = () => {
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const [state, setState] = useState<
     | {
         doc: DocumentBase;
-        path: string[];
+        path: string[] | undefined;
       }
     | { error: unknown }
     | null
@@ -59,20 +59,16 @@ const ContestEditorLoader: FC<Route.ComponentProps> = () => {
 
     const run = async () => {
       try {
-        if (searchParams.has("_noConfirm")) {
-          setSearchParams(
-            (prev) => {
-              prev.delete("_noConfirm");
-              return prev;
-            },
-            {
-              replace: true,
-            },
-          );
+        const file = searchParams.get("file");
+        if (file?.startsWith("local-") && navigationState.value?.doc) {
+          setState({
+            doc: navigationState.value.doc,
+            path: undefined,
+          });
+          navigationState.value = undefined;
           return;
         }
-        const file = searchParams.get("file");
-        if (!file) {
+        if (file === null || file.startsWith("local-")) {
           navigate("/", { replace: true });
           return;
         }
@@ -97,7 +93,7 @@ const ContestEditorLoader: FC<Route.ComponentProps> = () => {
 
     run();
     return () => void (cancelled = true);
-  }, [searchParams, setSearchParams, navigate]);
+  }, [searchParams, navigate]);
 
   if (!state) return null;
 
@@ -120,8 +116,8 @@ export default ContestEditorLoader;
 const ContestEditorMain: FC<{
   doc: ImmerDocument;
   updateDoc: Updater<ImmerDocument>;
-  path: string[];
-  setPath: Dispatch<SetStateAction<string[]>>;
+  path: string[] | undefined;
+  setPath: Dispatch<SetStateAction<string[] | undefined>>;
   panel: string;
   setPanel: Dispatch<SetStateAction<string>>;
   modified: boolean;
@@ -221,7 +217,7 @@ const ContestEditorMain: FC<{
   );
 };
 
-const ContestEditor: FC<{ doc: DocumentBase; path: string[] }> = ({
+const ContestEditor: FC<{ doc: DocumentBase; path: string[] | undefined }> = ({
   doc: rawDoc,
   path: initialPath,
 }) => {
@@ -241,7 +237,10 @@ const ContestEditor: FC<{ doc: DocumentBase; path: string[] }> = ({
     updateDoc(loaderImmerDoc);
     setPath(initialPath);
   }, [initialPath, loaderImmerDoc, updateDoc]);
-  const pathStr = useMemo(() => path.map(encodeURIComponent).join("/"), [path]);
+  const pathStr = useMemo(
+    () => (path || []).map(encodeURIComponent).join("/"),
+    [path],
+  );
   const [templateManagerState, setTemplateManagerState] = useState<
     TemplateManager | undefined
   >(undefined);
@@ -258,9 +257,9 @@ const ContestEditor: FC<{ doc: DocumentBase; path: string[] }> = ({
   // "config" | "extra-{name}" | "{problem-uuid}"
   const [panel, setPanel] = useState("config");
 
-  const [modified, setModified] = useState(false);
+  const [modified, setModified] = useState(path === undefined);
   useLayoutEffect(
-    () => setModified(false),
+    () => setModified(path === undefined),
     // oxlint-disable-next-line eslint-plugin-react-hooks/exhaustive-deps
     [pathStr],
   );
@@ -270,10 +269,7 @@ const ContestEditor: FC<{ doc: DocumentBase; path: string[] }> = ({
     event.preventDefault();
     event.returnValue = "你确定要离开吗？未保存的更改将会丢失。";
   });
-  const blocker = useBlocker(
-    ({ nextLocation }) =>
-      modified && !/(\?|&)_noConfirm/.test(nextLocation.search),
-  );
+  const blocker = useBlocker(() => modified && !navigationState.value);
   useEffect(() => {
     let oldState = "";
     if (blocker.state === "blocked" && oldState !== "blocked") {

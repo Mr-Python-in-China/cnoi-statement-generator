@@ -10,8 +10,6 @@ import {
 import { type Updater } from "use-immer";
 import MenuBar, { type MenuGroup } from "@/components/menuBar";
 import { App } from "antd";
-
-import "./header.css";
 import useTemplateManager from "@/components/templateManagerContext";
 import useTypstInitStatus from "@/components/typstInitStatusContext";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -23,12 +21,16 @@ import useExplorer from "@/components/useExplorer";
 import { toImmerContent } from "@/utils/contestDataUtils";
 import navigationState from "./navigationState";
 
+import "./header.css";
+import { documentToJson, jsonToDocument } from "@/utils/jsonDocument";
+import { removeImmer } from "@/utils/documentZod";
+
 const ContestEditorHeader: FC<{
   doc: ImmerDocument;
-  path: string[];
   updateDoc: Updater<ImmerDocument>;
   setPanel: Dispatch<SetStateAction<string>>;
-  setPath: Dispatch<SetStateAction<string[]>>;
+  path: string[] | undefined;
+  setPath: Dispatch<SetStateAction<string[] | undefined>>;
   modified: boolean;
   setModified: Dispatch<SetStateAction<boolean>>;
 }> = ({ doc, path, modified, setModified, setPath, updateDoc }) => {
@@ -99,39 +101,30 @@ const ContestEditorHeader: FC<{
     }
   }, [compiler, doc.name, doc.content, message]);
 
-  const onClickSave = useCallback(async () => {
-    try {
-      await saveDocument(path, doc);
-      setModified(false);
-    } catch (e) {
-      console.error("Error when saving document.", e);
-      message.error("保存失败");
-    }
-  }, [doc, path, message, setModified]);
+  const confirmDiscardUnsavedChanges = useCallback(async () => {
+    if (!modified) return true;
+    return await modal.confirm({
+      content: (
+        <>
+          你确定要继续吗？
+          <br />
+          未保存的更改将会丢失。
+        </>
+      ),
+      mask: {
+        closable: true,
+      },
+    });
+  }, [modal, modified]);
 
   const onClickOpen = useCallback(async () => {
-    const confirmed =
-      !modified ||
-      (await modal.confirm({
-        content: (
-          <>
-            你确定要继续吗？
-            <br />
-            未保存的更改将会丢失。
-          </>
-        ),
-        mask: {
-          closable: true,
-        },
-      }));
-    if (!confirmed) return;
+    if (!(await confirmDiscardUnsavedChanges())) return;
     const data = await explorer.show({
       mode: "open",
     });
     if (data.state === "success") {
       const url = new URL(window.location.href);
       url.searchParams.set("file", data.path.map(encodeURIComponent).join("/"));
-      url.searchParams.set("_noConfirm", "");
       navigationState.value = {
         doc: {
           ...data.doc,
@@ -142,7 +135,7 @@ const ContestEditorHeader: FC<{
         search: url.search,
       });
     }
-  }, [explorer, modal, modified, navigate]);
+  }, [explorer, navigate, confirmDiscardUnsavedChanges]);
 
   const onClickSaveAs = useCallback(() => {
     explorer
@@ -166,6 +159,68 @@ const ContestEditorHeader: FC<{
         }
       });
   }, [explorer, setPath, updateDoc, doc]);
+
+  const onClickSave = useCallback(async () => {
+    if (!path) {
+      onClickSaveAs();
+      return;
+    }
+    try {
+      await saveDocument(path, doc);
+      setModified(false);
+    } catch (e) {
+      console.error("Error when saving document.", e);
+      message.error("保存失败");
+    }
+  }, [doc, path, message, setModified, onClickSaveAs]);
+
+  const onClickUpload = useCallback(async () => {
+    if (!(await confirmDiscardUnsavedChanges())) return;
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = ".csg,.json,application/json";
+    input.addEventListener(
+      "change",
+      async () => {
+        if (!input.files || input.files.length === 0) return;
+        const file = input.files[0];
+        try {
+          const text = await file.text();
+          const loadedDoc = await jsonToDocument(text);
+          loadedDoc.name = file.name.replace(/\.[^/.]+$/, ""); // 去掉扩展名
+          navigationState.value = {
+            doc: {
+              ...loadedDoc,
+              content: toImmerContent(loadedDoc.content),
+            },
+          };
+          const url = new URL(window.location.href);
+          url.searchParams.set("file", "local-" + crypto.randomUUID());
+          navigate({
+            search: url.search,
+          });
+        } catch (e) {
+          console.error("Error when loading document from uploaded file.", e);
+          message.error("文件加载失败");
+        }
+      },
+      { once: true },
+    );
+    input.click();
+  }, [message, confirmDiscardUnsavedChanges, navigate]);
+
+  const onClickDownload = useCallback(async () => {
+    const json = await documentToJson(removeImmer(doc));
+    const blob = new Blob([json], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${doc.name}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 0);
+  }, [doc]);
 
   const versionInfo = useVersionInfo();
   const menuGroup = useMemo(
@@ -191,6 +246,11 @@ const ContestEditorHeader: FC<{
             shortcut: "Ctrl+O",
           },
           {
+            key: "upload",
+            label: "从本地上传",
+            onSelect: onClickUpload,
+          },
+          {
             key: "save",
             label: "保存",
             onSelect: onClickSave,
@@ -201,6 +261,11 @@ const ContestEditorHeader: FC<{
             label: "另存为",
             onSelect: onClickSaveAs,
             shortcut: "Ctrl+Shift+S",
+          },
+          {
+            key: "download",
+            label: "下载到本地",
+            onSelect: onClickDownload,
           },
           {
             key: "export PDF",
@@ -238,6 +303,8 @@ const ContestEditorHeader: FC<{
       onClickSave,
       onClickSaveAs,
       onClickOpen,
+      onClickDownload,
+      onClickUpload,
     ],
   );
   useEffect(() => {
