@@ -8,9 +8,10 @@ import { Suspense, use, useState, type FC } from "react";
 import { Link } from "react-router";
 import { useImmer } from "use-immer";
 
-import { useVersionInfo } from "@/components/useVersionInfo";
+import { useModal } from "@/components/modalWrapper";
 
 import "./index.css";
+import { VersionInfoModal } from "@/components/VersionInfoModal";
 import type { DocumentMeta } from "@/types/document";
 import { loadDocumentMetasFromDB } from "@/utils/indexedDB/browserStorage";
 
@@ -27,7 +28,7 @@ const RootImpl: FC<{
     "name" | "name (reversed)" | "modified at" | "modified at (reversed)"
   >("modified at (reversed)");
   const [openNewDocModal, setOpenNewDocModal] = useState(false);
-  const versionInfo = useVersionInfo();
+  const [versionInfo, versionInfoContextHolder] = useModal(VersionInfoModal);
   return (
     <>
       <NewDocModal
@@ -59,12 +60,12 @@ const RootImpl: FC<{
               </Button>
               <Button
                 icon={<FontAwesomeIcon icon={faInfo} />}
-                onClick={versionInfo.show}
+                onClick={() => versionInfo.show()}
               >
                 关于
               </Button>
             </div>
-            {versionInfo.contextHolder}
+            {versionInfoContextHolder}
             <div>
               <Select
                 className="root-button-group-sortby"

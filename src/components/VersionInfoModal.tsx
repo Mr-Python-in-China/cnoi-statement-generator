@@ -3,22 +3,21 @@ import {
   repository as REPOSITORY_URL,
 } from "/package.json";
 import { Button, Modal } from "antd";
-import { type FC } from "react";
 import { Link } from "react-router";
 
-import "./VersionInfo.css";
+import { createModal } from "./modalWrapper";
 
-export const VersionInfoModal: FC<{
-  open: boolean;
-  onClose: () => void;
-}> = ({ open, onClose }) => {
+import "./VersionInfoModal.css";
+
+export const VersionInfoModal = createModal(({ modalHandler }) => {
   return (
     <Modal
       title="关于"
-      open={open}
-      onCancel={onClose}
+      open={modalHandler.visible}
+      onCancel={modalHandler.resolveHide}
+      afterClose={modalHandler.remove}
       footer={
-        <Button type="primary" onClick={onClose}>
+        <Button type="primary" onClick={modalHandler.resolveHide}>
           确定
         </Button>
       }
@@ -59,4 +58,4 @@ export const VersionInfoModal: FC<{
       </div>
     </Modal>
   );
-};
+});

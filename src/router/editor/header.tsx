@@ -12,20 +12,21 @@ import {
 import { useNavigate } from "react-router";
 import { type Updater } from "use-immer";
 
+import ExplorerModal from "@/components/ExplorerModal";
 import MenuBar, { type MenuGroup } from "@/components/menuBar";
+import { useModal } from "@/components/modalWrapper";
 import useTemplateManager from "@/components/templateManagerContext";
 import useTypstInitStatus from "@/components/typstInitStatusContext";
-import useExplorer from "@/components/useExplorer";
-import { useVersionInfo } from "@/components/useVersionInfo";
+import { VersionInfoModal } from "@/components/VersionInfoModal";
 import { saveDocument } from "@/storage";
 import type { ImmerDocument } from "@/types/document";
 import { toImmerContent } from "@/utils/contestDataUtils";
 import { removeImmer } from "@/utils/documentZod";
-
-import "./header.css";
 import { documentToJson, jsonToDocument } from "@/utils/jsonDocument";
 
 import navigationState from "./navigationState";
+
+import "./header.css";
 
 const ContestEditorHeader: FC<{
   doc: ImmerDocument;
@@ -39,7 +40,7 @@ const ContestEditorHeader: FC<{
   const { notification, message, modal } = App.useApp();
   const { compiler } = useTemplateManager();
   const navigate = useNavigate();
-  const explorer = useExplorer();
+  const [explorer, explorerContextHolder] = useModal(ExplorerModal);
 
   const typstInitStatus = useTypstInitStatus();
 
@@ -224,7 +225,7 @@ const ContestEditorHeader: FC<{
     setTimeout(() => URL.revokeObjectURL(url), 0);
   }, [doc]);
 
-  const versionInfo = useVersionInfo();
+  const [versionInfo, versionInfoContextHolder] = useModal(VersionInfoModal);
   const menuGroup = useMemo(
     (): MenuGroup[] => [
       {
@@ -291,7 +292,7 @@ const ContestEditorHeader: FC<{
           {
             key: "about",
             label: "关于",
-            onSelect: versionInfo.show,
+            onSelect: () => versionInfo.show(),
           },
         ],
       },
@@ -301,7 +302,7 @@ const ContestEditorHeader: FC<{
       onClickExportPDF,
       onClickExportTypstSource,
       typstInitStatus,
-      versionInfo.show,
+      versionInfo,
       onClickSave,
       onClickSaveAs,
       onClickOpen,
@@ -321,8 +322,8 @@ const ContestEditorHeader: FC<{
         <div className="file-name">{doc.name}</div>
         {modified && <div className="modified-indicator">●</div>}
       </div>
-      {versionInfo.contextHolder}
-      {explorer.ContextHolder}
+      {versionInfoContextHolder}
+      {explorerContextHolder}
     </header>
   );
 };

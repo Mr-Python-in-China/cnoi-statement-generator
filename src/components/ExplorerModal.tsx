@@ -1,7 +1,7 @@
 import { faArrowLeft, faArrowRight } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { App, AutoComplete, Breadcrumb, Button, Modal, Space } from "antd";
-import { useCallback, useEffect, useMemo, useState, type FC } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { loadDocument, saveDocument, storageMethods } from "@/storage";
 import {
@@ -13,8 +13,9 @@ import type { ExplorerItem, StorageMethodObject } from "@/storage/types";
 import type { DocumentBase } from "@/types/document";
 
 import ExplorerPage from "./ExplorerPage";
+import { createModal } from "./modalWrapper";
 
-import "./Explorer.css";
+import "./ExplorerModal.css";
 
 const Page: StorageMethodObject["ExplorerPage"] = ({
   path,
@@ -68,24 +69,19 @@ export type ExplorerResult =
     }
   | { state: "cancelled" };
 
-export type ExplorerProps = (
+export type ExplorerProps =
   | {
       mode: "open";
     }
-  | { mode: "save"; doc: DocumentBase }
-) & {
-  onClose: (data: ExplorerResult) => void;
-};
+  | { mode: "save"; doc: DocumentBase };
 
-const Explorer: FC<ExplorerProps & { open: boolean }> = (props) => {
-  const { onClose } = props;
-
+const ExplorerModal = createModal<ExplorerProps, ExplorerResult>((props) => {
   const { message } = App.useApp();
   const [navState, setNavState] = useState(() => ({
     history: [new Array<string>()],
     index: 0,
   }));
-  const [filekey, setFilename] = useState("");
+  const [filekey, setFilekey] = useState("");
   const [loading, setLoading] = useState(false);
   const [fileItems, setFileItems] = useState<ExplorerItem[] | undefined>(
     undefined,
@@ -139,7 +135,7 @@ const Explorer: FC<ExplorerProps & { open: boolean }> = (props) => {
   }, []);
 
   useEffect(() => {
-    setFilename("");
+    setFilekey("");
     // oxlint-disable-next-line eslint-plugin-react-hooks/exhaustive-deps
   }, [currentPath.map(encodeURIComponent).join("/")]);
 
@@ -172,8 +168,8 @@ const Explorer: FC<ExplorerProps & { open: boolean }> = (props) => {
   );
 
   const closeAsCancelled = useCallback(() => {
-    onClose({ state: "cancelled" });
-  }, [onClose]);
+    props.modalHandler.resolveHide({ state: "cancelled" });
+  }, [props.modalHandler]);
 
   const handleConfirm = async (file: string | string[] | ExplorerItem) => {
     const path = Array.isArray(file)
@@ -198,11 +194,11 @@ const Explorer: FC<ExplorerProps & { open: boolean }> = (props) => {
         }
         const doc = await loadDocument(path);
         message.success("打开成功");
-        onClose({ state: "success", doc, path });
+        props.modalHandler.resolveHide({ state: "success", doc, path });
       } else {
         const doc = await saveDocument(path, props.doc);
         message.success("保存成功");
-        onClose({ state: "success", doc, path });
+        props.modalHandler.resolveHide({ state: "success", doc, path });
       }
     } catch (error) {
       if (error instanceof DocNotFoundError) {
@@ -227,7 +223,8 @@ const Explorer: FC<ExplorerProps & { open: boolean }> = (props) => {
   return (
     <Modal
       title={props.mode === "open" ? "打开文件" : "保存文件"}
-      open={props.open}
+      open={props.modalHandler.visible}
+      afterClose={props.modalHandler.remove}
       onCancel={closeAsCancelled}
       className="explorer-modal"
       classNames={{ body: "explorer-modal-body" }}
@@ -283,7 +280,7 @@ const Explorer: FC<ExplorerProps & { open: boolean }> = (props) => {
         <Page
           path={currentPath}
           mode={props.mode}
-          onSelect={(key) => setFilename(key)}
+          onSelect={(key) => setFilekey(key)}
           onOpenFolder={(key: string) => navigateTo([...currentPath, key])}
           setFileItems={handleSetFileItems}
           onConfirm={handleConfirm}
@@ -297,7 +294,7 @@ const Explorer: FC<ExplorerProps & { open: boolean }> = (props) => {
           id="explorer-filename"
           backfill
           value={filekey}
-          onChange={(v) => setFilename(v)}
+          onChange={(v) => setFilekey(v)}
           placeholder="输入文件名"
           options={fileItems?.map((x) => ({
             label: x.key,
@@ -308,6 +305,6 @@ const Explorer: FC<ExplorerProps & { open: boolean }> = (props) => {
       </div>
     </Modal>
   );
-};
+});
 
-export default Explorer;
+export default ExplorerModal;
