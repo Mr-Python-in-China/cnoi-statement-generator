@@ -15,6 +15,7 @@ import { type Updater } from "use-immer";
 import ExplorerModal from "@/components/ExplorerModal";
 import MenuBar, { type MenuGroup } from "@/components/menuBar";
 import { useModal } from "@/components/modalWrapper";
+import NewDocModal from "@/components/NewDocModal";
 import useTemplateManager from "@/components/templateManagerContext";
 import useTypstInitStatus from "@/components/typstInitStatusContext";
 import { VersionInfoModal } from "@/components/VersionInfoModal";
@@ -40,7 +41,9 @@ const ContestEditorHeader: FC<{
   const { notification, message, modal } = App.useApp();
   const { compiler } = useTemplateManager();
   const navigate = useNavigate();
+
   const [explorer, explorerContextHolder] = useModal(ExplorerModal);
+  const [newDocModal, newDocModalContextHolder] = useModal(NewDocModal);
 
   const typstInitStatus = useTypstInitStatus();
 
@@ -215,6 +218,11 @@ const ContestEditorHeader: FC<{
     setTimeout(() => URL.revokeObjectURL(url), 0);
   }, [doc]);
 
+  const onClickNew = useCallback(async () => {
+    if (!(await confirmDiscardUnsavedChanges())) return;
+    newDocModal.show();
+  }, [confirmDiscardUnsavedChanges, newDocModal]);
+
   const [versionInfo, versionInfoContextHolder] = useModal(VersionInfoModal);
   const menuGroup = useMemo(
     (): MenuGroup[] => [
@@ -232,6 +240,11 @@ const ContestEditorHeader: FC<{
         key: "file",
         label: "文件",
         items: [
+          {
+            key: "new",
+            label: "新建",
+            onSelect: onClickNew,
+          },
           {
             key: "open",
             label: "打开",
@@ -298,6 +311,7 @@ const ContestEditorHeader: FC<{
       onClickOpen,
       onClickDownload,
       onClickUpload,
+      onClickNew,
     ],
   );
   useEffect(() => {
@@ -314,6 +328,7 @@ const ContestEditorHeader: FC<{
       </div>
       {versionInfoContextHolder}
       {explorerContextHolder}
+      {newDocModalContextHolder}
     </header>
   );
 };

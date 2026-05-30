@@ -15,8 +15,8 @@ import { VersionInfoModal } from "@/components/VersionInfoModal";
 import type { DocumentMeta } from "@/types/document";
 import { loadDocumentMetasFromDB } from "@/utils/indexedDB/browserStorage";
 
+import NewDocModal from "../../components/NewDocModal";
 import DocumentGrid from "./documentGrid";
-import NewDocModal from "./newDocModal";
 
 const RootImpl: FC<{
   initialDocumentMetasPromise: Promise<DocumentMeta[]>;
@@ -27,14 +27,11 @@ const RootImpl: FC<{
   const [sortBy, setSortBy] = useState<
     "name" | "name (reversed)" | "modified at" | "modified at (reversed)"
   >("modified at (reversed)");
-  const [openNewDocModal, setOpenNewDocModal] = useState(false);
+  const [newDocModal, newDocModalContextHolder] = useModal(NewDocModal);
   const [versionInfo, versionInfoContextHolder] = useModal(VersionInfoModal);
+
   return (
     <>
-      <NewDocModal
-        open={openNewDocModal}
-        onClose={() => setOpenNewDocModal(false)}
-      />
       <header className="root-header">
         <Link to="/">
           <img src={favicon} alt="Favicon" className="favicon" />
@@ -54,7 +51,7 @@ const RootImpl: FC<{
               <Button
                 type="primary"
                 icon={<FontAwesomeIcon icon={faPlus} />}
-                onClick={() => setOpenNewDocModal(true)}
+                onClick={() => newDocModal.show()}
               >
                 新建文档
               </Button>
@@ -129,6 +126,7 @@ const RootImpl: FC<{
         </div>
         <ChangeLog />
       </div>
+      {newDocModalContextHolder}
     </>
   );
 };

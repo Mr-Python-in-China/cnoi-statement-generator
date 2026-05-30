@@ -1,47 +1,39 @@
-import { App, Button, Input, Modal } from "antd";
-import { useCallback, useState, type FC } from "react";
+import { App, Button, Modal } from "antd";
+import { useCallback, useState } from "react";
 import { useNavigate } from "react-router";
 
+import { navigateToEditorWithDoc } from "@/router/editor/navigationState";
+import { toImmerContent } from "@/utils/contestDataUtils";
 import { exampleDocuments, loadExampleContent } from "@/utils/exampleDocuments";
-import {
-  DocumentNameConflictError,
-  createDocumentToDB,
-} from "@/utils/indexedDB/browserStorage";
 
-import "./newDocModal.css";
+import { createModal } from "./modalWrapper";
 
-const NewDocModal: FC<{ open: boolean; onClose: () => void }> = ({
-  open,
-  onClose,
-}) => {
+import "./NewDocModal.css";
+
+const NewDocModal = createModal<void, void>(({ modalHandler }) => {
   const { message } = App.useApp();
   const navigate = useNavigate();
   const [selectedExample, setSelectedExample] = useState<string | undefined>(
     undefined,
   );
-  const [filename, setFilename] = useState("");
   const [loading, setLoading] = useState(false);
   const createDocument = useCallback(
-    async (exampleName: string, filename: string) => {
+    async (selectedExample: string) => {
       setLoading(true);
       try {
-        const content = await loadExampleContent(exampleName);
-        await createDocumentToDB({
-          name: filename,
-          templateId: exampleDocuments[exampleName].meta.template,
-          content,
-        });
-        navigate(
-          `/editor?file=${encodeURIComponent(`browser/${encodeURIComponent(filename)}`)}`,
+        const content = await loadExampleContent(selectedExample);
+        navigateToEditorWithDoc(
+          navigate,
+          {
+            name: exampleDocuments[selectedExample].meta.title,
+            templateId: exampleDocuments[selectedExample].meta.template,
+            content: toImmerContent(content),
+          },
+          ["tmp", crypto.randomUUID()],
         );
       } catch (e) {
-        if (e instanceof DocumentNameConflictError) {
-          message.error("文档名已存在");
-        } else {
-          message.error("创建文档失败");
-          console.error(e);
-        }
-      } finally {
+        message.error("新建文档失败");
+        console.error("Failed to create new file", e);
         setLoading(false);
       }
     },
@@ -49,17 +41,15 @@ const NewDocModal: FC<{ open: boolean; onClose: () => void }> = ({
   );
   return (
     <Modal
-      open={open}
-      closable={{ onClose }}
+      open={modalHandler.visible}
+      closable={!loading && { onClose: () => modalHandler.resolveHide() }}
+      afterClose={modalHandler.remove}
       footer={
         <Button
           type="primary"
-          disabled={!filename || !selectedExample || loading}
-          onClick={() =>
-            selectedExample &&
-            filename &&
-            !loading &&
-            createDocument(selectedExample, filename)
+          disabled={!selectedExample || loading}
+          onClick={async () =>
+            selectedExample && !loading && createDocument(selectedExample)
           }
         >
           创建
@@ -108,16 +98,9 @@ const NewDocModal: FC<{ open: boolean; onClose: () => void }> = ({
         ) : (
           <div>{/* TODO: 未选择模板时也写点东西 */}</div>
         )}
-        <label className="filename-input-label">
-          文件名
-          <Input
-            value={filename}
-            onChange={(e) => setFilename(e.target.value)}
-          />
-        </label>
       </div>
     </Modal>
   );
-};
+});
 
 export default NewDocModal;

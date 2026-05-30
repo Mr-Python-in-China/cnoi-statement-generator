@@ -68,10 +68,5 @@
     > :nth-child(1) {
       flex: 1;
     }
-    .filename-input-label {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
   }
 }
