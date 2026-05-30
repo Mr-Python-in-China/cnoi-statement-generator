@@ -1,5 +1,13 @@
+import { ConfigProvider, App as AntApp } from "antd";
+import zhCN from "antd/locale/zh_CN";
 import type { FC, ReactNode } from "react";
 import { Links, Meta, Outlet, Scripts, ScrollRestoration } from "react-router";
+import { isRouteErrorResponse } from "react-router";
+
+import type { Route } from "./+types/root";
+import BackupReminder from "./components/BackupReminder";
+import RequestUserActionHolder from "./components/RequestUserActionHolder";
+import ErrorPage from "./router/errorPage";
 
 export const Layout: FC<{ children: ReactNode }> = ({ children }) => {
   return (
@@ -31,6 +39,28 @@ export const Layout: FC<{ children: ReactNode }> = ({ children }) => {
   );
 };
 
-const Root: FC = () => <Outlet />;
+const Root: FC = () => (
+  <ConfigProvider locale={zhCN}>
+    <AntApp className="app">
+      <BackupReminder />
+      <Outlet />
+      <RequestUserActionHolder />
+    </AntApp>
+  </ConfigProvider>
+);
 
 export default Root;
+
+export const ErrorBoundary: FC<Route.ErrorBoundaryProps> = ({ error }) => {
+  return (
+    <ErrorPage>
+      {isRouteErrorResponse(error)
+        ? error.status === 404
+          ? "页面不存在"
+          : error.status + " " + error.statusText
+        : error instanceof Error
+          ? "出现错误：" + error.message
+          : "未知错误"}
+    </ErrorPage>
+  );
+};

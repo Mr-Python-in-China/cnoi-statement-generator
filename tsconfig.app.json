@@ -29,6 +29,7 @@
   },
   "include": [
     "src",
+    "src/**/.client/**/*",
     "templates",
     "examples",
     "import.d.ts",

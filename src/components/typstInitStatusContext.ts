@@ -1,6 +1,6 @@
 import React from "react";
 
-import CompilerInstance from "@/compiler";
+import CompilerInstance from "@/compiler/index.client";
 
 export const TypstInitStatusContext = React.createContext<
   CompilerInstance["typstInitStatus"] | null

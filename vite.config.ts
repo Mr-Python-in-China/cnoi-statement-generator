@@ -6,6 +6,7 @@ import ViteRemarkRehypePlugin from "@mr.python/vite-plugin-remark-rehype";
 import { reactRouter } from "@react-router/dev/vite";
 import { defineConfig, type PluginOption, type UserConfig } from "vite";
 import "vitest/config";
+import { envOnlyMacros } from "vite-env-only";
 import viteAssetsSplitPlugin from "vite-plugin-assets-split";
 import babel from "vite-plugin-babel";
 import devtoolsJson from "vite-plugin-devtools-json";
@@ -65,6 +66,7 @@ export default defineConfig(async (env): Promise<UserConfig> => {
       }),
       ViteRemarkRehypePlugin(),
       devtoolsJson(),
+      envOnlyMacros(),
     ],
     resolve: {
       alias: [

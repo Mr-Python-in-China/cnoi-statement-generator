@@ -1,13 +1,18 @@
-import { type FC } from "react";
+import { Suspense, use, type FC } from "react";
 import { Link } from "react-router";
 
-import type { RecentlyOpenedEntry } from "@/utils/indexedDB/recentlyOpened";
+import {
+  getRecentlyOpened,
+  type RecentlyOpenedEntry,
+} from "@/utils/.client/indexedDB/recentlyOpened";
 
 import "./documentGrid.css";
 
-const DocumentGrid: FC<{
-  recentlyOpened: RecentlyOpenedEntry[];
-}> = ({ recentlyOpened }) => {
+const DocumentGridImpl: FC<{
+  recentlyOpenedPromise: Promise<RecentlyOpenedEntry[]>;
+}> = ({ recentlyOpenedPromise }) => {
+  const recentlyOpened = use(recentlyOpenedPromise);
+
   return (
     <div className="root-document-grid">
       {recentlyOpened.map((meta) => (
@@ -37,6 +42,15 @@ const DocumentGrid: FC<{
         </div>
       ))}
     </div>
+  );
+};
+
+const DocumentGrid: FC = () => {
+  const recentlyOpenedPromise = getRecentlyOpened();
+  return (
+    <Suspense>
+      <DocumentGridImpl recentlyOpenedPromise={recentlyOpenedPromise} />
+    </Suspense>
   );
 };
 

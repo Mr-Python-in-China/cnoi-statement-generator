@@ -1,4 +1,4 @@
-import CompilerInstance from "../compiler";
+import CompilerInstance from "../compiler/index.client";
 import type { ContentBase } from "../types/document";
 import type { TemplateUiMetadata } from "../types/templates";
 import { importUiMetadata } from "./importTemplate";

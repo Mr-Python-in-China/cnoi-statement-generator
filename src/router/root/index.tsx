@@ -8,17 +8,14 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Button } from "antd";
-import { Suspense, use, type FC } from "react";
+import { type FC } from "react";
 import { Link, useNavigate } from "react-router";
+import { clientOnly$ } from "vite-env-only/macros";
 
 import ExplorerModal from "@/components/ExplorerModal";
 import { useModal } from "@/components/modalWrapper";
 import { VersionInfoModal } from "@/components/VersionInfoModal";
 import { toImmerContent } from "@/utils/contestDataUtils";
-import {
-  getRecentlyOpened,
-  type RecentlyOpenedEntry,
-} from "@/utils/indexedDB/recentlyOpened";
 
 import NewDocModal from "../../components/NewDocModal";
 import { navigateToEditorWithDoc } from "../editor/navigationState";
@@ -26,11 +23,7 @@ import DocumentGrid from "./documentGrid";
 
 import "./index.css";
 
-const RootImpl: FC<{
-  initialRecentlyOpenedPromise: Promise<RecentlyOpenedEntry[]>;
-}> = ({ initialRecentlyOpenedPromise }) => {
-  const recentlyOpened = use(initialRecentlyOpenedPromise);
-
+const Root: FC = () => {
   const navigate = useNavigate();
 
   const [newDocModal, newDocModalContextHolder] = useModal(NewDocModal);
@@ -90,7 +83,7 @@ const RootImpl: FC<{
           </div>
           <div>
             <h2>最近打开</h2>
-            <DocumentGrid recentlyOpened={recentlyOpened} />
+            {clientOnly$(<DocumentGrid />)}
           </div>
         </div>
         <ChangeLog />
@@ -109,15 +102,6 @@ const ChangeLog = () => {
       <h1>更新日志</h1>
       <article dangerouslySetInnerHTML={{ __html: changeLogHTML }} />
     </div>
-  );
-};
-
-const Root: FC = () => {
-  const initialRecentlyOpenedPromise = getRecentlyOpened();
-  return (
-    <Suspense>
-      <RootImpl initialRecentlyOpenedPromise={initialRecentlyOpenedPromise} />
-    </Suspense>
   );
 };
 

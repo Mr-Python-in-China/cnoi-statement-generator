@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-import type { PromiseStatus } from "@/compiler";
+import type { PromiseStatus } from "@/compiler/index.client";
 
 import useTemplateManager from "./templateManagerContext";
 
