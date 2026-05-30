@@ -5,7 +5,6 @@ import { Links, Meta, Outlet, Scripts, ScrollRestoration } from "react-router";
 import { isRouteErrorResponse } from "react-router";
 
 import type { Route } from "./+types/root";
-import BackupReminder from "./components/BackupReminder";
 import RequestUserActionHolder from "./components/RequestUserActionHolder";
 import ErrorPage from "./router/errorPage";
 
@@ -42,7 +41,6 @@ export const Layout: FC<{ children: ReactNode }> = ({ children }) => {
 const Root: FC = () => (
   <ConfigProvider locale={zhCN}>
     <AntApp className="app">
-      <BackupReminder />
       <Outlet />
       <RequestUserActionHolder />
     </AntApp>
