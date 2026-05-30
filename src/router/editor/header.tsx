@@ -24,7 +24,8 @@ import type { ImmerDocument } from "@/types/document";
 import { toImmerContent } from "@/utils/contestDataUtils";
 import { removeImmer } from "@/utils/documentZod";
 import { recordRecentlyOpened } from "@/utils/indexedDB/recentlyOpened";
-import { documentToJson, jsonToDocument } from "@/utils/jsonDocument";
+import { documentToJson } from "@/utils/jsonDocument";
+import { uploadDocumentFromFile } from "@/utils/uploadDocument";
 
 import { navigateToEditorWithDoc } from "./navigationState";
 
@@ -181,32 +182,14 @@ const ContestEditorHeader: FC<{
   }, [doc, path, message, setModified, onClickSaveAs]);
 
   const onClickUpload = useCallback(async () => {
-    if (!(await confirmDiscardUnsavedChanges())) return;
-    const input = document.createElement("input");
-    input.type = "file";
-    input.accept = ".csg,.json,application/json";
-    input.addEventListener(
-      "change",
-      async () => {
-        if (!input.files || input.files.length === 0) return;
-        const file = input.files[0];
-        try {
-          const text = await file.text();
-          const loadedDoc = await jsonToDocument(text);
-          loadedDoc.name = file.name.replace(/\.[^/.]+$/, ""); // 去掉扩展名
-          navigateToEditorWithDoc(
-            navigate,
-            { ...loadedDoc, content: toImmerContent(loadedDoc.content) },
-            ["tmp", crypto.randomUUID()],
-          );
-        } catch (e) {
-          console.error("Error when loading document from uploaded file.", e);
-          message.error("文件加载失败");
-        }
+    await uploadDocumentFromFile({
+      navigate,
+      beforeOpen: confirmDiscardUnsavedChanges,
+      onError: (e) => {
+        console.error("Error when loading document from uploaded file.", e);
+        message.error("文件加载失败");
       },
-      { once: true },
-    );
-    input.click();
+    });
   }, [message, confirmDiscardUnsavedChanges, navigate]);
 
   const onClickDownload = useCallback(async () => {

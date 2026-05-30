@@ -5,9 +5,10 @@ import {
   faFolderOpen,
   faInfo,
   faPlus,
+  faUpload,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { Button } from "antd";
+import { App, Button } from "antd";
 import { type FC } from "react";
 import { Link, useNavigate } from "react-router";
 import { clientOnly$ } from "vite-env-only/macros";
@@ -16,6 +17,7 @@ import ExplorerModal from "@/components/ExplorerModal";
 import { useModal } from "@/components/modalWrapper";
 import { VersionInfoModal } from "@/components/VersionInfoModal";
 import { toImmerContent } from "@/utils/contestDataUtils";
+import { uploadDocumentFromFile } from "@/utils/uploadDocument";
 
 import NewDocModal from "../../components/NewDocModal";
 import { navigateToEditorWithDoc } from "../editor/navigationState";
@@ -25,6 +27,7 @@ import "./index.css";
 
 const Root: FC = () => {
   const navigate = useNavigate();
+  const { message } = App.useApp();
 
   const [newDocModal, newDocModalContextHolder] = useModal(NewDocModal);
   const [explorerModal, explorerModalContextHolder] = useModal(ExplorerModal);
@@ -56,6 +59,7 @@ const Root: FC = () => {
                 新建文档
               </Button>
               <Button
+                type="primary"
                 icon={<FontAwesomeIcon icon={faFolderOpen} />}
                 onClick={() =>
                   explorerModal.show({ mode: "open" }).then((v) => {
@@ -72,6 +76,23 @@ const Root: FC = () => {
                 }
               >
                 打开文档
+              </Button>
+              <Button
+                icon={<FontAwesomeIcon icon={faUpload} />}
+                onClick={() =>
+                  uploadDocumentFromFile({
+                    navigate,
+                    onError: (e) => {
+                      console.error(
+                        "Error when loading document from uploaded file.",
+                        e,
+                      );
+                      message.error("文件加载失败");
+                    },
+                  })
+                }
+              >
+                上传文档
               </Button>
               <Button
                 icon={<FontAwesomeIcon icon={faInfo} />}
