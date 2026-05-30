@@ -8,6 +8,8 @@ import type { Route } from "./+types/root";
 import RequestUserActionHolder from "./components/RequestUserActionHolder";
 import ErrorPage from "./router/errorPage";
 
+import "./main.css";
+
 export const Layout: FC<{ children: ReactNode }> = ({ children }) => {
   return (
     <html lang="zh-CN">
