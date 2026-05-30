@@ -21,9 +21,9 @@ import useTypstInitStatus from "@/components/typstInitStatusContext";
 import { VersionInfoModal } from "@/components/VersionInfoModal";
 import { saveDocument } from "@/storage";
 import type { ImmerDocument } from "@/types/document";
+import { recordRecentlyOpened } from "@/utils/.client/indexedDB/recentlyOpened";
 import { toImmerContent } from "@/utils/contestDataUtils";
 import { removeImmer } from "@/utils/documentZod";
-import { recordRecentlyOpened } from "@/utils/indexedDB/recentlyOpened";
 import { documentToJson } from "@/utils/jsonDocument";
 import { uploadDocumentFromFile } from "@/utils/uploadDocument";
 

@@ -4,7 +4,7 @@ import { App, Button } from "antd";
 import { useCallback, useEffect, useRef } from "react";
 
 import type { DocumentBase } from "@/types/document";
-import { getFsHandle, saveFsHandle } from "@/utils/indexedDB/fsHandles";
+import { getFsHandle, saveFsHandle } from "@/utils/.client/indexedDB/fsHandles";
 import { documentToJson, jsonToDocument } from "@/utils/jsonDocument";
 
 import {

@@ -32,13 +32,13 @@ import type {
   ImmerDocument,
 } from "@/types/document";
 import {
+  recordRecentlyOpened,
+  deleteRecentlyOpened,
+} from "@/utils/.client/indexedDB/recentlyOpened";
+import {
   removeProblemCallback,
   toImmerContent,
 } from "@/utils/contestDataUtils";
-import {
-  recordRecentlyOpened,
-  deleteRecentlyOpened,
-} from "@/utils/indexedDB/recentlyOpened";
 import TemplateManager from "@/utils/templateManager";
 
 import ErrorPage from "../errorPage";

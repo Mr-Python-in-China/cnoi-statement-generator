@@ -13,7 +13,7 @@ import {
   loadDocumentFromDB,
   loadDocumentMetasFromDB,
   saveDocumentToDB,
-} from "@/utils/indexedDB/browserStorage";
+} from "@/utils/.client/indexedDB/browserStorage";
 
 import type { StorageMethodObject } from "../types";
 

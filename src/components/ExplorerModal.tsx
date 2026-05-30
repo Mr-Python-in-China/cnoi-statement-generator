@@ -11,7 +11,7 @@ import {
 } from "@/storage/errors";
 import type { ExplorerItem, StorageMethodObject } from "@/storage/types";
 import type { DocumentBase } from "@/types/document";
-import { deleteRecentlyOpened } from "@/utils/indexedDB/recentlyOpened";
+import { deleteRecentlyOpened } from "@/utils/.client/indexedDB/recentlyOpened";
 
 import ExplorerPage from "./ExplorerPage";
 import { createModal } from "./modalWrapper";
