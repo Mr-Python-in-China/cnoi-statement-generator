@@ -23,8 +23,6 @@ import { requestUserAction } from "@/components/RequestUserActionHolder";
 import useTemplateManager, {
   TemplateManagerContext,
 } from "@/components/templateManagerContext";
-
-import "./index.css";
 import TypstInitStatusProvider from "@/components/typstInitStatusProvider";
 import { loadDocument } from "@/storage";
 import { DocNotFoundError, LoadDocumentError } from "@/storage/errors";
@@ -45,6 +43,8 @@ import Body from "./body";
 import ContestEditorHeader from "./header";
 import navigationState from "./navigationState";
 
+import "./index.css";
+
 const ContestEditorLoader: FC<Route.ComponentProps> = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -63,25 +63,26 @@ const ContestEditorLoader: FC<Route.ComponentProps> = () => {
     const run = async () => {
       try {
         const file = searchParams.get("file");
-        if (file?.startsWith("local-") && navigationState.value?.doc) {
+        const parsedPath = file?.split("/").map((x) => decodeURIComponent(x));
+        if (
+          parsedPath?.[0] === "tmp" &&
+          navigationState.value?.encodedPath === file
+        ) {
           setState({
             doc: navigationState.value.doc,
             path: undefined,
           });
-          navigationState.value = undefined;
           return;
         }
-        if (file === null || file.startsWith("local-")) {
+        if (parsedPath === undefined || parsedPath[0] === "tmp") {
           navigate("/", { replace: true });
           return;
         }
-        const parsedPath = file.split("/").map((x) => decodeURIComponent(x));
         let nextDoc: DocumentBase | undefined = navigationState.value?.doc;
-        if (!nextDoc) {
+        if (!nextDoc || navigationState.value?.encodedPath !== file) {
           if (parsedPath[0] === "fs") await requestUserAction();
           nextDoc = await loadDocument(parsedPath);
         }
-        navigationState.value = undefined;
         if (cancelled) return;
         setState({
           doc: nextDoc,

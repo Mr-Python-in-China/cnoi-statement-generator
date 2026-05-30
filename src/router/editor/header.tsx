@@ -24,7 +24,7 @@ import { toImmerContent } from "@/utils/contestDataUtils";
 import { removeImmer } from "@/utils/documentZod";
 import { documentToJson, jsonToDocument } from "@/utils/jsonDocument";
 
-import navigationState from "./navigationState";
+import { navigateToEditorWithDoc } from "./navigationState";
 
 import "./header.css";
 
@@ -125,19 +125,15 @@ const ContestEditorHeader: FC<{
     const data = await explorer.show({
       mode: "open",
     });
-    if (data.state === "success") {
-      const url = new URL(window.location.href);
-      url.searchParams.set("file", data.path.map(encodeURIComponent).join("/"));
-      navigationState.value = {
-        doc: {
+    if (data.state === "success")
+      navigateToEditorWithDoc(
+        navigate,
+        {
           ...data.doc,
           content: toImmerContent(data.doc.content),
         },
-      };
-      navigate({
-        search: url.search,
-      });
-    }
+        data.path,
+      );
   }, [explorer, navigate, confirmDiscardUnsavedChanges]);
 
   const onClickSaveAs = useCallback(() => {
@@ -191,17 +187,11 @@ const ContestEditorHeader: FC<{
           const text = await file.text();
           const loadedDoc = await jsonToDocument(text);
           loadedDoc.name = file.name.replace(/\.[^/.]+$/, ""); // 去掉扩展名
-          navigationState.value = {
-            doc: {
-              ...loadedDoc,
-              content: toImmerContent(loadedDoc.content),
-            },
-          };
-          const url = new URL(window.location.href);
-          url.searchParams.set("file", "local-" + crypto.randomUUID());
-          navigate({
-            search: url.search,
-          });
+          navigateToEditorWithDoc(
+            navigate,
+            { ...loadedDoc, content: toImmerContent(loadedDoc.content) },
+            ["tmp", crypto.randomUUID()],
+          );
         } catch (e) {
           console.error("Error when loading document from uploaded file.", e);
           message.error("文件加载失败");
