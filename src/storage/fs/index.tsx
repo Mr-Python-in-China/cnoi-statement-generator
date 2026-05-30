@@ -67,32 +67,44 @@ export default {
     path: string[],
     content: DocumentBase,
   ): Promise<DocumentBase> => {
-    ensureFileSaveSystemApi();
-    const handle = await getFsHandle(path);
-    if (!handle) throw new DocNotFoundError("File handle not found");
-    await ensureSavePermission(handle);
-    const writable = await handle.createWritable();
-    const payload = {
-      ...content,
-      name: handle.name || content.name,
-    };
-    await writable.write(await documentToJson(payload));
-    await writable.close();
-    return payload;
+    try {
+      ensureFileSaveSystemApi();
+      const handle = await getFsHandle(path);
+      if (!handle) throw new DocNotFoundError("File handle not found");
+      await ensureSavePermission(handle);
+      const writable = await handle.createWritable();
+      const payload = {
+        ...content,
+        name: handle.name || content.name,
+      };
+      await writable.write(await documentToJson(payload));
+      await writable.close();
+      return payload;
+    } catch (e) {
+      if (e instanceof DOMException && e.name === "NotFoundError")
+        throw new DocNotFoundError("File not found", { cause: e });
+      throw e;
+    }
   },
   loadDocument: async (path: string[]): Promise<DocumentBase> => {
-    ensureFileLoadSystemApi();
-    const handle = await getFsHandle(path);
-    if (!handle) {
-      throw new DocNotFoundError("File handle not found");
+    try {
+      ensureFileLoadSystemApi();
+      const handle = await getFsHandle(path);
+      if (!handle) {
+        throw new DocNotFoundError("File handle not found");
+      }
+      await ensureLoadPermission(handle);
+      const file = await handle.getFile();
+      const doc = await jsonToDocument(await file.text());
+      return {
+        ...doc,
+        name: handle.name || doc.name,
+      };
+    } catch (e) {
+      if (e instanceof DOMException && e.name === "NotFoundError")
+        throw new DocNotFoundError("File not found", { cause: e });
+      throw e;
     }
-    await ensureLoadPermission(handle);
-    const file = await handle.getFile();
-    const doc = await jsonToDocument(await file.text());
-    return {
-      ...doc,
-      name: handle.name || doc.name,
-    };
   },
   icon: <FontAwesomeIcon icon={faHardDrive} />,
   ExplorerPage: ({ onConfirm, mode }) => {
