@@ -23,6 +23,7 @@ import { saveDocument } from "@/storage";
 import type { ImmerDocument } from "@/types/document";
 import { toImmerContent } from "@/utils/contestDataUtils";
 import { removeImmer } from "@/utils/documentZod";
+import { recordRecentlyOpened } from "@/utils/indexedDB/recentlyOpened";
 import { documentToJson, jsonToDocument } from "@/utils/jsonDocument";
 
 import { navigateToEditorWithDoc } from "./navigationState";
@@ -158,6 +159,9 @@ const ContestEditorHeader: FC<{
             data.path.map(encodeURIComponent).join("/"),
           );
           history.replaceState(undefined, "", new URL(nowUrl).href);
+          recordRecentlyOpened(data.path, data.doc.name).catch((e) =>
+            console.warn("Failed to record recently opened document", e),
+          );
         }
       });
   }, [explorer, setPath, updateDoc, doc]);

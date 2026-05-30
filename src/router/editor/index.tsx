@@ -35,6 +35,10 @@ import {
   removeProblemCallback,
   toImmerContent,
 } from "@/utils/contestDataUtils";
+import {
+  recordRecentlyOpened,
+  deleteRecentlyOpened,
+} from "@/utils/indexedDB/recentlyOpened";
 import TemplateManager from "@/utils/templateManager";
 
 import ErrorPage from "../errorPage";
@@ -61,9 +65,9 @@ const ContestEditorLoader: FC<Route.ComponentProps> = () => {
     let cancelled = false;
 
     const run = async () => {
+      const file = searchParams.get("file");
+      const parsedPath = file?.split("/").map((x) => decodeURIComponent(x));
       try {
-        const file = searchParams.get("file");
-        const parsedPath = file?.split("/").map((x) => decodeURIComponent(x));
         if (
           parsedPath?.[0] === "tmp" &&
           navigationState.value?.encodedPath === file
@@ -83,6 +87,9 @@ const ContestEditorLoader: FC<Route.ComponentProps> = () => {
           if (parsedPath[0] === "fs") await requestUserAction();
           nextDoc = await loadDocument(parsedPath);
         }
+        recordRecentlyOpened(parsedPath, nextDoc.name).catch((e) =>
+          console.warn("Failed to record recently opened document:", e),
+        );
         if (cancelled) return;
         setState({
           doc: nextDoc,
@@ -91,6 +98,18 @@ const ContestEditorLoader: FC<Route.ComponentProps> = () => {
       } catch (err) {
         if (cancelled) return;
         console.error("Failed to load document in editor route", err);
+        // If document is missing, remove from recently opened (best-effort)
+        if (
+          err instanceof DocNotFoundError &&
+          parsedPath &&
+          parsedPath[0] !== "tmp"
+        )
+          deleteRecentlyOpened(parsedPath).catch((e) =>
+            console.warn(
+              "Failed to delete recently opened entry after document not found",
+              e,
+            ),
+          );
         setState({ error: err });
       }
     };

@@ -11,6 +11,7 @@ import {
 } from "@/storage/errors";
 import type { ExplorerItem, StorageMethodObject } from "@/storage/types";
 import type { DocumentBase } from "@/types/document";
+import { deleteRecentlyOpened } from "@/utils/indexedDB/recentlyOpened";
 
 import ExplorerPage from "./ExplorerPage";
 import { createModal } from "./modalWrapper";
@@ -203,6 +204,14 @@ const ExplorerModal = createModal<ExplorerProps, ExplorerResult>((props) => {
     } catch (error) {
       if (error instanceof DocNotFoundError) {
         message.error("文档不存在");
+        try {
+          await deleteRecentlyOpened(path);
+        } catch (e) {
+          console.warn(
+            "Failed to delete recently opened entry after document not found",
+            e,
+          );
+        }
       } else if (
         error instanceof LoadDocumentError ||
         error instanceof SaveDocumentError

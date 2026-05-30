@@ -21,6 +21,11 @@ class CnoiDatabase extends Dexie {
     string
   >;
 
+  recently_opened!: Dexie.Table<
+    { pathKey: string; name: string; openedAt: Date },
+    string
+  >;
+
   constructor() {
     super("cnoi-statement-generator");
     this.version(1).stores({
@@ -209,6 +214,14 @@ class CnoiDatabase extends Dexie {
 
     this.version(8).stores({
       fs_handles: "filename",
+    });
+
+    this.version(9).stores({
+      fs_handles: "filename",
+    });
+
+    this.version(10).stores({
+      recently_opened: "pathKey",
     });
   }
 }
