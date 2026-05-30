@@ -7,17 +7,18 @@ import {
   faPlus,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { Button, Select } from "antd";
-import { Suspense, use, useState, type FC } from "react";
+import { Button } from "antd";
+import { Suspense, use, type FC } from "react";
 import { Link, useNavigate } from "react-router";
-import { useImmer } from "use-immer";
 
 import ExplorerModal from "@/components/ExplorerModal";
 import { useModal } from "@/components/modalWrapper";
 import { VersionInfoModal } from "@/components/VersionInfoModal";
-import type { DocumentMeta } from "@/types/document";
 import { toImmerContent } from "@/utils/contestDataUtils";
-import { loadDocumentMetasFromDB } from "@/utils/indexedDB/browserStorage";
+import {
+  getRecentlyOpened,
+  type RecentlyOpenedEntry,
+} from "@/utils/indexedDB/recentlyOpened";
 
 import NewDocModal from "../../components/NewDocModal";
 import { navigateToEditorWithDoc } from "../editor/navigationState";
@@ -26,14 +27,9 @@ import DocumentGrid from "./documentGrid";
 import "./index.css";
 
 const RootImpl: FC<{
-  initialDocumentMetasPromise: Promise<DocumentMeta[]>;
-}> = ({ initialDocumentMetasPromise }) => {
-  const [documentMetas, updateDocumentMetas] = useImmer(
-    use(initialDocumentMetasPromise),
-  );
-  const [sortBy, setSortBy] = useState<
-    "name" | "name (reversed)" | "modified at" | "modified at (reversed)"
-  >("modified at (reversed)");
+  initialRecentlyOpenedPromise: Promise<RecentlyOpenedEntry[]>;
+}> = ({ initialRecentlyOpenedPromise }) => {
+  const recentlyOpened = use(initialRecentlyOpenedPromise);
 
   const navigate = useNavigate();
 
@@ -91,66 +87,11 @@ const RootImpl: FC<{
                 关于
               </Button>
             </div>
-            <div>
-              <Select
-                className="root-button-group-sortby"
-                options={
-                  [
-                    {
-                      value: "name",
-                      label: "名称 ↑",
-                    },
-                    {
-                      value: "name (reversed)",
-                      label: "名称 ↓",
-                    },
-                    {
-                      value: "modified at",
-                      label: "修改时间 ↑",
-                    },
-                    {
-                      value: "modified at (reversed)",
-                      label: "修改时间 ↓",
-                    },
-                  ] as const satisfies Array<{
-                    value: typeof sortBy;
-                    label: string;
-                  }>
-                }
-                value={sortBy}
-                onChange={(value) => {
-                  setSortBy(value);
-                }}
-              />
-            </div>
           </div>
-          <DocumentGrid
-            updateDocumentMetas={updateDocumentMetas}
-            documentMetas={Array.from(documentMetas).sort((x, y) => {
-              if (sortBy === "name")
-                return x.name.localeCompare(y.name, "zh-Hans-CN", {
-                  sensitivity: "accent",
-                });
-              else if (sortBy === "name (reversed)")
-                return y.name.localeCompare(x.name, "zh-Hans-CN", {
-                  sensitivity: "accent",
-                });
-              else if (sortBy === "modified at")
-                return (
-                  new Date(x.modifiedAt).getTime() -
-                  new Date(y.modifiedAt).getTime()
-                );
-              else if (sortBy === "modified at (reversed)")
-                return (
-                  new Date(y.modifiedAt).getTime() -
-                  new Date(x.modifiedAt).getTime()
-                );
-              else {
-                sortBy satisfies never;
-                return 0;
-              }
-            })}
-          />
+          <div>
+            <h2>最近打开</h2>
+            <DocumentGrid recentlyOpened={recentlyOpened} />
+          </div>
         </div>
         <ChangeLog />
       </div>
@@ -172,10 +113,10 @@ const ChangeLog = () => {
 };
 
 const Root: FC = () => {
-  const initialDocumentMetasPromise = loadDocumentMetasFromDB();
+  const initialRecentlyOpenedPromise = getRecentlyOpened();
   return (
     <Suspense>
-      <RootImpl initialDocumentMetasPromise={initialDocumentMetasPromise} />
+      <RootImpl initialRecentlyOpenedPromise={initialRecentlyOpenedPromise} />
     </Suspense>
   );
 };

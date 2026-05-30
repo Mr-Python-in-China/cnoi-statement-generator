@@ -19,11 +19,13 @@ export async function recordRecentlyOpened(path: string[], name: string) {
 // Fetch all recently opened entries (unsorted)
 export async function getRecentlyOpened(): Promise<RecentlyOpenedEntry[]> {
   const rows = await db.recently_opened.toArray();
-  return rows.map((r) => ({
-    path: r.pathKey.split("/").map((s: string) => decodeURIComponent(s)),
-    name: r.name,
-    openedAt: r.openedAt,
-  }));
+  return rows
+    .map((r) => ({
+      path: r.pathKey.split("/").map((s: string) => decodeURIComponent(s)),
+      name: r.name,
+      openedAt: r.openedAt,
+    }))
+    .sort((a, b) => b.openedAt.getTime() - a.openedAt.getTime());
 }
 
 export async function deleteRecentlyOpened(path: string[]) {

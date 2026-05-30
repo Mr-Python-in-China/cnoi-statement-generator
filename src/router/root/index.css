@@ -89,7 +89,4 @@
   > :nth-child(1) {
     flex: 1;
   }
-  .root-button-group-sortby {
-    width: 120px;
-  }
 }

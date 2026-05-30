@@ -7,16 +7,8 @@ let unresolvedCnt = 0;
 export const requestUserAction = () =>
   new Promise<void>((resolve) => {
     ++unresolvedCnt;
-    console.debug(
-      "Requesting user action. Total unresolved requests:",
-      unresolvedCnt,
-    );
     const f = () => {
       --unresolvedCnt;
-      console.debug(
-        "User action received, resolving one request. Remaining:",
-        unresolvedCnt,
-      );
       resolve();
     };
     eventTarget.addEventListener("userAction", f, {
@@ -33,7 +25,6 @@ const RequestUserActionHolder: FC = () => {
     const h = () => {
       const resolve = () => {
         if (key) notification.destroy(key);
-        console.debug("User action received, dispatching userAction event");
         eventTarget.dispatchEvent(new Event("userAction"));
       };
       if (window.navigator.userActivation?.isActive) {

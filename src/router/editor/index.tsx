@@ -87,10 +87,10 @@ const ContestEditorLoader: FC<Route.ComponentProps> = () => {
           if (parsedPath[0] === "fs") await requestUserAction();
           nextDoc = await loadDocument(parsedPath);
         }
+        if (cancelled) return;
         recordRecentlyOpened(parsedPath, nextDoc.name).catch((e) =>
           console.warn("Failed to record recently opened document:", e),
         );
-        if (cancelled) return;
         setState({
           doc: nextDoc,
           path: parsedPath,
