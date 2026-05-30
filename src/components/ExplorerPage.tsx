@@ -1,6 +1,10 @@
-import { Table, type TableColumnsType } from "antd";
+import { faTrash } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { Dropdown, Table, type TableColumnsType } from "antd";
+import type { MenuProps } from "antd";
 import type { TableRef } from "antd/es/table";
 import {
+  useCallback,
   useEffect,
   useLayoutEffect,
   useMemo,
@@ -12,6 +16,8 @@ import {
 
 import "./ExplorerPage.css";
 
+export type ExplorerItemActions = "delete";
+
 export type ExplorerItem = {
   key: string;
   name?: string;
@@ -19,6 +25,7 @@ export type ExplorerItem = {
   createdAt?: Date;
   modifiedAt?: Date;
   type: "file" | "folder";
+  actions?: Record<ExplorerItemActions, () => void>;
 };
 
 export type ExplorerPageProps = {
@@ -38,6 +45,14 @@ const formatDate = (value?: Date) => {
   }).format(value);
 };
 
+const rowDropDownList = [
+  {
+    key: "delete",
+    label: "删除",
+    icon: <FontAwesomeIcon icon={faTrash} />,
+  },
+] as const satisfies MenuProps["items"];
+
 const ExplorerPage: FC<ExplorerPageProps> = ({
   items,
   onSelect,
@@ -49,6 +64,10 @@ const ExplorerPage: FC<ExplorerPageProps> = ({
   const [selectedKey, setSelectedKey] = useState<string | undefined>(undefined);
   const tableRef = useRef<TableRef>(null);
   const sectionRef = useRef<HTMLElement>(null);
+  const itemObj = useMemo(
+    () => Object.fromEntries(items.map((item) => [item.key, item])),
+    [items],
+  );
   const itemKeys = useMemo(() => items.map((item) => item.key), [items]);
   const selectedIndex = useMemo(
     () => (selectedKey ? itemKeys.indexOf(selectedKey) : -1),
@@ -150,6 +169,27 @@ const ExplorerPage: FC<ExplorerPageProps> = ({
     [itemKeys.map(encodeURIComponent).join(",")],
   );
 
+  const getContextMenuItem = useCallback(
+    (rowProps: React.HTMLAttributes<HTMLTableRowElement>) => {
+      const item =
+        itemObj[
+          // @ts-ignore
+          rowProps["data-row-key"]
+        ];
+      const res: MenuProps["items"] = [];
+      for (const i of rowDropDownList) {
+        const action = item?.actions?.[i.key];
+        if (action)
+          res.push({
+            ...i,
+            onClick: action,
+          });
+      }
+      return res;
+    },
+    [itemObj],
+  );
+
   return (
     <section
       className="explorer-page"
@@ -174,6 +214,20 @@ const ExplorerPage: FC<ExplorerPageProps> = ({
         onRow={(item) => ({
           onClick: () => handleRowActivate(item),
         })}
+        components={{
+          body: {
+            row: (props: React.HTMLAttributes<HTMLTableRowElement>) => (
+              <Dropdown
+                trigger={["contextMenu"]}
+                menu={{
+                  items: getContextMenuItem(props),
+                }}
+              >
+                <tr {...props} />
+              </Dropdown>
+            ),
+          },
+        }}
       />
     </section>
   );

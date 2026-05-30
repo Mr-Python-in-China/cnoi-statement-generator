@@ -15,7 +15,7 @@ const DocumentGrid: FC<{
           <Link
             to={{
               pathname: "/editor",
-              search: `?file=${meta.path.map(encodeURIComponent).join("/")}`,
+              search: `?file=${encodeURIComponent(meta.path.map(encodeURIComponent).join("/"))}`,
             }}
           >
             {/*{meta.previewImage ? (
