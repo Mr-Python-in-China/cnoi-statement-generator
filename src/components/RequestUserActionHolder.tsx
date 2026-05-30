@@ -1,5 +1,4 @@
-import { Button } from "antd";
-import { App } from "antd";
+import { App, Button } from "antd";
 import { useEffect, type FC } from "react";
 
 const eventTarget = new EventTarget();
@@ -8,13 +7,22 @@ let unresolvedCnt = 0;
 export const requestUserAction = () =>
   new Promise<void>((resolve) => {
     ++unresolvedCnt;
-    eventTarget.dispatchEvent(new Event("requestUserAction"));
+    console.debug(
+      "Requesting user action. Total unresolved requests:",
+      unresolvedCnt,
+    );
     const f = () => {
       --unresolvedCnt;
+      console.debug(
+        "User action received, resolving one request. Remaining:",
+        unresolvedCnt,
+      );
       resolve();
-      eventTarget.removeEventListener("userAction", f);
     };
-    eventTarget.addEventListener("userAction", f);
+    eventTarget.addEventListener("userAction", f, {
+      once: true,
+    });
+    eventTarget.dispatchEvent(new Event("requestUserAction"));
   });
 
 const RequestUserActionHolder: FC = () => {
@@ -25,6 +33,7 @@ const RequestUserActionHolder: FC = () => {
     const h = () => {
       const resolve = () => {
         if (key) notification.destroy(key);
+        console.debug("User action received, dispatching userAction event");
         eventTarget.dispatchEvent(new Event("userAction"));
       };
       if (window.navigator.userActivation?.isActive) {
