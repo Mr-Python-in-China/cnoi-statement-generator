@@ -1,22 +1,29 @@
 import changeLogHTML from "/CHANGELOG.md";
 import favicon from "/favicon.svg";
 import { faGithub } from "@fortawesome/free-brands-svg-icons";
-import { faInfo, faPlus } from "@fortawesome/free-solid-svg-icons";
+import {
+  faFolderOpen,
+  faInfo,
+  faPlus,
+} from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Button, Select } from "antd";
 import { Suspense, use, useState, type FC } from "react";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { useImmer } from "use-immer";
 
+import ExplorerModal from "@/components/ExplorerModal";
 import { useModal } from "@/components/modalWrapper";
-
-import "./index.css";
 import { VersionInfoModal } from "@/components/VersionInfoModal";
 import type { DocumentMeta } from "@/types/document";
+import { toImmerContent } from "@/utils/contestDataUtils";
 import { loadDocumentMetasFromDB } from "@/utils/indexedDB/browserStorage";
 
 import NewDocModal from "../../components/NewDocModal";
+import { navigateToEditorWithDoc } from "../editor/navigationState";
 import DocumentGrid from "./documentGrid";
+
+import "./index.css";
 
 const RootImpl: FC<{
   initialDocumentMetasPromise: Promise<DocumentMeta[]>;
@@ -27,7 +34,11 @@ const RootImpl: FC<{
   const [sortBy, setSortBy] = useState<
     "name" | "name (reversed)" | "modified at" | "modified at (reversed)"
   >("modified at (reversed)");
+
+  const navigate = useNavigate();
+
   const [newDocModal, newDocModalContextHolder] = useModal(NewDocModal);
+  const [explorerModal, explorerModalContextHolder] = useModal(ExplorerModal);
   const [versionInfo, versionInfoContextHolder] = useModal(VersionInfoModal);
 
   return (
@@ -56,13 +67,30 @@ const RootImpl: FC<{
                 新建文档
               </Button>
               <Button
+                icon={<FontAwesomeIcon icon={faFolderOpen} />}
+                onClick={() =>
+                  explorerModal.show({ mode: "open" }).then((v) => {
+                    if (v.state !== "success") return;
+                    navigateToEditorWithDoc(
+                      navigate,
+                      {
+                        ...v.doc,
+                        content: toImmerContent(v.doc.content),
+                      },
+                      v.path,
+                    );
+                  })
+                }
+              >
+                打开文档
+              </Button>
+              <Button
                 icon={<FontAwesomeIcon icon={faInfo} />}
                 onClick={() => versionInfo.show()}
               >
                 关于
               </Button>
             </div>
-            {versionInfoContextHolder}
             <div>
               <Select
                 className="root-button-group-sortby"
@@ -127,6 +155,8 @@ const RootImpl: FC<{
         <ChangeLog />
       </div>
       {newDocModalContextHolder}
+      {explorerModalContextHolder}
+      {versionInfoContextHolder}
     </>
   );
 };
