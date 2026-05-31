@@ -25,4 +25,5 @@ export type StorageMethodObject = {
   }>;
   icon: ReactNode;
   name: string;
+  enabled: boolean;
 };

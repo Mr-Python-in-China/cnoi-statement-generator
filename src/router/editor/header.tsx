@@ -11,7 +11,7 @@ import NewDocModal from "@/components/NewDocModal";
 import useTemplateManager from "@/components/templateManagerContext";
 import useTypstInitStatus from "@/components/typstInitStatusContext";
 import { VersionInfoModal } from "@/components/VersionInfoModal";
-import { saveDocument } from "@/storage";
+import { saveDocument } from "@/storage/index.client";
 import { recordRecentlyOpened } from "@/utils/.client/indexedDB/recentlyOpened";
 import { toImmerContent } from "@/utils/contestDataUtils";
 import { removeImmer } from "@/utils/documentZod";

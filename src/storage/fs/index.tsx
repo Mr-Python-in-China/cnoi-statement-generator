@@ -33,16 +33,6 @@ const jsonSaveOptions: SaveFilePickerOptions = {
   startIn: "documents",
 };
 
-const ensureFileLoadSystemApi = () => {
-  if (!("showOpenFilePicker" in window))
-    throw new LoadDocumentError("当前浏览器不支持");
-};
-
-const ensureFileSaveSystemApi = () => {
-  if (!("showSaveFilePicker" in window))
-    throw new SaveDocumentError("当前浏览器不支持");
-};
-
 const ensureLoadPermission = async (handle: FileSystemFileHandle) => {
   const status = await handle.queryPermission({ mode: "read" });
   if (status === "granted") return;
@@ -63,12 +53,12 @@ const ensureSavePermission = async (handle: FileSystemFileHandle) => {
 
 export default {
   name: "本机",
+  enabled: "showOpenFilePicker" in window && "showSaveFilePicker" in window,
   saveDocument: async (
     path: string[],
     content: DocumentBase,
   ): Promise<DocumentBase> => {
     try {
-      ensureFileSaveSystemApi();
       const handle = await getFsHandle(path);
       if (!handle) throw new DocNotFoundError("File handle not found");
       await ensureSavePermission(handle);
@@ -88,7 +78,6 @@ export default {
   },
   loadDocument: async (path: string[]): Promise<DocumentBase> => {
     try {
-      ensureFileLoadSystemApi();
       const handle = await getFsHandle(path);
       if (!handle) {
         throw new DocNotFoundError("File handle not found");
@@ -119,13 +108,9 @@ export default {
     const handlePickFile = useCallback(async () => {
       try {
         let handle: FileSystemFileHandle;
-        if (mode === "open") {
-          ensureFileLoadSystemApi();
+        if (mode === "open")
           handle = (await window.showOpenFilePicker(jsonPickerOptions))[0];
-        } else {
-          ensureFileSaveSystemApi();
-          handle = await window.showSaveFilePicker(jsonSaveOptions);
-        }
+        else handle = await window.showSaveFilePicker(jsonSaveOptions);
         if (!handle) return;
         const key = await saveFsHandle(handle);
         onConfirmRef.current(key);

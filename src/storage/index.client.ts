@@ -9,7 +9,9 @@ export const storageMethods = Object.fromEntries(
       eager: true,
       import: "default",
     }),
-  ).map(([key, module]) => [key.split("/")[1], module]),
+  )
+    .filter((x) => x[1].enabled)
+    .map(([key, module]) => [key.split("/")[1], module]),
 );
 
 export async function saveDocument(

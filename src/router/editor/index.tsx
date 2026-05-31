@@ -23,8 +23,8 @@ import useTemplateManager, {
   TemplateManagerContext,
 } from "@/components/templateManagerContext";
 import TypstInitStatusProvider from "@/components/typstInitStatusProvider";
-import { loadDocument } from "@/storage";
 import { DocNotFoundError, LoadDocumentError } from "@/storage/errors";
+import { loadDocument } from "@/storage/index.client";
 import type {
   DocumentBase,
   ImmerContent,

@@ -3,12 +3,16 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { App, AutoComplete, Breadcrumb, Button, Modal, Space } from "antd";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-import { loadDocument, saveDocument, storageMethods } from "@/storage";
 import {
   DocNotFoundError,
   LoadDocumentError,
   SaveDocumentError,
 } from "@/storage/errors";
+import {
+  loadDocument,
+  saveDocument,
+  storageMethods,
+} from "@/storage/index.client";
 import type { ExplorerItem, StorageMethodObject } from "@/storage/types";
 import type { DocumentBase } from "@/types/document";
 import { deleteRecentlyOpened } from "@/utils/.client/indexedDB/recentlyOpened";

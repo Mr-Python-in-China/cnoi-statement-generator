@@ -19,6 +19,7 @@ import type { StorageMethodObject } from "../types";
 
 export default {
   name: "浏览器存储",
+  enabled: true,
   saveDocument: async (
     path: string[],
     content: DocumentBase,
