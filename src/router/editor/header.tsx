@@ -1,16 +1,8 @@
 import { faAngleLeft } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { App } from "antd";
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  type Dispatch,
-  type FC,
-  type SetStateAction,
-} from "react";
+import { useCallback, useEffect, useMemo, type FC } from "react";
 import { useNavigate } from "react-router";
-import { type Updater } from "use-immer";
 
 import ExplorerModal from "@/components/ExplorerModal";
 import MenuBar, { type MenuGroup } from "@/components/menuBar";
@@ -20,26 +12,20 @@ import useTemplateManager from "@/components/templateManagerContext";
 import useTypstInitStatus from "@/components/typstInitStatusContext";
 import { VersionInfoModal } from "@/components/VersionInfoModal";
 import { saveDocument } from "@/storage";
-import type { ImmerDocument } from "@/types/document";
 import { recordRecentlyOpened } from "@/utils/.client/indexedDB/recentlyOpened";
 import { toImmerContent } from "@/utils/contestDataUtils";
 import { removeImmer } from "@/utils/documentZod";
 import { documentToJson } from "@/utils/jsonDocument";
 import { uploadDocumentFromFile } from "@/utils/uploadDocument";
 
+import { useEditorDoc } from "./editorContext";
 import { navigateToEditorWithDoc } from "./navigationState";
 
 import "./header.css";
 
-const ContestEditorHeader: FC<{
-  doc: ImmerDocument;
-  updateDoc: Updater<ImmerDocument>;
-  setPanel: Dispatch<SetStateAction<string>>;
-  path: string[] | undefined;
-  setPath: Dispatch<SetStateAction<string[] | undefined>>;
-  modified: boolean;
-  setModified: Dispatch<SetStateAction<boolean>>;
-}> = ({ doc, path, modified, setModified, setPath, updateDoc }) => {
+const ContestEditorHeader: FC = () => {
+  const { doc, path, modified, setModified, setPath, updateDoc } =
+    useEditorDoc();
   const { notification, message, modal } = App.useApp();
   const { compiler } = useTemplateManager();
   const navigate = useNavigate();

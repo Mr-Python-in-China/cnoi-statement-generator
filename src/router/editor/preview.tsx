@@ -1,11 +1,11 @@
 import { Alert } from "antd";
 import errorImg from "assets/preview-error.webp";
 import loadingImg from "assets/preview-loading.webp";
-import { isEqual } from "lodash-es";
 import { memo, useEffect, useImperativeHandle, useRef, useState } from "react";
 
 import useTemplateManager from "@/components/templateManagerContext";
-import type { ImmerContent } from "@/types/document";
+
+import { useEditorContent } from "./editorContext";
 
 import "./preview.css";
 
@@ -28,7 +28,8 @@ const PreviewContainer = memo<{
   return <div className="contest-editor-preview-container" ref={ref} />;
 });
 
-const Preview = memo<{ data: ImmerContent }>(({ data }) => {
+const Preview = memo(() => {
+  const { content } = useEditorContent();
   const { compiler } = useTemplateManager();
   const [error, setError] = useState<string>();
   const [svg, setSvg] = useState<string | 0 | 1>(1); // 0: error; 1: loading
@@ -49,7 +50,7 @@ const Preview = memo<{ data: ImmerContent }>(({ data }) => {
         if (now - lastUpdateTimeRef.current < 100) return;
         lastUpdateTimeRef.current = now;
         compiler
-          .compileToSvgDebounced(data)
+          .compileToSvgDebounced(content)
           .then((res) => {
             if (!res || !mounted) return;
             setSvg(res);
@@ -66,7 +67,7 @@ const Preview = memo<{ data: ImmerContent }>(({ data }) => {
     return () => {
       mounted = false;
     };
-  }, [compiler, data]);
+  }, [compiler, content]);
   useEffect(() => {
     if (!containerRef.current) return;
     const container = containerRef.current;
@@ -137,6 +138,6 @@ const Preview = memo<{ data: ImmerContent }>(({ data }) => {
       />
     </div>
   );
-}, isEqual);
+});
 
 export default Preview;

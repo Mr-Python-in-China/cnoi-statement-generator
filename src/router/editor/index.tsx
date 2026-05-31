@@ -6,8 +6,6 @@ import {
   use,
   useCallback,
   Suspense,
-  type Dispatch,
-  type SetStateAction,
   useMemo,
   useLayoutEffect,
 } from "react";
@@ -44,6 +42,12 @@ import TemplateManager from "@/utils/templateManager";
 import ErrorPage from "../errorPage";
 import type { Route } from "./+types";
 import Body from "./body";
+import {
+  EditorContentContext,
+  EditorDocContext,
+  EditorPanelContext,
+  useEditorDoc,
+} from "./editorContext";
 import ContestEditorHeader from "./header";
 import navigationState from "./navigationState";
 
@@ -136,16 +140,8 @@ const ContestEditorLoader: FC<Route.ComponentProps> = () => {
 
 export default ContestEditorLoader;
 
-const ContestEditorMain: FC<{
-  doc: ImmerDocument;
-  updateDoc: Updater<ImmerDocument>;
-  path: string[] | undefined;
-  setPath: Dispatch<SetStateAction<string[] | undefined>>;
-  panel: string;
-  setPanel: Dispatch<SetStateAction<string>>;
-  modified: boolean;
-  setModified: Dispatch<SetStateAction<boolean>>;
-}> = ({ doc, updateDoc, panel, setPanel, setModified }) => {
+const ContestEditorMain: FC = () => {
+  const { doc, updateDoc, setModified } = useEditorDoc();
   const templateManager = useTemplateManager();
   const uiMeta = use(templateManager.uiMetadataPromise);
   const compiler = templateManager.compiler;
@@ -170,6 +166,8 @@ const ContestEditorMain: FC<{
     }) satisfies Updater<ImmerContent>,
     [updateDoc, setModified],
   );
+
+  const [panel, setPanel] = useState("config");
 
   // Register asset blob URLs with compiler whenever images change
   useEffect(() => {
@@ -205,38 +203,33 @@ const ContestEditorMain: FC<{
   const removeProblem = removeProblemCallback(modal, setPanel, updateContent);
 
   return (
-    <>
-      <main>
-        <Tabs
-          type="editable-card"
-          items={items}
-          activeKey={panel}
-          onChange={(x) => {
-            setPanel(x);
-          }}
-          hideAdd={uiMeta.createNewProblem === undefined}
-          onEdit={async (e, action) => {
-            if (action === "remove") removeProblem(e as string);
-            else {
-              if (!uiMeta.createNewProblem) return;
-              const v = uiMeta.createNewProblem(content);
-              setPanel(v.uuid);
-              updateContent((draft) => {
-                draft.problems.push(v);
-              });
-            }
-          }}
-        />
-        <Body
-          {...{
-            content,
-            updateContent,
-            panel,
-            setPanel,
-          }}
-        />
-      </main>
-    </>
+    <EditorContentContext.Provider value={{ content, updateContent }}>
+      <EditorPanelContext.Provider value={{ panel, setPanel }}>
+        <main>
+          <Tabs
+            type="editable-card"
+            items={items}
+            activeKey={panel}
+            onChange={(x) => {
+              setPanel(x);
+            }}
+            hideAdd={uiMeta.createNewProblem === undefined}
+            onEdit={async (e, action) => {
+              if (action === "remove") removeProblem(e as string);
+              else {
+                if (!uiMeta.createNewProblem) return;
+                const v = uiMeta.createNewProblem(content);
+                setPanel(v.uuid);
+                updateContent((draft) => {
+                  draft.problems.push(v);
+                });
+              }
+            }}
+          />
+          <Body />
+        </main>
+      </EditorPanelContext.Provider>
+    </EditorContentContext.Provider>
   );
 };
 
@@ -276,9 +269,6 @@ const ContestEditor: FC<{ doc: DocumentBase; path: string[] | undefined }> = ({
     templateManagerState?.template === doc.templateId
       ? templateManagerState
       : undefined;
-
-  // "config" | "extra-{name}" | "{problem-uuid}"
-  const [panel, setPanel] = useState("config");
 
   const [modified, setModified] = useState(path === undefined);
   useLayoutEffect(
@@ -321,38 +311,26 @@ const ContestEditor: FC<{ doc: DocumentBase; path: string[] | undefined }> = ({
   }, [blocker, modal]);
 
   return (
-    <>
+    <EditorDocContext.Provider
+      value={{
+        doc,
+        updateDoc,
+        path,
+        setPath,
+        modified,
+        setModified,
+      }}
+    >
       {templateManager && (
         <TemplateManagerContext.Provider value={templateManager}>
           <TypstInitStatusProvider>
-            <ContestEditorHeader
-              {...{
-                doc,
-                updateDoc,
-                setPanel,
-                path,
-                setPath,
-                modified,
-                setModified,
-              }}
-            />
+            <ContestEditorHeader />
             <Suspense>
-              <ContestEditorMain
-                {...{
-                  doc,
-                  updateDoc,
-                  panel,
-                  setPanel,
-                  path,
-                  setPath,
-                  modified,
-                  setModified,
-                }}
-              />
+              <ContestEditorMain />
             </Suspense>
           </TypstInitStatusProvider>
         </TemplateManagerContext.Provider>
       )}
-    </>
+    </EditorDocContext.Provider>
   );
 };

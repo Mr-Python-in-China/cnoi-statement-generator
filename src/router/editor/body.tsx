@@ -1,30 +1,18 @@
 import { Splitter } from "antd";
-import {
-  useEffect,
-  useRef,
-  useState,
-  type FC,
-  type Dispatch,
-  type SetStateAction,
-  use,
-} from "react";
-import { type Updater } from "use-immer";
+import { useEffect, useRef, useState, type FC, use } from "react";
 
 import useTemplateManager from "@/components/templateManagerContext";
-import type { ImmerContent } from "@/types/document";
 
+import { useEditorContent, useEditorPanel } from "./editorContext";
 import MarkdownPanel from "./markdownPanel";
 import Preview from "./preview";
 
 import "./body.css";
 import "./config-common.css";
 
-const Body: FC<{
-  content: ImmerContent;
-  updateContent: Updater<ImmerContent>;
-  panel: string;
-  setPanel: Dispatch<SetStateAction<string>>;
-}> = ({ panel, content, updateContent, setPanel }) => {
+const Body: FC = () => {
+  const { content, updateContent } = useEditorContent();
+  const { panel, setPanel } = useEditorPanel();
   const divRef = useRef<HTMLDivElement>(null);
   const [sizes, setSizes] = useState<number[] | undefined>(undefined);
   const { ConfigPanelFC } = use(useTemplateManager().uiMetadataPromise);
@@ -105,7 +93,7 @@ const Body: FC<{
           size={sizes === undefined ? "50%" : sizes[1]}
           collapsible
         >
-          {(!sizes || sizes[1] > 0) && <Preview data={content} />}
+          {(!sizes || sizes[1] > 0) && <Preview />}
         </Splitter.Panel>
       </Splitter>
     </div>
