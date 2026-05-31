@@ -21,7 +21,7 @@ class CnoiDatabase extends Dexie {
   >;
 
   recently_opened!: Dexie.Table<
-    { pathKey: string; name: string; openedAt: Date },
+    { pathKey: string; name: string; openedAt: Date; previewImage?: Blob },
     string
   >;
 

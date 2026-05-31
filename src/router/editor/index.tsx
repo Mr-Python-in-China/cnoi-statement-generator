@@ -1,4 +1,5 @@
 import { App, Tabs, type TabsProps } from "antd";
+import mitt from "mitt";
 import {
   type FC,
   useEffect,
@@ -45,6 +46,8 @@ import Body from "./body";
 import {
   EditorContentContext,
   EditorDocContext,
+  EditorEventBusContext,
+  type EditorEvents,
   EditorPanelContext,
   useEditorDoc,
 } from "./editorContext";
@@ -257,6 +260,7 @@ const ContestEditor: FC<{ doc: DocumentBase; path: string[] | undefined }> = ({
     () => (path || []).map(encodeURIComponent).join("/"),
     [path],
   );
+  const editorEvents = useMemo(() => mitt<EditorEvents>(), []);
   const [templateManagerState, setTemplateManagerState] = useState<
     TemplateManager | undefined
   >(undefined);
@@ -311,26 +315,28 @@ const ContestEditor: FC<{ doc: DocumentBase; path: string[] | undefined }> = ({
   }, [blocker, modal]);
 
   return (
-    <EditorDocContext.Provider
-      value={{
-        doc,
-        updateDoc,
-        path,
-        setPath,
-        modified,
-        setModified,
-      }}
-    >
-      {templateManager && (
-        <TemplateManagerContext.Provider value={templateManager}>
-          <TypstInitStatusProvider>
-            <ContestEditorHeader />
-            <Suspense>
-              <ContestEditorMain />
-            </Suspense>
-          </TypstInitStatusProvider>
-        </TemplateManagerContext.Provider>
-      )}
-    </EditorDocContext.Provider>
+    <EditorEventBusContext.Provider value={editorEvents}>
+      <EditorDocContext.Provider
+        value={{
+          doc,
+          updateDoc,
+          path,
+          setPath,
+          modified,
+          setModified,
+        }}
+      >
+        {templateManager && (
+          <TemplateManagerContext.Provider value={templateManager}>
+            <TypstInitStatusProvider>
+              <ContestEditorHeader />
+              <Suspense>
+                <ContestEditorMain />
+              </Suspense>
+            </TypstInitStatusProvider>
+          </TemplateManagerContext.Provider>
+        )}
+      </EditorDocContext.Provider>
+    </EditorEventBusContext.Provider>
   );
 };

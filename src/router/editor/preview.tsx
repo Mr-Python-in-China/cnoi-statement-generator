@@ -4,8 +4,13 @@ import loadingImg from "assets/preview-loading.webp";
 import { memo, useEffect, useImperativeHandle, useRef, useState } from "react";
 
 import useTemplateManager from "@/components/templateManagerContext";
+import { setRecentlyOpenedPreviewImage } from "@/utils/.client/indexedDB/recentlyOpened";
 
-import { useEditorContent } from "./editorContext";
+import {
+  useEditorContent,
+  useEditorDoc,
+  useEditorEvents,
+} from "./editorContext";
 
 import "./preview.css";
 
@@ -13,8 +18,18 @@ const PreviewContainer = memo<{
   svg: string;
   ref?: React.Ref<HTMLDivElement>;
 }>(({ svg, ref: refParam }) => {
+  const { path } = useEditorDoc();
+  const editorEvents = useEditorEvents();
   const ref = useRef<HTMLDivElement>(null);
+  const pathRef = useRef(path);
+  const svgRef = useRef(svg);
   useImperativeHandle(refParam, () => ref.current!, []);
+  useEffect(() => {
+    pathRef.current = path;
+  }, [path]);
+  useEffect(() => {
+    svgRef.current = svg;
+  }, [svg]);
   useEffect(() => {
     const host = ref.current;
     if (!host || host.shadowRoot) return;
@@ -25,6 +40,69 @@ const PreviewContainer = memo<{
     ref.current.shadowRoot.innerHTML =
       svg + "<style>.typst-doc{width:100%;height:auto;}</style>";
   }, [svg]);
+  useEffect(() => {
+    const handleSaved = () => {
+      const currentPath = pathRef.current;
+      const currentSvg = svgRef.current;
+      if (!currentPath) return;
+      if (!ref.current?.shadowRoot) return;
+      if (typeof currentSvg !== "string" || currentSvg.length === 0) return;
+      const svgDom = ref.current.shadowRoot.children[0] as
+        | SVGElement
+        | undefined;
+      const firstPage = svgDom?.querySelector(
+        ".typst-page",
+      ) as SVGGElement | null;
+      if (!svgDom || !firstPage) return;
+      const viewWidth = Number(firstPage.getAttribute("data-page-width"));
+      const viewHeight = Number(firstPage.getAttribute("data-page-height"));
+      const scale = 400 / Math.max(viewWidth, viewHeight);
+      const canvas = document.createElement("canvas");
+      canvas.width = viewWidth * scale;
+      canvas.height = viewHeight * scale;
+      const clonedSvgDom = svgDom.cloneNode(true) as SVGElement;
+      const pages = clonedSvgDom.querySelectorAll(".typst-page");
+      pages.forEach((page, index) => {
+        if (index > 0) page.remove();
+      });
+      clonedSvgDom.querySelectorAll("script, foreignObject").forEach((node) => {
+        node.remove();
+      });
+      clonedSvgDom.setAttribute("viewBox", `0 0 ${viewWidth} ${viewHeight}`);
+      clonedSvgDom.setAttribute("width", String(canvas.width));
+      clonedSvgDom.setAttribute("height", String(canvas.height));
+
+      const svgBlob = new Blob(
+        [new XMLSerializer().serializeToString(clonedSvgDom)],
+        {
+          type: "image/svg+xml",
+        },
+      );
+      const url = URL.createObjectURL(svgBlob);
+
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+      const img = new Image();
+      img.addEventListener(
+        "load",
+        () => {
+          ctx.fillStyle = "#fff";
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          canvas.toBlob((blob) => {
+            if (!blob) return;
+            URL.revokeObjectURL(url);
+            setRecentlyOpenedPreviewImage(currentPath, blob);
+          }, "image/webp");
+        },
+        { once: true },
+      );
+      img.src = url;
+    };
+    editorEvents.on("documentSaved", handleSaved);
+    return () => editorEvents.off("documentSaved", handleSaved);
+  }, [editorEvents]);
+
   return <div className="contest-editor-preview-container" ref={ref} />;
 });
 

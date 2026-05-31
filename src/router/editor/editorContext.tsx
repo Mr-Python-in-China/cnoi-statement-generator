@@ -1,3 +1,4 @@
+import type { Emitter } from "mitt";
 import {
   createContext,
   useContext,
@@ -27,6 +28,14 @@ type EditorPanelContextValue = {
   setPanel: Dispatch<SetStateAction<string>>;
 };
 
+export type EditorEvents = {
+  documentSaved: {
+    path: string[];
+  };
+};
+
+type EditorEventBusContextValue = Emitter<EditorEvents>;
+
 export const EditorDocContext = createContext<EditorDocContextValue | null>(
   null,
 );
@@ -35,6 +44,8 @@ export const EditorContentContext =
 export const EditorPanelContext = createContext<EditorPanelContextValue | null>(
   null,
 );
+export const EditorEventBusContext =
+  createContext<EditorEventBusContextValue | null>(null);
 
 export function useEditorDoc() {
   const res = useContext(EditorDocContext);
@@ -51,5 +62,11 @@ export function useEditorContent() {
 export function useEditorPanel() {
   const res = useContext(EditorPanelContext);
   if (res === null) throw new Error("EditorPanelContext is null");
+  return res;
+}
+
+export function useEditorEvents() {
+  const res = useContext(EditorEventBusContext);
+  if (res === null) throw new Error("EditorEventBusContext is null");
   return res;
 }

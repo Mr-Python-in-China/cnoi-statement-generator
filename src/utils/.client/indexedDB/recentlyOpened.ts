@@ -4,6 +4,7 @@ export type RecentlyOpenedEntry = {
   path: string[];
   name: string;
   openedAt: Date;
+  previewImage?: Blob;
 };
 
 // Record that a document at `path` with `name` was opened at now.
@@ -24,16 +25,20 @@ export async function getRecentlyOpened(): Promise<RecentlyOpenedEntry[]> {
       path: r.pathKey.split("/").map((s: string) => decodeURIComponent(s)),
       name: r.name,
       openedAt: r.openedAt,
+      previewImage: r.previewImage,
     }))
     .sort((a, b) => b.openedAt.getTime() - a.openedAt.getTime());
 }
 
 export async function deleteRecentlyOpened(path: string[]) {
   const pathKey = path.map(encodeURIComponent).join("/");
-  try {
-    await db.recently_opened.delete(pathKey);
-  } catch (err) {
-    // best-effort
-    console.error("Failed to delete recently opened entry:", err);
-  }
+  await db.recently_opened.delete(pathKey);
+}
+
+export async function setRecentlyOpenedPreviewImage(
+  path: string[],
+  imageBlob: Blob,
+) {
+  const pathKey = path.map(encodeURIComponent).join("/");
+  await db.recently_opened.update(pathKey, { previewImage: imageBlob });
 }

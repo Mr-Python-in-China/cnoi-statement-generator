@@ -1,12 +1,13 @@
 import { Suspense, use, type FC } from "react";
 import { Link } from "react-router";
 
+import BlobImage from "@/components/BlobImage";
+
+import "./documentGrid.css";
 import {
   getRecentlyOpened,
   type RecentlyOpenedEntry,
 } from "@/utils/.client/indexedDB/recentlyOpened";
-
-import "./documentGrid.css";
 
 const DocumentGridImpl: FC<{
   recentlyOpenedPromise: Promise<RecentlyOpenedEntry[]>;
@@ -16,30 +17,37 @@ const DocumentGridImpl: FC<{
   return (
     <div className="root-document-grid">
       {recentlyOpened.map((meta) => (
-        <div key={meta.name}>
-          <Link
-            to={{
-              pathname: "/editor",
-              search: `?file=${encodeURIComponent(meta.path.map(encodeURIComponent).join("/"))}`,
-            }}
-          >
-            {/*{meta.previewImage ? (
-              <BlobImage
-                blob={meta.previewImage}
-                alt={`Document "${meta.name}" preview`}
-              />
-            ) : */}
-            <div
-              style={{
-                // @ts-expect-error CSS variable
-                "--doc-preview-card-color-hue": 0.625 + "turn",
-              }}
-            >
-              <div>{meta.name}</div>
+        <Link
+          key={meta.name}
+          to={{
+            pathname: "/editor",
+            search: `?file=${encodeURIComponent(meta.path.map(encodeURIComponent).join("/"))}`,
+          }}
+          className="root-document-grid-item"
+        >
+          <div className="root-document-grid-item-preview-container">
+            <div className="root-document-grid-item-preview-wrapper">
+              {meta.previewImage ? (
+                <BlobImage
+                  className="root-document-grid-item-preview"
+                  blob={meta.previewImage}
+                  alt={`Document "${meta.name}" preview`}
+                />
+              ) : (
+                <div
+                  className="root-document-grid-item-preview-fallback"
+                  style={{
+                    // @ts-expect-error CSS variable
+                    "--doc-preview-card-color-hue": 0.625 + "turn",
+                  }}
+                >
+                  <div>{meta.name}</div>
+                </div>
+              )}
             </div>
-          </Link>
-          <div>{meta.name}</div>
-        </div>
+          </div>
+          <div className="root-document-grid-item-name">{meta.name}</div>
+        </Link>
       ))}
     </div>
   );

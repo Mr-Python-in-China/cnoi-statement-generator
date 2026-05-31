@@ -18,7 +18,7 @@ import { removeImmer } from "@/utils/documentZod";
 import { documentToJson } from "@/utils/jsonDocument";
 import { uploadDocumentFromFile } from "@/utils/uploadDocument";
 
-import { useEditorDoc } from "./editorContext";
+import { useEditorDoc, useEditorEvents } from "./editorContext";
 import { navigateToEditorWithDoc } from "./navigationState";
 
 import "./header.css";
@@ -26,6 +26,7 @@ import "./header.css";
 const ContestEditorHeader: FC = () => {
   const { doc, path, modified, setModified, setPath, updateDoc } =
     useEditorDoc();
+  const editorEvents = useEditorEvents();
   const { notification, message, modal } = App.useApp();
   const { compiler } = useTemplateManager();
   const navigate = useNavigate();
@@ -149,9 +150,10 @@ const ContestEditorHeader: FC = () => {
           recordRecentlyOpened(data.path, data.doc.name).catch((e) =>
             console.warn("Failed to record recently opened document", e),
           );
+          editorEvents.emit("documentSaved", { path: data.path });
         }
       });
-  }, [explorer, setPath, updateDoc, doc]);
+  }, [explorer, setPath, updateDoc, doc, editorEvents]);
 
   const onClickSave = useCallback(async () => {
     if (!path) {
@@ -161,11 +163,12 @@ const ContestEditorHeader: FC = () => {
     try {
       await saveDocument(path, doc);
       setModified(false);
+      editorEvents.emit("documentSaved", { path });
     } catch (e) {
       console.error("Error when saving document.", e);
       message.error("保存失败");
     }
-  }, [doc, path, message, setModified, onClickSaveAs]);
+  }, [doc, path, message, setModified, onClickSaveAs, editorEvents]);
 
   const onClickUpload = useCallback(async () => {
     await uploadDocumentFromFile({
