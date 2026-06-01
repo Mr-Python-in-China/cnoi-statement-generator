@@ -3,13 +3,45 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import ViteRemarkRehypePlugin from "@mr.python/vite-plugin-remark-rehype";
+import typst from "@myriaddreamin/vite-plugin-typst";
 import { reactRouter } from "@react-router/dev/vite";
-import { defineConfig, type PluginOption, type UserConfig } from "vite";
 import "vitest/config";
+import { defineConfig, type PluginOption, type UserConfig } from "vite";
 import { envOnlyMacros } from "vite-env-only";
 import viteAssetsSplitPlugin from "vite-plugin-assets-split";
 import babel from "vite-plugin-babel";
 import devtoolsJson from "vite-plugin-devtools-json";
+
+/* typst plugin only support imports like 'dir/doc.typ' but not '/dir/doc.typ'
+ * so we need to handle the path conversion */
+
+const typstAbsolutePathPlugin = (): PluginOption => ({
+  name: "typst-absolute-path",
+  enforce: "pre",
+  resolveId(source) {
+    const [rawPath, queryString] = source.split("?", 2);
+    if (!rawPath.endsWith(".typ")) return null;
+    if (!rawPath.startsWith("/")) return null;
+
+    const virtualId =
+      rawPath +
+      (queryString ? `?${queryString}` : "") +
+      "\0typst-absolute-path";
+    return virtualId;
+  },
+  load(id) {
+    if (!id.endsWith("\0typst-absolute-path")) return null;
+
+    const withoutPrefix = id.slice(0, -"\0typst-absolute-path".length);
+    const [rawPath, queryString] = withoutPrefix.split("?", 2);
+    const normalizedPath = rawPath.startsWith("/") ? rawPath.slice(1) : rawPath;
+    const target = queryString
+      ? `${normalizedPath}?${queryString}`
+      : normalizedPath;
+
+    return `export * from ${JSON.stringify(target)};\nexport { default } from ${JSON.stringify(target)};`;
+  },
+});
 
 const fontMetaPlugin = (): PluginOption => ({
   name: "font-meta",
@@ -48,6 +80,8 @@ export default defineConfig(async (env): Promise<UserConfig> => {
   return {
     base: "/",
     plugins: [
+      typstAbsolutePathPlugin(),
+      typst(),
       reactRouter(),
       babel(
         env.mode === "development"

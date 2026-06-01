@@ -14,3 +14,9 @@ declare module "*?split" {
   const urls: string[];
   export default urls;
 }
+
+declare module "*.typ?parts" {
+  export const title: string | null;
+  export const description: string;
+  export const body: string;
+}
