@@ -1,5 +1,16 @@
-main {
+.app {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
   height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+main {
+  flex: 1;
+  margin: 16px;
   display: flex;
   flex-direction: column;
 }
