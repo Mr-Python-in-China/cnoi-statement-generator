@@ -21,6 +21,7 @@ const typstAbsolutePathPlugin = (): PluginOption => ({
   resolveId(source) {
     const [rawPath, queryString] = source.split("?", 2);
     if (!rawPath.endsWith(".typ")) return null;
+    if (queryString !== "parts") return null;
     if (!rawPath.startsWith("/")) return null;
 
     const virtualId =
