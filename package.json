@@ -91,7 +91,7 @@
     "fontkit": "^2.0.4",
     "globals": "^17.5.0",
     "husky": "^9.1.7",
-    "jiti": "^2.6.1",
+    "jiti": "^2.7.0",
     "mdast-util-to-hast": "^13.2.1",
     "oxfmt": "^0.53.0",
     "oxlint": "^1.65.0",
