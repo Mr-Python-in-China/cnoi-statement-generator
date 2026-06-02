@@ -38,7 +38,7 @@
     "@mr.python/promise-worker-ts": "^1.0.0",
     "@myriaddreamin/typst-ts-renderer": "0.7.0-rc2",
     "@myriaddreamin/typst-ts-web-compiler": "0.7.0-rc2",
-    "@myriaddreamin/typst.ts": "0.7.0-rc2",
+    "@myriaddreamin/typst.ts": "0.7.0",
     "@react-router/node": "^7.16.0",
     "@reactuses/core": "^6.3.1",
     "@uiw/react-codemirror": "^4.25.9",
