@@ -71,7 +71,7 @@
   "devDependencies": {
     "@mr.python/vite-plugin-remark-rehype": "^0.1.1",
     "@myriaddreamin/typst-ts-node-compiler": "0.7.0-rc2",
-    "@react-router/dev": "^7.15.1",
+    "@react-router/dev": "^7.17.0",
     "@types/browser-update": "^3.3.3",
     "@types/fontkit": "^2.0.9",
     "@types/lodash-es": "^4.17.12",
