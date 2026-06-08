@@ -105,7 +105,7 @@
     "vite-env-only": "^3.0.3",
     "vite-node": "^6.0.0",
     "vite-plugin-assets-split": "^1.0.1",
-    "vite-plugin-babel": "^1.6.0",
+    "vite-plugin-babel": "^1.7.3",
     "vite-plugin-devtools-json": "^1.0.0",
     "vitest": "^4.1.8"
   }
