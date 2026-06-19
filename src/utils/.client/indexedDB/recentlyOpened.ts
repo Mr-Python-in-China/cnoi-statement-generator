@@ -10,11 +10,12 @@ export type RecentlyOpenedEntry = {
 // Record that a document at `path` with `name` was opened at now.
 export async function recordRecentlyOpened(path: string[], name: string) {
   const pathKey = path.map(encodeURIComponent).join("/");
-  await db.recently_opened.put({
-    pathKey,
+  const updated = await db.recently_opened.update(pathKey, {
     name,
     openedAt: new Date(),
   });
+  if (!updated)
+    await db.recently_opened.add({ pathKey, name, openedAt: new Date() });
 }
 
 // Fetch all recently opened entries (unsorted)
