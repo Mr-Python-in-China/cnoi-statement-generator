@@ -12,7 +12,7 @@ importers:
         specifier: ^6.5.0
         version: 6.5.0
       '@codemirror/view':
-        specifier: ^6.41.1
+        specifier: ^6.43.1
         version: 6.43.1
       '@dnd-kit/core':
         specifier: ^6.3.1
@@ -39,7 +39,7 @@ importers:
         specifier: ^7.2.0
         version: 7.2.0
       '@fortawesome/react-fontawesome':
-        specifier: ^3.2.0
+        specifier: ^3.3.1
         version: 3.3.1(@fortawesome/fontawesome-svg-core@7.2.0)(react@19.2.7)
       '@mr.python/promise-worker-ts':
         specifier: ^1.0.0
@@ -54,22 +54,22 @@ importers:
         specifier: 0.7.0-rc2
         version: 0.7.0-rc2(@myriaddreamin/typst-ts-renderer@0.7.0-rc2)(@myriaddreamin/typst-ts-web-compiler@0.7.0-rc2)
       '@react-router/node':
-        specifier: ^7.16.0
+        specifier: ^7.18.0
         version: 7.18.0(react-router@7.18.0(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(typescript@5.9.3)
       '@reactuses/core':
-        specifier: ^6.3.1
+        specifier: ^6.3.2
         version: 6.3.2(react@19.2.7)
       '@uiw/react-codemirror':
-        specifier: ^4.25.9
+        specifier: ^4.25.10
         version: 4.25.10(@babel/runtime@7.29.7)(@codemirror/autocomplete@6.20.3)(@codemirror/language@6.12.3)(@codemirror/lint@6.9.7)(@codemirror/search@6.7.1)(@codemirror/state@6.6.0)(@codemirror/theme-one-dark@6.1.3)(@codemirror/view@6.43.1)(codemirror@6.0.2)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       antd:
-        specifier: ^6.3.5
+        specifier: ^6.4.4
         version: 6.4.4(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       async-mutex:
         specifier: ^0.5.0
         version: 0.5.0
       axios:
-        specifier: ^1.15.2
+        specifier: ^1.18.0
         version: 1.18.0
       base64-js:
         specifier: ^1.5.1
@@ -78,13 +78,13 @@ importers:
         specifier: ^3.3.63
         version: 3.3.63
       dayjs:
-        specifier: ^1.11.20
+        specifier: ^1.11.21
         version: 1.11.21
       dexie:
-        specifier: ^4.3.0
+        specifier: ^4.4.4
         version: 4.4.4
       isbot:
-        specifier: ^5.1.40
+        specifier: ^5.1.43
         version: 5.1.43
       jszip:
         specifier: ^3.10.1
@@ -93,13 +93,13 @@ importers:
         specifier: ^3.0.1
         version: 3.0.1
       react:
-        specifier: ^19.2.3
+        specifier: ^19.2.7
         version: 19.2.7
       react-dom:
         specifier: ^19.2.7
         version: 19.2.7(react@19.2.7)
       react-router:
-        specifier: ^7.15.1
+        specifier: ^7.18.0
         version: 7.18.0(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       remark:
         specifier: ^15.0.1
@@ -135,7 +135,7 @@ importers:
         specifier: ^0.2.2
         version: 0.2.2
       zod:
-        specifier: ^4.3.6
+        specifier: ^4.4.3
         version: 4.4.3
     devDependencies:
       '@mr.python/vite-plugin-remark-rehype':
@@ -145,7 +145,7 @@ importers:
         specifier: 0.7.0-rc2
         version: 0.7.0-rc2
       '@react-router/dev':
-        specifier: ^7.15.1
+        specifier: ^7.18.0
         version: 7.18.0(@types/node@24.13.2)(jiti@2.7.0)(lightningcss@1.32.0)(react-router@7.18.0(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(typescript@5.9.3)(vite@7.3.5(@types/node@24.13.2)(jiti@2.7.0)(lightningcss@1.32.0))
       '@types/browser-update':
         specifier: ^3.3.3
@@ -160,13 +160,13 @@ importers:
         specifier: ^4.0.4
         version: 4.0.4
       '@types/node':
-        specifier: ^24.10.1
+        specifier: ^24.13.2
         version: 24.13.2
       '@types/pngjs':
         specifier: ^6.0.5
         version: 6.0.5
       '@types/react':
-        specifier: ^19.2.8
+        specifier: ^19.2.17
         version: 19.2.17
       '@types/react-dom':
         specifier: ^19.2.3
@@ -181,19 +181,19 @@ importers:
         specifier: ^0.2.4
         version: 0.2.4
       '@vitejs/plugin-react':
-        specifier: ^5.1.4
+        specifier: ^5.2.0
         version: 5.2.0(vite@7.3.5(@types/node@24.13.2)(jiti@2.7.0)(lightningcss@1.32.0))
       '@vitest/coverage-v8':
-        specifier: ^4.1.8
+        specifier: ^4.1.9
         version: 4.1.9(vitest@4.1.9)
       autoprefixer:
         specifier: ^10.5.0
         version: 10.5.0(postcss@8.5.15)
       babel-plugin-react-compiler:
-        specifier: ^19.1.0-rc.3
-        version: 19.1.0-rc.1-rc-af1b7da-20250421
+        specifier: 1.0.0
+        version: 1.0.0
       baseline-browser-mapping:
-        specifier: ^2.10.32
+        specifier: ^2.10.38
         version: 2.10.38
       decode-named-character-reference:
         specifier: ^1.3.0
@@ -202,7 +202,7 @@ importers:
         specifier: ^2.0.4
         version: 2.0.4
       globals:
-        specifier: ^17.5.0
+        specifier: ^17.6.0
         version: 17.6.0
       husky:
         specifier: ^9.1.7
@@ -220,10 +220,10 @@ importers:
         specifier: ^0.53.0
         version: 0.53.0
       oxlint:
-        specifier: ^1.65.0
+        specifier: ^1.70.0
         version: 1.70.0
       pdf-to-img:
-        specifier: ^6.1.0
+        specifier: ^6.2.0
         version: 6.2.0
       pngjs:
         specifier: ^7.0.0
@@ -232,7 +232,7 @@ importers:
         specifier: ^6.0.1
         version: 6.0.1(jiti@2.7.0)(postcss@8.5.15)
       postcss-preset-env:
-        specifier: ^11.2.1
+        specifier: ^11.3.1
         version: 11.3.1(postcss@8.5.15)
       sharp:
         specifier: ^0.34.5
@@ -244,7 +244,7 @@ importers:
         specifier: ^6.0.3
         version: 6.0.3
       vite:
-        specifier: ^7.3.2
+        specifier: ^7.3.5
         version: 7.3.5(@types/node@24.13.2)(jiti@2.7.0)(lightningcss@1.32.0)
       vite-env-only:
         specifier: ^3.0.3
@@ -256,13 +256,13 @@ importers:
         specifier: ^1.0.1
         version: 1.0.1(vite@7.3.5(@types/node@24.13.2)(jiti@2.7.0)(lightningcss@1.32.0))
       vite-plugin-babel:
-        specifier: ^1.6.0
+        specifier: ^1.7.3
         version: 1.7.3(@babel/core@7.29.7)(vite@7.3.5(@types/node@24.13.2)(jiti@2.7.0)(lightningcss@1.32.0))
       vite-plugin-devtools-json:
         specifier: ^1.0.0
         version: 1.0.0(vite@7.3.5(@types/node@24.13.2)(jiti@2.7.0)(lightningcss@1.32.0))
       vitest:
-        specifier: ^4.1.8
+        specifier: ^4.1.9
         version: 4.1.9(@types/node@24.13.2)(@vitest/coverage-v8@4.1.9)(vite@7.3.5(@types/node@24.13.2)(jiti@2.7.0)(lightningcss@1.32.0))
 
 packages:
@@ -2423,9 +2423,8 @@ packages:
   babel-dead-code-elimination@1.0.12:
     resolution: {integrity: sha512-GERT7L2TiYcYDtYk1IpD+ASAYXjKbLTDPhBtYj7X1NuRMDTMtAx9kyBenub1Ev41lo91OHCKdmP+egTDmfQ7Ig==}
 
-  babel-plugin-react-compiler@19.1.0-rc.1-rc-af1b7da-20250421:
-    resolution: {integrity: sha512-E3kaokBhWDLf7ZD8fuYjYn0ZJHYZ+3EHtAWCdX2hl4lpu1z9S/Xr99sxhx2bTCVB41oIesz9FtM8f4INsrZaOw==}
-    deprecated: Wrong version name was published
+  babel-plugin-react-compiler@1.0.0:
+    resolution: {integrity: sha512-Ixm8tFfoKKIPYdCCKYTsqv+Fd4IJ0DQqMyEimo+pxUOMUR9cVPlwTrFt9Avu+3cb6Zp3mAzl+t1MrG2fxxKsxw==}
 
   bail@2.0.2:
     resolution: {integrity: sha512-0xO6mYd7JB2YesxDKplafRpsiOzPt9V02ddPCLbY1xYGPOX24NTyN50qnUxgCPcSoYMhKpAuBTjQoRZCAkUDRw==}
@@ -2840,6 +2839,11 @@ packages:
 
   jsesc@3.0.2:
     resolution: {integrity: sha512-xKqzzWXDttJuOcawBt4KnKHHIf5oQ/Cxax+0PWFG+DFDgHNAdi+TXECADI+RYiFUMmx8792xsMbbgXj4CwnP4g==}
+    engines: {node: '>=6'}
+    hasBin: true
+
+  jsesc@3.1.0:
+    resolution: {integrity: sha512-/sM3dO2FOzXjKQhJuo0Q173wf2KOo8t4I8vHy6lF9poUp7bKT0/NHE8fPX23PwfhnykfqnC2xRxOnVw5XuGIaA==}
     engines: {node: '>=6'}
     hasBin: true
 
@@ -3924,7 +3928,7 @@ snapshots:
       '@babel/types': 7.29.7
       '@jridgewell/gen-mapping': 0.3.13
       '@jridgewell/trace-mapping': 0.3.31
-      jsesc: 3.0.2
+      jsesc: 3.1.0
 
   '@babel/helper-annotate-as-pure@7.29.7':
     dependencies:
@@ -5901,7 +5905,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  babel-plugin-react-compiler@19.1.0-rc.1-rc-af1b7da-20250421:
+  babel-plugin-react-compiler@1.0.0:
     dependencies:
       '@babel/types': 7.29.7
 
@@ -6271,6 +6275,8 @@ snapshots:
   js-tokens@4.0.0: {}
 
   jsesc@3.0.2: {}
+
+  jsesc@3.1.0: {}
 
   json2mq@0.2.0:
     dependencies:
