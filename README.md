@@ -51,14 +51,14 @@
 要想编译此项目，你需要 Node.js 22+ ~~低版本可能能用，没试过~~。使用以下命令构建页面：
 
 ```shell
-npm install
-npm run build
+pnpm install
+pnpm run build
 ```
 
 产物将输出到 `./build/client` 目录下。使用任意静态服务器对外公开该目录即可。对于较简单的部署，你可以直接运行：
 
 ```shell
-npm run preview
+pnpm run preview
 ```
 
 ## 许可证
