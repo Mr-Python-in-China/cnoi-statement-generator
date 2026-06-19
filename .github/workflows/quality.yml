@@ -13,18 +13,19 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Install pnpm
+        run: |
+          corepack enable
+          corepack pnpm -v
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version-file: ".nvmrc"
           cache: "pnpm"
 
-      - name: Install pnpm
-        run: corepack enable
-          corepack pnpm -v
-
       - name: Install dependencies
-        run: pnpm ci --no-audit --no-fund
+        run: pnpm ci
 
       - name: Run check
         run: pnpm run quality
