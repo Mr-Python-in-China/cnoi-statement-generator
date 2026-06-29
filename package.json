@@ -100,7 +100,7 @@
     "pdf-to-img": "^6.2.0",
     "pngjs": "^7.0.0",
     "postcss-load-config": "^6.0.1",
-    "postcss-preset-env": "^11.3.1",
+    "postcss-preset-env": "^11.3.2",
     "sharp": "^0.34.5",
     "typescript": "~5.9.3",
     "vfile": "^6.0.3",
