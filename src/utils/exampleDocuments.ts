@@ -27,7 +27,7 @@ const contentModules = import.meta.glob<string>(
   {
     import: "default",
     eager: false,
-    query: "raw",
+    query: "?raw",
   },
 );
 
