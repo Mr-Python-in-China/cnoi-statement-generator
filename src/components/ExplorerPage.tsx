@@ -20,7 +20,7 @@ export type ExplorerItemActions = "delete";
 
 export type ExplorerItem = {
   key: string;
-  name?: string;
+  name?: ReactNode;
   icon?: ReactNode;
   createdAt?: Date;
   modifiedAt?: Date;

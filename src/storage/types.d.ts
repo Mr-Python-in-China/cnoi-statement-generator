@@ -24,6 +24,6 @@ export type StorageMethodObject = {
     onConfirm: (file: string | string[] | ExplorerItem) => void;
   }>;
   icon: ReactNode;
-  name: string;
+  name: ReactNode;
   enabled: boolean;
 };

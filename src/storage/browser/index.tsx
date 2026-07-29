@@ -1,9 +1,10 @@
 import {
   faFileLines,
+  faInfoCircle,
   faWindowMaximize,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { App } from "antd";
+import { App, Tooltip } from "antd";
 import { useEffect, useState } from "react";
 
 import ExplorerPage from "@/components/ExplorerPage";
@@ -18,7 +19,14 @@ import {
 import type { StorageMethodObject } from "../types";
 
 export default {
-  name: "浏览器存储",
+  name: (
+    <>
+      浏览器存储{" "}
+      <Tooltip title="浏览器在磁盘空间不足时可能会清理存储的数据，请注意备份到本地。">
+        <FontAwesomeIcon icon={faInfoCircle} />
+      </Tooltip>
+    </>
+  ),
   enabled: true,
   saveDocument: async (
     path: string[],
