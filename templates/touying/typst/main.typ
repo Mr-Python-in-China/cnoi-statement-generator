@@ -3,7 +3,7 @@
 #let none-if-empty-string(value) = if value == "" { none } else { value }
 
 #set text(font: "Alibaba PuHuiTi 3.0")
-#show math.equation: set text(font: "Latin Modern Math")
+#show math.equation: set text(font: "New Computer Modern Math")
 #show raw: set text(font: "JetBrains Mono")
 
 #show: (

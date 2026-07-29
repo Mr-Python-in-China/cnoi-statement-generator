@@ -1,7 +1,6 @@
 import firaMonoBold from "assets/typst/fonts/FiraMono-Bold.ttf?font-meta";
 import firaMonoMedium from "assets/typst/fonts/FiraMono-Medium.ttf?font-meta";
 import firaMonoRegular from "assets/typst/fonts/FiraMono-Regular.ttf?font-meta";
-import latinmodernMath from "assets/typst/fonts/latinmodern-math.otf?font-meta";
 import lmroman10Bold from "assets/typst/fonts/lmroman10-bold.otf?font-meta";
 import lmroman10BoldItalic from "assets/typst/fonts/lmroman10-bolditalic.otf?font-meta";
 import lmroman10Italic from "assets/typst/fonts/lmroman10-italic.otf?font-meta";
@@ -10,6 +9,10 @@ import lmroman12Bold from "assets/typst/fonts/lmroman12-bold.otf?font-meta";
 import lmroman12Italic from "assets/typst/fonts/lmroman12-italic.otf?font-meta";
 import lmroman12Regular from "assets/typst/fonts/lmroman12-regular.otf?font-meta";
 import lmroman17Regular from "assets/typst/fonts/lmroman17-regular.otf?font-meta";
+import newCMMathBold from "assets/typst/fonts/NewCMMath-Bold.otf?font-meta";
+import newCMMathBook from "assets/typst/fonts/NewCMMath-Book.otf?font-meta";
+import newCMMathRegular from "assets/typst/fonts/NewCMMath-Regular.otf?font-meta";
+import newCMSansMathRegular from "assets/typst/fonts/NewCMSansMath-Regular.otf?font-meta";
 import simHei from "assets/typst/fonts/simhei.ttf?font-meta";
 import simKai from "assets/typst/fonts/simkai.ttf?font-meta";
 import simSun from "assets/typst/fonts/SimSun.ttf?font-meta";
@@ -18,7 +21,6 @@ export default [
   firaMonoRegular,
   firaMonoBold,
   firaMonoMedium,
-  latinmodernMath,
   lmroman10Bold,
   lmroman10BoldItalic,
   lmroman10Italic,
@@ -30,4 +32,8 @@ export default [
   simSun,
   simHei,
   simKai,
+  newCMMathRegular,
+  newCMMathBook,
+  newCMMathBold,
+  newCMSansMathRegular,
 ];
