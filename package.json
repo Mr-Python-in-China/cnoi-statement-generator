@@ -83,7 +83,7 @@
     "@types/unist": "^3.0.3",
     "@types/wicg-file-system-access": "^2023.10.7",
     "@types/xxhashjs": "^0.2.4",
-    "@vitejs/plugin-react": "^5.2.0",
+    "@vitejs/plugin-react": "^6.0.5",
     "@vitest/coverage-v8": "^4.1.10",
     "autoprefixer": "^10.5.4",
     "babel-plugin-react-compiler": "1.0.0",
