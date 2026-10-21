@@ -4,7 +4,7 @@ import {
   faXmark,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { Button, DatePicker, Input, Switch, Tooltip } from "antd";
+import { Button, DatePicker, Input, Select, Switch, Tooltip } from "antd";
 import dayjs from "dayjs";
 import { useEffect, useRef, useState, type FC } from "react";
 
@@ -181,6 +181,21 @@ const ConfigPanel: ConfigPanelFC<Content> = ({
           </div>
         </label>
       </div>
+      <label>
+        <div>代码字体</div>
+        <Select
+          value={content.code_font ?? "fira-mono"}
+          options={[
+            { label: "Fira Mono", value: "fira-mono" },
+            { label: "Consolas", value: "consolas" },
+          ]}
+          onChange={(value: Content["code_font"]) =>
+            updateContent((x) => {
+              x.code_font = value;
+            })
+          }
+        />
+      </label>
       <div className="contest-editor-config-languages contest-editor-config-label">
         <div>编程语言</div>
         <div>
