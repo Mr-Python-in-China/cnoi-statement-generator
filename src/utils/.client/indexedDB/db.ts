@@ -56,6 +56,7 @@ class CnoiDatabase extends Dexie {
               noi_style: old.noi_style,
               file_io: old.file_io,
               use_pretest: old.use_pretest,
+              code_font: "fira-mono",
               support_languages: old.support_languages.map((x) => ({
                 uuid: crypto.randomUUID(),
                 name: x.name,

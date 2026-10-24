@@ -1,3 +1,6 @@
+import consola from "assets/typst/fonts/consola.ttf?font-meta";
+import consolab from "assets/typst/fonts/consolab.ttf?font-meta";
+import consolai from "assets/typst/fonts/consolai.ttf?font-meta";
 import firaMonoBold from "assets/typst/fonts/FiraMono-Bold.ttf?font-meta";
 import firaMonoMedium from "assets/typst/fonts/FiraMono-Medium.ttf?font-meta";
 import firaMonoRegular from "assets/typst/fonts/FiraMono-Regular.ttf?font-meta";
@@ -18,6 +21,9 @@ import simKai from "assets/typst/fonts/simkai.ttf?font-meta";
 import simSun from "assets/typst/fonts/SimSun.ttf?font-meta";
 
 export default [
+  consola,
+  consolab,
+  consolai,
   firaMonoRegular,
   firaMonoBold,
   firaMonoMedium,

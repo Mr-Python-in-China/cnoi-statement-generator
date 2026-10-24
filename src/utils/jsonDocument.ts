@@ -93,6 +93,7 @@ export async function jsonToDocument(str: string): Promise<DocumentBase> {
         noi_style: content.noi_style,
         file_io: content.file_io,
         use_pretest: content.use_pretest,
+        code_font: "fira-mono",
         support_languages: content.support_languages.map((x) => ({
           ...x,
           uuid: crypto.randomUUID(),

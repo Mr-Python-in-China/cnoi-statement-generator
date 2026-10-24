@@ -164,7 +164,11 @@
 #show link: set text(fill: rgb("#ed028c"))
 #show raw: it => {
   in-raw.update(true)
-  let mono-font = ("Fira Mono", "SimSun")
+  let mono-font = if "code_font" in data and data.code_font == "consolas" {
+    ("Consolas", "SimSun")
+  } else {
+    ("Fira Mono", "SimSun")
+  }
   set text(font: mono-font, size: 12pt)
   show strong: it => text(it.body, weight: "medium")
   if not it.block { it } else {

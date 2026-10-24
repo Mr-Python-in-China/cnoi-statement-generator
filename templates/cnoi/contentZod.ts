@@ -26,6 +26,7 @@ const zContent = zContentBase.extend({
   noi_style: z.boolean(),
   file_io: z.boolean(),
   use_pretest: z.boolean(),
+  code_font: z.enum(["consolas", "fira-mono"]).optional(),
   support_languages: z.array(
     z.object({
       uuid: z.uuid(),
