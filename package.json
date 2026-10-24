@@ -1,6 +1,6 @@
 {
   "name": "cnoi-statement-generator",
-  "version": "2.0.6",
+  "version": "2.0.7",
   "private": true,
   "description": "A website to generate CNOI-style statements for competitive programming.",
   "license": "AGPL-3.0",
@@ -69,6 +69,7 @@
     "zod": "^4.6.7"
   },
   "devDependencies": {
+    "@babel/preset-typescript": "^8.0.7",
     "@mr.python/vite-plugin-remark-rehype": "^0.1.1",
     "@myriaddreamin/typst-ts-node-compiler": "0.7.0-rc2",
     "@react-router/dev": "^8.5.0",
