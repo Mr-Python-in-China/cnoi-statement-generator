@@ -96,7 +96,7 @@
     "immer": "^11.2.9",
     "jiti": "^2.7.0",
     "mdast-util-to-hast": "^13.2.1",
-    "oxfmt": "^0.53.0",
+    "oxfmt": "^0.74.0",
     "oxlint": "^1.89.0",
     "pdf-to-img": "^6.3.0",
     "pngjs": "^7.0.0",
