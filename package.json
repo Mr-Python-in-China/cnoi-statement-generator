@@ -63,7 +63,7 @@
     "strict-event-emitter": "^0.5.1",
     "string-width": "^8.3.0",
     "unified": "^11.0.5",
-    "unist-util-visit": "^5.1.0",
+    "unist-util-visit": "^5.2.0",
     "use-immer": "^0.11.0",
     "xxhashjs": "^0.2.2",
     "zod": "^4.6.7"
